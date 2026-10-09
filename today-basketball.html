@@ -84,6 +84,14 @@ footer.foot { margin-top:26px; color:var(--muted); font-size:11px; text-align:ce
   .grid.wide { grid-template-columns:1fr; }
   .filters input[type=number] { width:72px; }
 }
+@media print {
+  .filters, .jshint, noscript, footer.foot, .legend { display:none !important; }
+  body { padding: 0; }
+  .wrap { max-width: none; }
+  .grid { grid-template-columns: repeat(4, 1fr); }
+  .tile, .row { break-inside: avoid; border-color: #ddd; }
+  section h2 { break-after: avoid; }
+}
 /* ---- warm digest theme (ai / basketball row lists) ---- */
 body.warm { --bg:#f4eee1; --card:#fffdf6; --ink:#2b2620; --muted:#8a8071; }
 body.warm .filters { border-bottom-color:#e3d9c2; }
@@ -98,8 +106,7 @@ body.warm .filters select, body.warm .filters input { border-color:#ddd2b8; }
 .row .rank { font-size:21px; font-weight:800; color:#cdc2a9; min-width:32px;
   text-align:center; letter-spacing:-0.02em; }
 .rbody { flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
-.rtitle { font-size:14px; font-weight:650; line-height:1.3;
-  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.rtitle { font-size:14px; font-weight:650; line-height:1.35; }
 .rsum { font-size:12px; color:var(--muted); line-height:1.4;
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .thumb { width:84px; height:84px; border-radius:10px; overflow:hidden; position:relative;
@@ -124,7 +131,7 @@ Images and prices work everywhere.</div>
 Images and prices still work. To filter by brand, shop or price, open this file in Safari or
 Chrome (not the Files/QuickLook preview).</p></noscript>
 <header class="top"><h1>Basketball news digest</h1>
-<div class="sub"><b>48</b> items from <b>5</b> sources · tap a row to open the article</div>
+<div class="sub"><b>44</b> items from <b>5</b> sources · tap a row to open the article</div>
 
 
 <div class="filters">
@@ -136,28 +143,28 @@ Chrome (not the Files/QuickLook preview).</p></noscript>
   <span class="count" id="f-count"></span>
 </div>
 </header>
-<section><h2>Today's picks <span class="n">48 items, 5 sources, 12 with article images</span></h2>
+<section><h2>Today's picks <span class="n">44 items, 5 sources, 0 with article images</span></h2>
 <div class="rows"><a class="row" data-source="Espn News"
-   data-name="76ers&#x27; embiid calls &#x27;not true&#x27; lebron report &#x27;unfortunate&#x27; joel embiid said a recent report about lebron james getting on him about being late to practice &quot;is not true&quot; and caused him to wonder why he was targeted."
-   href="https://www.espn.com/nba/story/_/id/50137826/76ers-embiid-calls-not-true-lebron-report-unfortunate" target="_blank" rel="noopener">
+   data-name="how to ace your salary cap draft: tips and strategies to build a winning team are you ready for your salary cap draft? jim mccormick lays out helpful strategies and tactics you can use to ace draft day."
+   href="https://www.espn.com/fantasy/basketball/story/_/id/50134524/fantasy-basketball-how-ace-your-salary-cap-draft-2026-2027" target="_blank" rel="noopener">
   <div class="rank">1</div>
   <div class="rbody">
-    <div class="rtitle">76ers&#x27; Embiid calls &#x27;not true&#x27; LeBron report &#x27;unfortunate&#x27;</div>
-    <div class="rsum">Joel Embiid said a recent report about LeBron James getting on him about being late to practice &quot;is not true&quot; and caused him to wonder why he was targeted.</div>
+    <div class="rtitle">How to ace your salary cap draft: Tips and strategies to build a winning team</div>
+    <div class="rsum">Are you ready for your salary cap draft? Jim McCormick lays out helpful strategies and tactics you can use to ace draft day.</div>
     <div class="meta"><span class="chip">Espn News</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(35,45%,93%),hsl(35,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.espn.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(35,45%,93%),hsl(35,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABvElEQVR4nO2a0U3DMBCGv1Z9hw3oCDxkAEZhBSaAbsIo6XsfygbdgLIBD8UocRwbqp4d3d0nVU3cyDr998c5XwrGWeV+PMAb8FonlCbs1oUL7qqE0Y6+JMBjlTAaUhLgvkoUjejcARkHHJRnH+ghfwuozz7kBdDugD24A7ICqK8BwB1gdw3o3AEXkgJYqQFg3gEmsg/zAmh3wD4cmHfAZma8rxlEA95bB+A4jrMIJm3xA2y5fLRy6uAUTlKPwWeUvwvg8r4DSBdCJvoAgZQAZqpASAugeh/QuQPGjASw1AcIxA7Qnv1zPBALoN0BH/GAOyA6114DHOMBd0B0rnoN6Iw7YJJ9GAhgoAaYZB/Gu0GJ7B+BF4F5ryHpgKEAEg44x7X30hiuAVIOWDRDASRqgC+BOW+KO2BwLLIGCMx5U8w7YAW/NcCnwPy9wJzXcOxmHsfhMShVAT4JzftfZm/FcAtorwInfYBAEEDzHgD+4ABzfYCAO+DnW/UakOoDBCw4IFuMra32AQJrdGcfSg5A938BIFMDgA0Big54qBRIK4prwLZOHM2wvQbkagDQL0CxIbNhOXt2CRbfkGnON/bjP1BtfngQAAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="Espn Scores"
-   data-name="boston celtics at cleveland cavaliers — final "
+   data-name="houston rockets at dallas mavericks — 10/9 - 8:00 am edt "
    href="#" target="_blank" rel="noopener">
   <div class="rank">2</div>
   <div class="rbody">
-    <div class="rtitle">Boston Celtics at Cleveland Cavaliers — Final</div>
+    <div class="rtitle">Houston Rockets at Dallas Mavericks — 10/9 - 8:00 AM EDT</div>
     
     <div class="meta"><span class="chip">Espn Scores</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(78,45%,93%),hsl(78,50%,84%));">📰</span></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(78,45%,93%),hsl(78,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABvElEQVR4nO2a0U3DMBCGv1Z9hw3oCDxkAEZhBSaAbsIo6XsfygbdgLIBD8UocRwbqp4d3d0nVU3cyDr998c5XwrGWeV+PMAb8FonlCbs1oUL7qqE0Y6+JMBjlTAaUhLgvkoUjejcARkHHJRnH+ghfwuozz7kBdDugD24A7ICqK8BwB1gdw3o3AEXkgJYqQFg3gEmsg/zAmh3wD4cmHfAZma8rxlEA95bB+A4jrMIJm3xA2y5fLRy6uAUTlKPwWeUvwvg8r4DSBdCJvoAgZQAZqpASAugeh/QuQPGjASw1AcIxA7Qnv1zPBALoN0BH/GAOyA6114DHOMBd0B0rnoN6Iw7YJJ9GAhgoAaYZB/Gu0GJ7B+BF4F5ryHpgKEAEg44x7X30hiuAVIOWDRDASRqgC+BOW+KO2BwLLIGCMx5U8w7YAW/NcCnwPy9wJzXcOxmHsfhMShVAT4JzftfZm/FcAtorwInfYBAEEDzHgD+4ABzfYCAO+DnW/UakOoDBCw4IFuMra32AQJrdGcfSg5A938BIFMDgA0Big54qBRIK4prwLZOHM2wvQbkagDQL0CxIbNhOXt2CRbfkGnON/bjP1BtfngQAAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="Hoopsrumors"
    data-name="atlantic notes: carter, celtics, sixers, raptors, barrett despite resting their projected top seven rotation players on thursday, the celtics won their preseason opener in cleveland behind 71 first-half points and 21 offensive rebounds, writes brian robb of masslive.com (subscr"
@@ -168,18 +175,18 @@ Chrome (not the Files/QuickLook preview).</p></noscript>
     <div class="rsum">Despite resting their projected top seven rotation players on Thursday, the Celtics won their preseason opener in Cleveland behind 71 first-half points and 21 offensive rebounds, writes Brian Robb of MassLive.com (subscr</div>
     <div class="meta"><span class="chip">Hoopsrumors</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.hoopsrumors.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://cdn.hoopsrumors.com/files/2026/10/Devin-Carter-900x600.jpg" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,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" alt=""></div>
 </a>
 <a class="row" data-source="r/Euroleague"
-   data-name="post match thread: panathinaikos - fenerbahce [euroleague regular season, round 4] "
-   href="https://www.reddit.com/r/Euroleague/comments/1x11nwo/post_match_thread_panathinaikos_fenerbahce/" target="_blank" rel="noopener">
+   data-name="valencia and panathinaikos are the last ones standing undefeated in euroleague "
+   href="https://www.reddit.com/r/Euroleague/comments/1x1g0jm/valencia_and_panathinaikos_are_the_last_ones/" target="_blank" rel="noopener">
   <div class="rank">4</div>
   <div class="rbody">
-    <div class="rtitle">POST MATCH THREAD: Panathinaikos - Fenerbahce [EuroLeague Regular Season, Round 4]</div>
+    <div class="rtitle">Valencia and Panathinaikos are the last ones standing undefeated in EuroLeague</div>
     
     <div class="meta"><span class="chip">r/Euroleague</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="r/NBA"
    data-name="daily discussion thread + game thread index "
@@ -190,29 +197,29 @@ Chrome (not the Files/QuickLook preview).</p></noscript>
     
     <div class="meta"><span class="chip">r/NBA</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="Espn News"
-   data-name="lebron james scores 10 points in 18 minutes in 76ers debut lebron james, who joined the 76ers this summer, had 10 points, five assists and four rebounds in the first half of his debut with philadelphia."
-   href="https://www.espn.com/nba/story/_/id/50137673/lebron-james-scores-10-points-18-minutes-76ers-debut" target="_blank" rel="noopener">
+   data-name="76ers&#x27; embiid calls &#x27;not true&#x27; lebron report &#x27;unfortunate&#x27; joel embiid said a recent report about lebron james getting on him about being late to practice &quot;is not true&quot; and caused him to wonder why he was targeted."
+   href="https://www.espn.com/nba/story/_/id/50137826/76ers-embiid-calls-not-true-lebron-report-unfortunate" target="_blank" rel="noopener">
   <div class="rank">6</div>
   <div class="rbody">
-    <div class="rtitle">LeBron James scores 10 points in 18 minutes in 76ers debut</div>
-    <div class="rsum">LeBron James, who joined the 76ers this summer, had 10 points, five assists and four rebounds in the first half of his debut with Philadelphia.</div>
+    <div class="rtitle">76ers&#x27; Embiid calls &#x27;not true&#x27; LeBron report &#x27;unfortunate&#x27;</div>
+    <div class="rsum">Joel Embiid said a recent report about LeBron James getting on him about being late to practice &quot;is not true&quot; and caused him to wonder why he was targeted.</div>
     <div class="meta"><span class="chip">Espn News</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(35,45%,93%),hsl(35,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.espn.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(35,45%,93%),hsl(35,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABvElEQVR4nO2a0U3DMBCGv1Z9hw3oCDxkAEZhBSaAbsIo6XsfygbdgLIBD8UocRwbqp4d3d0nVU3cyDr998c5XwrGWeV+PMAb8FonlCbs1oUL7qqE0Y6+JMBjlTAaUhLgvkoUjejcARkHHJRnH+ghfwuozz7kBdDugD24A7ICqK8BwB1gdw3o3AEXkgJYqQFg3gEmsg/zAmh3wD4cmHfAZma8rxlEA95bB+A4jrMIJm3xA2y5fLRy6uAUTlKPwWeUvwvg8r4DSBdCJvoAgZQAZqpASAugeh/QuQPGjASw1AcIxA7Qnv1zPBALoN0BH/GAOyA6114DHOMBd0B0rnoN6Iw7YJJ9GAhgoAaYZB/Gu0GJ7B+BF4F5ryHpgKEAEg44x7X30hiuAVIOWDRDASRqgC+BOW+KO2BwLLIGCMx5U8w7YAW/NcCnwPy9wJzXcOxmHsfhMShVAT4JzftfZm/FcAtorwInfYBAEEDzHgD+4ABzfYCAO+DnW/UakOoDBCw4IFuMra32AQJrdGcfSg5A938BIFMDgA0Big54qBRIK4prwLZOHM2wvQbkagDQL0CxIbNhOXt2CRbfkGnON/bjP1BtfngQAAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="Espn Scores"
-   data-name="new orleans pelicans at miami heat — final "
+   data-name="memphis grizzlies at chicago bulls — 10/9 - 8:00 pm edt "
    href="#" target="_blank" rel="noopener">
   <div class="rank">7</div>
   <div class="rbody">
-    <div class="rtitle">New Orleans Pelicans at Miami Heat — Final</div>
+    <div class="rtitle">Memphis Grizzlies at Chicago Bulls — 10/9 - 8:00 PM EDT</div>
     
     <div class="meta"><span class="chip">Espn Scores</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(78,45%,93%),hsl(78,50%,84%));">📰</span></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(78,45%,93%),hsl(78,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABvElEQVR4nO2a0U3DMBCGv1Z9hw3oCDxkAEZhBSaAbsIo6XsfygbdgLIBD8UocRwbqp4d3d0nVU3cyDr998c5XwrGWeV+PMAb8FonlCbs1oUL7qqE0Y6+JMBjlTAaUhLgvkoUjejcARkHHJRnH+ghfwuozz7kBdDugD24A7ICqK8BwB1gdw3o3AEXkgJYqQFg3gEmsg/zAmh3wD4cmHfAZma8rxlEA95bB+A4jrMIJm3xA2y5fLRy6uAUTlKPwWeUvwvg8r4DSBdCJvoAgZQAZqpASAugeh/QuQPGjASw1AcIxA7Qnv1zPBALoN0BH/GAOyA6114DHOMBd0B0rnoN6Iw7YJJ9GAhgoAaYZB/Gu0GJ7B+BF4F5ryHpgKEAEg44x7X30hiuAVIOWDRDASRqgC+BOW+KO2BwLLIGCMx5U8w7YAW/NcCnwPy9wJzXcOxmHsfhMShVAT4JzftfZm/FcAtorwInfYBAEEDzHgD+4ABzfYCAO+DnW/UakOoDBCw4IFuMra32AQJrdGcfSg5A938BIFMDgA0Big54qBRIK4prwLZOHM2wvQbkagDQL0CxIbNhOXt2CRbfkGnON/bjP1BtfngQAAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="Hoopsrumors"
    data-name="minor roster moves: heat, nets the heat made a handful of minor transactions on thursday night, per anthony chiang of the miami herald (twitter links). after waiving lester quinones and j’vonne hadley, the heat signed and immediately waived denn"
@@ -223,18 +230,18 @@ Chrome (not the Files/QuickLook preview).</p></noscript>
     <div class="rsum">The Heat made a handful of minor transactions on Thursday night, per Anthony Chiang of The Miami Herald (Twitter links). After waiving Lester Quinones and J’Vonne Hadley, the Heat signed and immediately waived Denn</div>
     <div class="meta"><span class="chip">Hoopsrumors</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.hoopsrumors.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://cdn.hoopsrumors.com/files/2025/04/Kylor-Kelley1-900x600.jpg" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,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" alt=""></div>
 </a>
 <a class="row" data-source="r/Euroleague"
-   data-name="amazing teamwork in the dubai - crvena zvezda game "
-   href="https://www.reddit.com/r/Euroleague/comments/1x0wpyq/amazing_teamwork_in_the_dubai_crvena_zvezda_game/" target="_blank" rel="noopener">
+   data-name="[basketballmaniacs] while many of the players who stood out in today’s game were expected to grab the headlines, željko obradović chose to single out isaac bonga in his post-game flash interview. despite scoring zero points in 21 minutes, bonga earned praise for his defensive consistency. "
+   href="https://www.reddit.com/r/Euroleague/comments/1x1g13n/basketballmaniacs_while_many_of_the_players_who/" target="_blank" rel="noopener">
   <div class="rank">9</div>
   <div class="rbody">
-    <div class="rtitle">Amazing teamwork in the Dubai - Crvena Zvezda game</div>
+    <div class="rtitle">[Basketballmaniacs] While many of the players who stood out in today’s game were expected to grab the headlines, Željko Obradović chose to single out Isaac Bonga in his post-game flash interview. Despite scoring zero points in 21 minutes, Bonga earned praise for his defensive consistency.</div>
     
     <div class="meta"><span class="chip">r/Euroleague</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="r/NBA"
    data-name="[lowlight] embiid falls to the ground and has a scary collision with jaylen brown&#x27;s leg "
@@ -245,433 +252,390 @@ Chrome (not the Files/QuickLook preview).</p></noscript>
     
     <div class="meta"><span class="chip">r/NBA</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="Espn News"
-   data-name="atlanta hawks vs. san antonio spurs: game highlights atlanta hawks vs. san antonio spurs: game highlights"
-   href="https://www.espn.com/video/clip/_/id/50137491/game-highlights" target="_blank" rel="noopener">
+   data-name="lebron james scores 10 points in 18 minutes in 76ers debut lebron james, who joined the 76ers this summer, had 10 points, five assists and four rebounds in the first half of his debut with philadelphia."
+   href="https://www.espn.com/nba/story/_/id/50137673/lebron-james-scores-10-points-18-minutes-76ers-debut" target="_blank" rel="noopener">
   <div class="rank">11</div>
   <div class="rbody">
-    <div class="rtitle">Atlanta Hawks vs. San Antonio Spurs: Game Highlights</div>
-    <div class="rsum">Atlanta Hawks vs. San Antonio Spurs: Game Highlights</div>
+    <div class="rtitle">LeBron James scores 10 points in 18 minutes in 76ers debut</div>
+    <div class="rsum">LeBron James, who joined the 76ers this summer, had 10 points, five assists and four rebounds in the first half of his debut with Philadelphia.</div>
     <div class="meta"><span class="chip">Espn News</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(35,45%,93%),hsl(35,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.espn.com&amp;sz=64" alt="" onerror="this.remove()"></div>
-</a>
-<a class="row" data-source="Espn Scores"
-   data-name="philadelphia 76ers at brooklyn nets — final "
-   href="#" target="_blank" rel="noopener">
-  <div class="rank">12</div>
-  <div class="rbody">
-    <div class="rtitle">Philadelphia 76ers at Brooklyn Nets — Final</div>
-    
-    <div class="meta"><span class="chip">Espn Scores</span></div>
-  </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(78,45%,93%),hsl(78,50%,84%));">📰</span></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(35,45%,93%),hsl(35,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABvElEQVR4nO2a0U3DMBCGv1Z9hw3oCDxkAEZhBSaAbsIo6XsfygbdgLIBD8UocRwbqp4d3d0nVU3cyDr998c5XwrGWeV+PMAb8FonlCbs1oUL7qqE0Y6+JMBjlTAaUhLgvkoUjejcARkHHJRnH+ghfwuozz7kBdDugD24A7ICqK8BwB1gdw3o3AEXkgJYqQFg3gEmsg/zAmh3wD4cmHfAZma8rxlEA95bB+A4jrMIJm3xA2y5fLRy6uAUTlKPwWeUvwvg8r4DSBdCJvoAgZQAZqpASAugeh/QuQPGjASw1AcIxA7Qnv1zPBALoN0BH/GAOyA6114DHOMBd0B0rnoN6Iw7YJJ9GAhgoAaYZB/Gu0GJ7B+BF4F5ryHpgKEAEg44x7X30hiuAVIOWDRDASRqgC+BOW+KO2BwLLIGCMx5U8w7YAW/NcCnwPy9wJzXcOxmHsfhMShVAT4JzftfZm/FcAtorwInfYBAEEDzHgD+4ABzfYCAO+DnW/UakOoDBCw4IFuMra32AQJrdGcfSg5A938BIFMDgA0Big54qBRIK4prwLZOHM2wvQbkagDQL0CxIbNhOXt2CRbfkGnON/bjP1BtfngQAAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="Hoopsrumors"
    data-name="and-ones: swing players, team needs, aivazoglou, mutual options john hollinger of the athletic lists 10 under-the-radar players who could swing their respective teams’ seasons. hawks guard dyson daniels, whose shaky jump shot makes him a tricky offensive fit, is one player holl"
    href="https://www.hoopsrumors.com/2026/10/and-ones-swing-players-team-needs-aivazoglou-mutual-options.html" target="_blank" rel="noopener">
-  <div class="rank">13</div>
+  <div class="rank">12</div>
   <div class="rbody">
     <div class="rtitle">And-Ones: Swing Players, Team Needs, Aivazoglou, Mutual Options</div>
     <div class="rsum">John Hollinger of The Athletic lists 10 under-the-radar players who could swing their respective teams’ seasons. Hawks guard Dyson Daniels, whose shaky jump shot makes him a tricky offensive fit, is one player Holl</div>
     <div class="meta"><span class="chip">Hoopsrumors</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.hoopsrumors.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://cdn.hoopsrumors.com/files/2026/10/Dyson-Daniels-900x600.jpg" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,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" alt=""></div>
 </a>
 <a class="row" data-source="r/Euroleague"
-   data-name="the home stadium of aris bc, the international fair of thessaloniki, the white tower and the sea in one picture "
-   href="https://www.reddit.com/r/Euroleague/comments/1x0vzpf/the_home_stadium_of_aris_bc_the_international/" target="_blank" rel="noopener">
-  <div class="rank">14</div>
+   data-name="post match thread: panathinaikos - fenerbahce [euroleague regular season, round 4] "
+   href="https://www.reddit.com/r/Euroleague/comments/1x11nwo/post_match_thread_panathinaikos_fenerbahce/" target="_blank" rel="noopener">
+  <div class="rank">13</div>
   <div class="rbody">
-    <div class="rtitle">The home stadium of Aris BC, the International Fair of Thessaloniki, the White Tower and the sea in one picture</div>
+    <div class="rtitle">POST MATCH THREAD: Panathinaikos - Fenerbahce [EuroLeague Regular Season, Round 4]</div>
     
     <div class="meta"><span class="chip">r/Euroleague</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="r/NBA"
    data-name="embiid cant jump for the lob on the fast break "
    href="https://www.reddit.com/r/nba/comments/1x17rhk/embiid_cant_jump_for_the_lob_on_the_fast_break/" target="_blank" rel="noopener">
-  <div class="rank">15</div>
+  <div class="rank">14</div>
   <div class="rbody">
     <div class="rtitle">Embiid cant jump for the lob on the fast break</div>
     
     <div class="meta"><span class="chip">r/NBA</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="Espn News"
-   data-name="philadelphia 76ers vs. brooklyn nets: game highlights philadelphia 76ers vs. brooklyn nets: game highlights"
-   href="https://www.espn.com/video/clip/_/id/50137286/game-highlights" target="_blank" rel="noopener">
-  <div class="rank">16</div>
+   data-name="atlanta hawks vs. san antonio spurs: game highlights atlanta hawks vs. san antonio spurs: game highlights"
+   href="https://www.espn.com/video/clip/_/id/50137491/game-highlights" target="_blank" rel="noopener">
+  <div class="rank">15</div>
   <div class="rbody">
-    <div class="rtitle">Philadelphia 76ers vs. Brooklyn Nets: Game Highlights</div>
-    <div class="rsum">Philadelphia 76ers vs. Brooklyn Nets: Game Highlights</div>
+    <div class="rtitle">Atlanta Hawks vs. San Antonio Spurs: Game Highlights</div>
+    <div class="rsum">Atlanta Hawks vs. San Antonio Spurs: Game Highlights</div>
     <div class="meta"><span class="chip">Espn News</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(35,45%,93%),hsl(35,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.espn.com&amp;sz=64" alt="" onerror="this.remove()"></div>
-</a>
-<a class="row" data-source="Espn Scores"
-   data-name="washington wizards at new york knicks — final "
-   href="#" target="_blank" rel="noopener">
-  <div class="rank">17</div>
-  <div class="rbody">
-    <div class="rtitle">Washington Wizards at New York Knicks — Final</div>
-    
-    <div class="meta"><span class="chip">Espn Scores</span></div>
-  </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(78,45%,93%),hsl(78,50%,84%));">📰</span></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(35,45%,93%),hsl(35,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABvElEQVR4nO2a0U3DMBCGv1Z9hw3oCDxkAEZhBSaAbsIo6XsfygbdgLIBD8UocRwbqp4d3d0nVU3cyDr998c5XwrGWeV+PMAb8FonlCbs1oUL7qqE0Y6+JMBjlTAaUhLgvkoUjejcARkHHJRnH+ghfwuozz7kBdDugD24A7ICqK8BwB1gdw3o3AEXkgJYqQFg3gEmsg/zAmh3wD4cmHfAZma8rxlEA95bB+A4jrMIJm3xA2y5fLRy6uAUTlKPwWeUvwvg8r4DSBdCJvoAgZQAZqpASAugeh/QuQPGjASw1AcIxA7Qnv1zPBALoN0BH/GAOyA6114DHOMBd0B0rnoN6Iw7YJJ9GAhgoAaYZB/Gu0GJ7B+BF4F5ryHpgKEAEg44x7X30hiuAVIOWDRDASRqgC+BOW+KO2BwLLIGCMx5U8w7YAW/NcCnwPy9wJzXcOxmHsfhMShVAT4JzftfZm/FcAtorwInfYBAEEDzHgD+4ABzfYCAO+DnW/UakOoDBCw4IFuMra32AQJrdGcfSg5A938BIFMDgA0Big54qBRIK4prwLZOHM2wvQbkagDQL0CxIbNhOXt2CRbfkGnON/bjP1BtfngQAAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="Hoopsrumors"
    data-name="jazz sign mohamed wague the jazz have signed mohamed wague, the team announced in a press release. a bronx native who started his college career playing juco ball in pennsylvania, wague had relatively modest roles with west virginia, alabama an"
    href="https://www.hoopsrumors.com/2026/10/jazz-sign-mohamed-wague.html" target="_blank" rel="noopener">
-  <div class="rank">18</div>
+  <div class="rank">16</div>
   <div class="rbody">
     <div class="rtitle">Jazz Sign Mohamed Wague</div>
     <div class="rsum">The Jazz have signed Mohamed Wague, the team announced in a press release. A Bronx native who started his college career playing juco ball in Pennsylvania, Wague had relatively modest roles with West Virginia, Alabama an</div>
     <div class="meta"><span class="chip">Hoopsrumors</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.hoopsrumors.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://cdn.hoopsrumors.com/files/2026/10/Mohamed-Wague-900x720.jpg" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,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" alt=""></div>
 </a>
 <a class="row" data-source="r/Euroleague"
-   data-name="post match thread: dubai basketball - crvena zvezda [euroleague regular season, round 4] "
-   href="https://www.reddit.com/r/Euroleague/comments/1x0xsvg/post_match_thread_dubai_basketball_crvena_zvezda/" target="_blank" rel="noopener">
-  <div class="rank">19</div>
+   data-name="[barkas] joint nba and fiba statement: "
+   href="https://www.reddit.com/r/Euroleague/comments/1x1g1t8/barkas_joint_nba_and_fiba_statement/" target="_blank" rel="noopener">
+  <div class="rank">17</div>
   <div class="rbody">
-    <div class="rtitle">POST MATCH THREAD: Dubai Basketball - Crvena Zvezda [EuroLeague Regular Season, Round 4]</div>
+    <div class="rtitle">[Barkas] Joint NBA and FIBA statement:</div>
     
     <div class="meta"><span class="chip">r/Euroleague</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="r/NBA"
    data-name="oscar winner anne hathaway correctly guesses og anunoby’s name and explains his game 4 play to dakota johnson and josh hartnett "
    href="https://www.reddit.com/r/nba/comments/1x0utpc/oscar_winner_anne_hathaway_correctly_guesses_og/" target="_blank" rel="noopener">
-  <div class="rank">20</div>
+  <div class="rank">18</div>
   <div class="rbody">
     <div class="rtitle">Oscar winner Anne Hathaway correctly guesses OG Anunoby’s name and explains his Game 4 play to Dakota Johnson and Josh Hartnett</div>
     
     <div class="meta"><span class="chip">r/NBA</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="Espn News"
-   data-name="washington wizards vs. new york knicks: game highlights washington wizards vs. new york knicks: game highlights"
-   href="https://www.espn.com/video/clip/_/id/50137095/game-highlights" target="_blank" rel="noopener">
-  <div class="rank">21</div>
+   data-name="philadelphia 76ers vs. brooklyn nets: game highlights philadelphia 76ers vs. brooklyn nets: game highlights"
+   href="https://www.espn.com/video/clip/_/id/50137286/game-highlights" target="_blank" rel="noopener">
+  <div class="rank">19</div>
   <div class="rbody">
-    <div class="rtitle">Washington Wizards vs. New York Knicks: Game Highlights</div>
-    <div class="rsum">Washington Wizards vs. New York Knicks: Game Highlights</div>
+    <div class="rtitle">Philadelphia 76ers vs. Brooklyn Nets: Game Highlights</div>
+    <div class="rsum">Philadelphia 76ers vs. Brooklyn Nets: Game Highlights</div>
     <div class="meta"><span class="chip">Espn News</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(35,45%,93%),hsl(35,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.espn.com&amp;sz=64" alt="" onerror="this.remove()"></div>
-</a>
-<a class="row" data-source="Espn Scores"
-   data-name="atlanta hawks at san antonio spurs — final "
-   href="#" target="_blank" rel="noopener">
-  <div class="rank">22</div>
-  <div class="rbody">
-    <div class="rtitle">Atlanta Hawks at San Antonio Spurs — Final</div>
-    
-    <div class="meta"><span class="chip">Espn Scores</span></div>
-  </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(78,45%,93%),hsl(78,50%,84%));">📰</span></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(35,45%,93%),hsl(35,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABvElEQVR4nO2a0U3DMBCGv1Z9hw3oCDxkAEZhBSaAbsIo6XsfygbdgLIBD8UocRwbqp4d3d0nVU3cyDr998c5XwrGWeV+PMAb8FonlCbs1oUL7qqE0Y6+JMBjlTAaUhLgvkoUjejcARkHHJRnH+ghfwuozz7kBdDugD24A7ICqK8BwB1gdw3o3AEXkgJYqQFg3gEmsg/zAmh3wD4cmHfAZma8rxlEA95bB+A4jrMIJm3xA2y5fLRy6uAUTlKPwWeUvwvg8r4DSBdCJvoAgZQAZqpASAugeh/QuQPGjASw1AcIxA7Qnv1zPBALoN0BH/GAOyA6114DHOMBd0B0rnoN6Iw7YJJ9GAhgoAaYZB/Gu0GJ7B+BF4F5ryHpgKEAEg44x7X30hiuAVIOWDRDASRqgC+BOW+KO2BwLLIGCMx5U8w7YAW/NcCnwPy9wJzXcOxmHsfhMShVAT4JzftfZm/FcAtorwInfYBAEEDzHgD+4ABzfYCAO+DnW/UakOoDBCw4IFuMra32AQJrdGcfSg5A938BIFMDgA0Big54qBRIK4prwLZOHM2wvQbkagDQL0CxIbNhOXt2CRbfkGnON/bjP1BtfngQAAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="Hoopsrumors"
    data-name="southeast notes: hornets, heat, conwell, magic brandon miller (shin contusion) and christian anderson jr. (left ankle sprain) both suffered injuries in practice, which is why they were sidelined for the hornets’ preseason opener on tuesday, the team announced ("
    href="https://www.hoopsrumors.com/2026/10/southeast-notes-hornets-heat-conwell-magic.html" target="_blank" rel="noopener">
-  <div class="rank">23</div>
+  <div class="rank">20</div>
   <div class="rbody">
     <div class="rtitle">Southeast Notes: Hornets, Heat, Conwell, Magic</div>
     <div class="rsum">Brandon Miller (shin contusion) and Christian Anderson Jr. (left ankle sprain) both suffered injuries in practice, which is why they were sidelined for the Hornets’ preseason opener on Tuesday, the team announced (</div>
     <div class="meta"><span class="chip">Hoopsrumors</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.hoopsrumors.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://cdn.hoopsrumors.com/files/2025/10/Brandon-Miller-900x600.jpg" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,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" alt=""></div>
 </a>
 <a class="row" data-source="r/Euroleague"
-   data-name="peppe poeta&#x27;s future at olimpia milano is uncertain. "
-   href="https://www.reddit.com/r/Euroleague/comments/1x13sxy/peppe_poetas_future_at_olimpia_milano_is_uncertain/" target="_blank" rel="noopener">
-  <div class="rank">24</div>
+   data-name="amazing teamwork in the dubai - crvena zvezda game "
+   href="https://www.reddit.com/r/Euroleague/comments/1x0wpyq/amazing_teamwork_in_the_dubai_crvena_zvezda_game/" target="_blank" rel="noopener">
+  <div class="rank">21</div>
   <div class="rbody">
-    <div class="rtitle">Peppe Poeta&#x27;s future at Olimpia Milano is uncertain.</div>
+    <div class="rtitle">Amazing teamwork in the Dubai - Crvena Zvezda game</div>
     
     <div class="meta"><span class="chip">r/Euroleague</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
-</a>
-<a class="row" data-source="r/NBA"
-   data-name="[all-access] lebron james’ first chalk toss in a 76ers uniform "
-   href="https://www.reddit.com/r/nba/comments/1x16n0f/allaccess_lebron_james_first_chalk_toss_in_a/" target="_blank" rel="noopener">
-  <div class="rank">25</div>
-  <div class="rbody">
-    <div class="rtitle">[All-Access] LeBron James’ first chalk toss in a 76ers uniform</div>
-    
-    <div class="meta"><span class="chip">r/NBA</span></div>
-  </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
-</a>
-<a class="row" data-source="Espn News"
-   data-name="new orleans pelicans vs. miami heat: game highlights new orleans pelicans vs. miami heat: game highlights"
-   href="https://www.espn.com/video/clip/_/id/50136993/game-highlights" target="_blank" rel="noopener">
-  <div class="rank">26</div>
-  <div class="rbody">
-    <div class="rtitle">New Orleans Pelicans vs. Miami Heat: Game Highlights</div>
-    <div class="rsum">New Orleans Pelicans vs. Miami Heat: Game Highlights</div>
-    <div class="meta"><span class="chip">Espn News</span></div>
-  </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(35,45%,93%),hsl(35,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.espn.com&amp;sz=64" alt="" onerror="this.remove()"></div>
-</a>
-<a class="row" data-source="Espn Scores"
-   data-name="sacramento kings at los angeles lakers — final "
-   href="#" target="_blank" rel="noopener">
-  <div class="rank">27</div>
-  <div class="rbody">
-    <div class="rtitle">Sacramento Kings at Los Angeles Lakers — Final</div>
-    
-    <div class="meta"><span class="chip">Espn Scores</span></div>
-  </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(78,45%,93%),hsl(78,50%,84%));">📰</span></div>
-</a>
-<a class="row" data-source="Hoopsrumors"
-   data-name="northwest notes: sga, dosunmu, kerr, trail blazers reigning back-to-back mvp shai gilgeous-alexander considers himself the “best player in the nba,” the thunder superstar told sean gregory of time. when asked why he thought that way, gilgeous-alexander didn&amp;#"
-   href="https://www.hoopsrumors.com/2026/10/northwest-notes-sga-dosunmu-kerr-trail-blazers.html" target="_blank" rel="noopener">
-  <div class="rank">28</div>
-  <div class="rbody">
-    <div class="rtitle">Northwest Notes: SGA, Dosunmu, Kerr, Trail Blazers</div>
-    <div class="rsum">Reigning back-to-back MVP Shai Gilgeous-Alexander considers himself the “best player in the NBA,” the Thunder superstar told Sean Gregory of TIME. When asked why he thought that way, Gilgeous-Alexander didn&amp;#</div>
-    <div class="meta"><span class="chip">Hoopsrumors</span></div>
-  </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.hoopsrumors.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://cdn.hoopsrumors.com/files/2026/04/Shai-Gilgeous-Alexander2-900x600.jpg" alt="" onerror="this.remove()"></div>
-</a>
-<a class="row" data-source="r/Euroleague"
-   data-name="post match thread: real madrid - partizan [euroleague regular season, round 4] "
-   href="https://www.reddit.com/r/Euroleague/comments/1x125kl/post_match_thread_real_madrid_partizan_euroleague/" target="_blank" rel="noopener">
-  <div class="rank">29</div>
-  <div class="rbody">
-    <div class="rtitle">POST MATCH THREAD: Real Madrid - Partizan [EuroLeague Regular Season, Round 4]</div>
-    
-    <div class="meta"><span class="chip">r/Euroleague</span></div>
-  </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
-</a>
-<a class="row" data-source="r/NBA"
-   data-name="victor wembanyama crossover step back 3 "
-   href="https://www.reddit.com/r/nba/comments/1x178ik/victor_wembanyama_crossover_step_back_3/" target="_blank" rel="noopener">
-  <div class="rank">30</div>
-  <div class="rbody">
-    <div class="rtitle">Victor Wembanyama Crossover Step back 3</div>
-    
-    <div class="meta"><span class="chip">r/NBA</span></div>
-  </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
-</a>
-<a class="row" data-source="Hoopsrumors"
-   data-name="bulls notes: wilson, swain, awaka, williams, claxton, collins while caleb wilson scored a team-high 15 points in his preseason debut and the bulls ended up beating phoenix by seven points on wednesday, his overall play was pretty erratic, writes julia poe of the chicago tribune. wi"
-   href="https://www.hoopsrumors.com/2026/10/bulls-notes-wilson-swain-awaka-williams-claxton-collins.html" target="_blank" rel="noopener">
-  <div class="rank">31</div>
-  <div class="rbody">
-    <div class="rtitle">Bulls Notes: Wilson, Swain, Awaka, Williams, Claxton, Collins</div>
-    <div class="rsum">While Caleb Wilson scored a team-high 15 points in his preseason debut and the Bulls ended up beating Phoenix by seven points on Wednesday, his overall play was pretty erratic, writes Julia Poe of The Chicago Tribune. Wi</div>
-    <div class="meta"><span class="chip">Hoopsrumors</span></div>
-  </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.hoopsrumors.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://cdn.hoopsrumors.com/files/2026/10/Caleb-Wilson1-scaled-e1791492595312-900x601.jpg" alt="" onerror="this.remove()"></div>
-</a>
-<a class="row" data-source="r/Euroleague"
-   data-name="post match thread: valencia - hapoel tel aviv [euroleague regular season, round 4] "
-   href="https://www.reddit.com/r/Euroleague/comments/1x122h7/post_match_thread_valencia_hapoel_tel_aviv/" target="_blank" rel="noopener">
-  <div class="rank">32</div>
-  <div class="rbody">
-    <div class="rtitle">POST MATCH THREAD: Valencia - Hapoel Tel Aviv [EuroLeague Regular Season, Round 4]</div>
-    
-    <div class="meta"><span class="chip">r/Euroleague</span></div>
-  </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="r/NBA"
    data-name="[highlight] luka dončić hits the logo 3-pointer to beat the shot clock (with replays). lakers and espn commentaries "
    href="https://www.reddit.com/r/nba/comments/1x1b0wu/highlight_luka_dončić_hits_the_logo_3pointer_to/" target="_blank" rel="noopener">
-  <div class="rank">33</div>
+  <div class="rank">22</div>
   <div class="rbody">
     <div class="rtitle">[Highlight] Luka Dončić hits the logo 3-pointer to beat the shot clock (with replays). Lakers and ESPN commentaries</div>
     
     <div class="meta"><span class="chip">r/NBA</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
+</a>
+<a class="row" data-source="Espn News"
+   data-name="washington wizards vs. new york knicks: game highlights washington wizards vs. new york knicks: game highlights"
+   href="https://www.espn.com/video/clip/_/id/50137095/game-highlights" target="_blank" rel="noopener">
+  <div class="rank">23</div>
+  <div class="rbody">
+    <div class="rtitle">Washington Wizards vs. New York Knicks: Game Highlights</div>
+    <div class="rsum">Washington Wizards vs. New York Knicks: Game Highlights</div>
+    <div class="meta"><span class="chip">Espn News</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(35,45%,93%),hsl(35,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABvElEQVR4nO2a0U3DMBCGv1Z9hw3oCDxkAEZhBSaAbsIo6XsfygbdgLIBD8UocRwbqp4d3d0nVU3cyDr998c5XwrGWeV+PMAb8FonlCbs1oUL7qqE0Y6+JMBjlTAaUhLgvkoUjejcARkHHJRnH+ghfwuozz7kBdDugD24A7ICqK8BwB1gdw3o3AEXkgJYqQFg3gEmsg/zAmh3wD4cmHfAZma8rxlEA95bB+A4jrMIJm3xA2y5fLRy6uAUTlKPwWeUvwvg8r4DSBdCJvoAgZQAZqpASAugeh/QuQPGjASw1AcIxA7Qnv1zPBALoN0BH/GAOyA6114DHOMBd0B0rnoN6Iw7YJJ9GAhgoAaYZB/Gu0GJ7B+BF4F5ryHpgKEAEg44x7X30hiuAVIOWDRDASRqgC+BOW+KO2BwLLIGCMx5U8w7YAW/NcCnwPy9wJzXcOxmHsfhMShVAT4JzftfZm/FcAtorwInfYBAEEDzHgD+4ABzfYCAO+DnW/UakOoDBCw4IFuMra32AQJrdGcfSg5A938BIFMDgA0Big54qBRIK4prwLZOHM2wvQbkagDQL0CxIbNhOXt2CRbfkGnON/bjP1BtfngQAAAAAElFTkSuQmCC" alt=""></div>
+</a>
+<a class="row" data-source="Hoopsrumors"
+   data-name="northwest notes: sga, dosunmu, kerr, trail blazers reigning back-to-back mvp shai gilgeous-alexander considers himself the “best player in the nba,” the thunder superstar told sean gregory of time. when asked why he thought that way, gilgeous-alexander didn&amp;#"
+   href="https://www.hoopsrumors.com/2026/10/northwest-notes-sga-dosunmu-kerr-trail-blazers.html" target="_blank" rel="noopener">
+  <div class="rank">24</div>
+  <div class="rbody">
+    <div class="rtitle">Northwest Notes: SGA, Dosunmu, Kerr, Trail Blazers</div>
+    <div class="rsum">Reigning back-to-back MVP Shai Gilgeous-Alexander considers himself the “best player in the NBA,” the Thunder superstar told Sean Gregory of TIME. When asked why he thought that way, Gilgeous-Alexander didn&amp;#</div>
+    <div class="meta"><span class="chip">Hoopsrumors</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,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" alt=""></div>
+</a>
+<a class="row" data-source="r/Euroleague"
+   data-name="the home stadium of aris bc, the international fair of thessaloniki, the white tower and the sea in one picture "
+   href="https://www.reddit.com/r/Euroleague/comments/1x0vzpf/the_home_stadium_of_aris_bc_the_international/" target="_blank" rel="noopener">
+  <div class="rank">25</div>
+  <div class="rbody">
+    <div class="rtitle">The home stadium of Aris BC, the International Fair of Thessaloniki, the White Tower and the sea in one picture</div>
+    
+    <div class="meta"><span class="chip">r/Euroleague</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
+</a>
+<a class="row" data-source="r/NBA"
+   data-name="[all-access] lebron james’ first chalk toss in a 76ers uniform "
+   href="https://www.reddit.com/r/nba/comments/1x16n0f/allaccess_lebron_james_first_chalk_toss_in_a/" target="_blank" rel="noopener">
+  <div class="rank">26</div>
+  <div class="rbody">
+    <div class="rtitle">[All-Access] LeBron James’ first chalk toss in a 76ers uniform</div>
+    
+    <div class="meta"><span class="chip">r/NBA</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
+</a>
+<a class="row" data-source="Hoopsrumors"
+   data-name="bulls notes: wilson, swain, awaka, williams, claxton, collins while caleb wilson scored a team-high 15 points in his preseason debut and the bulls ended up beating phoenix by seven points on wednesday, his overall play was pretty erratic, writes julia poe of the chicago tribune. wi"
+   href="https://www.hoopsrumors.com/2026/10/bulls-notes-wilson-swain-awaka-williams-claxton-collins.html" target="_blank" rel="noopener">
+  <div class="rank">27</div>
+  <div class="rbody">
+    <div class="rtitle">Bulls Notes: Wilson, Swain, Awaka, Williams, Claxton, Collins</div>
+    <div class="rsum">While Caleb Wilson scored a team-high 15 points in his preseason debut and the Bulls ended up beating Phoenix by seven points on Wednesday, his overall play was pretty erratic, writes Julia Poe of The Chicago Tribune. Wi</div>
+    <div class="meta"><span class="chip">Hoopsrumors</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,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" alt=""></div>
+</a>
+<a class="row" data-source="r/Euroleague"
+   data-name="post match thread: dubai basketball - crvena zvezda [euroleague regular season, round 4] "
+   href="https://www.reddit.com/r/Euroleague/comments/1x0xsvg/post_match_thread_dubai_basketball_crvena_zvezda/" target="_blank" rel="noopener">
+  <div class="rank">28</div>
+  <div class="rbody">
+    <div class="rtitle">POST MATCH THREAD: Dubai Basketball - Crvena Zvezda [EuroLeague Regular Season, Round 4]</div>
+    
+    <div class="meta"><span class="chip">r/Euroleague</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
+</a>
+<a class="row" data-source="r/NBA"
+   data-name="victor wembanyama crossover step back 3 "
+   href="https://www.reddit.com/r/nba/comments/1x178ik/victor_wembanyama_crossover_step_back_3/" target="_blank" rel="noopener">
+  <div class="rank">29</div>
+  <div class="rbody">
+    <div class="rtitle">Victor Wembanyama Crossover Step back 3</div>
+    
+    <div class="meta"><span class="chip">r/NBA</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="Hoopsrumors"
    data-name="southwest notes: kyrie, edey, udoka, engelland making his return to action after a 19-month absence in which he recovered from an acl tear, mavericks point guard kyrie irving will play in just one of the team’s two games vs. houston in macao this weekend, head"
    href="https://www.hoopsrumors.com/2026/10/southwest-notes-kyrie-edey-udoka-engelland.html" target="_blank" rel="noopener">
-  <div class="rank">34</div>
+  <div class="rank">30</div>
   <div class="rbody">
     <div class="rtitle">Southwest Notes: Kyrie, Edey, Udoka, Engelland</div>
     <div class="rsum">Making his return to action after a 19-month absence in which he recovered from an ACL tear, Mavericks point guard Kyrie Irving will play in just one of the team’s two games vs. Houston in Macao this weekend, head</div>
     <div class="meta"><span class="chip">Hoopsrumors</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.hoopsrumors.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://cdn.hoopsrumors.com/files/2026/10/Kyrie-Irving-900x600.jpg" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,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" alt=""></div>
 </a>
 <a class="row" data-source="r/Euroleague"
-   data-name="[espn] nba, fiba say europe push to continue without euroleague "
-   href="https://www.reddit.com/r/Euroleague/comments/1x172zx/espn_nba_fiba_say_europe_push_to_continue_without/" target="_blank" rel="noopener">
-  <div class="rank">35</div>
+   data-name="peppe poeta&#x27;s future at olimpia milano is uncertain. "
+   href="https://www.reddit.com/r/Euroleague/comments/1x13sxy/peppe_poetas_future_at_olimpia_milano_is_uncertain/" target="_blank" rel="noopener">
+  <div class="rank">31</div>
   <div class="rbody">
-    <div class="rtitle">[ESPN] NBA, FIBA say Europe push to continue without EuroLeague</div>
+    <div class="rtitle">Peppe Poeta&#x27;s future at Olimpia Milano is uncertain.</div>
     
     <div class="meta"><span class="chip">r/Euroleague</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="r/NBA"
    data-name="[highlight] lebron james with the no look dime to vj edgecombe for the dunk (with a replay) "
    href="https://www.reddit.com/r/nba/comments/1x16gq9/highlight_lebron_james_with_the_no_look_dime_to/" target="_blank" rel="noopener">
-  <div class="rank">36</div>
+  <div class="rank">32</div>
   <div class="rbody">
     <div class="rtitle">[Highlight] LeBron James with the no look dime to VJ Edgecombe for the dunk (with a replay)</div>
     
     <div class="meta"><span class="chip">r/NBA</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="Hoopsrumors"
    data-name="knicks notes: bridges, reserves, 14th man, more mikal bridges’ faced increased scrutiny from knicks fans during his first two years in new york due to the price the team paid (five first-round picks) to acquire him from brooklyn during the 2024 offseason. while"
    href="https://www.hoopsrumors.com/2026/10/knicks-notes-bridges-reserves-14th-man-more.html" target="_blank" rel="noopener">
-  <div class="rank">37</div>
+  <div class="rank">33</div>
   <div class="rbody">
     <div class="rtitle">Knicks Notes: Bridges, Reserves, 14th Man, More</div>
     <div class="rsum">Mikal Bridges’ faced increased scrutiny from Knicks fans during his first two years in New York due to the price the team paid (five first-round picks) to acquire him from Brooklyn during the 2024 offseason. While</div>
     <div class="meta"><span class="chip">Hoopsrumors</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.hoopsrumors.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://cdn.hoopsrumors.com/files/2026/03/Mikal-Bridges-900x600.jpg" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,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" alt=""></div>
 </a>
 <a class="row" data-source="r/Euroleague"
-   data-name="post match thread: bayern munich - virtus bologna [euroleague regular season, round 4] "
-   href="https://www.reddit.com/r/Euroleague/comments/1x118uc/post_match_thread_bayern_munich_virtus_bologna/" target="_blank" rel="noopener">
-  <div class="rank">38</div>
+   data-name="rome will host its first derby since 1980 "
+   href="https://www.reddit.com/r/Euroleague/comments/1x1hj80/rome_will_host_its_first_derby_since_1980/" target="_blank" rel="noopener">
+  <div class="rank">34</div>
   <div class="rbody">
-    <div class="rtitle">POST MATCH THREAD: Bayern Munich - Virtus Bologna [EuroLeague Regular Season, Round 4]</div>
+    <div class="rtitle">Rome will host its first derby since 1980</div>
     
     <div class="meta"><span class="chip">r/Euroleague</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="r/NBA"
    data-name="[highlight] trey murphy iii dribbles and blows by giannis antetokounmpo and dunks it over bam adebayo (with a replay) "
    href="https://www.reddit.com/r/nba/comments/1x1ap5l/highlight_trey_murphy_iii_dribbles_and_blows_by/" target="_blank" rel="noopener">
-  <div class="rank">39</div>
+  <div class="rank">35</div>
   <div class="rbody">
     <div class="rtitle">[Highlight] Trey Murphy III dribbles and blows by Giannis Antetokounmpo and dunks it over Bam Adebayo (with a replay)</div>
     
     <div class="meta"><span class="chip">r/NBA</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="Hoopsrumors"
    data-name="nba’s top 50 highest-paid players for 2026/27 many of the nba’s highest-paid players are on contracts considered maximum-salary deals, but the 2026/27 salaries for those players vary significantly depending on when the player signed his contract and how much n"
    href="https://www.hoopsrumors.com/2026/10/nbas-top-50-highest-paid-players-for-2026-27.html" target="_blank" rel="noopener">
-  <div class="rank">40</div>
+  <div class="rank">36</div>
   <div class="rbody">
     <div class="rtitle">NBA’s Top 50 Highest-Paid Players For 2026/27</div>
     <div class="rsum">Many of the NBA’s highest-paid players are on contracts considered maximum-salary deals, but the 2026/27 salaries for those players vary significantly depending on when the player signed his contract and how much N</div>
     <div class="meta"><span class="chip">Hoopsrumors</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.hoopsrumors.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://cdn.hoopsrumors.com/files/2026/09/Stephen-Curry-900x647.jpg" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,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" alt=""></div>
 </a>
 <a class="row" data-source="r/Euroleague"
-   data-name="i made a free euroleague draft game: spin a season and a club, draft 5 players, try to go 43–0 "
-   href="https://www.reddit.com/r/Euroleague/comments/1x18tcu/i_made_a_free_euroleague_draft_game_spin_a_season/" target="_blank" rel="noopener">
-  <div class="rank">41</div>
+   data-name="[espn] nba, fiba say europe push to continue without euroleague "
+   href="https://www.reddit.com/r/Euroleague/comments/1x172zx/espn_nba_fiba_say_europe_push_to_continue_without/" target="_blank" rel="noopener">
+  <div class="rank">37</div>
   <div class="rbody">
-    <div class="rtitle">I made a free EuroLeague draft game: spin a season and a club, draft 5 players, try to go 43–0</div>
+    <div class="rtitle">[ESPN] NBA, FIBA say Europe push to continue without EuroLeague</div>
     
     <div class="meta"><span class="chip">r/Euroleague</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
-</a>
-<a class="row" data-source="r/NBA"
-   data-name="[sean gregory] shai gilgeous-alexander on being called a “foul merchant” : “playing this game has done amazing things for my and my family’s life. and if a narrative on social media is the worst that comes from this game for me, well, i’d take that a million times out of a million times.” "
-   href="https://www.reddit.com/r/nba/comments/1x0tlf1/sean_gregory_shai_gilgeousalexander_on_being/" target="_blank" rel="noopener">
-  <div class="rank">42</div>
-  <div class="rbody">
-    <div class="rtitle">[Sean Gregory] Shai Gilgeous-Alexander on being called a “foul merchant” : “Playing this game has done amazing things for my and my family’s life. And if a narrative on social media is the worst that comes from this game for me, well, I’d take that a million times out of a million times.”</div>
-    
-    <div class="meta"><span class="chip">r/NBA</span></div>
-  </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
-</a>
-<a class="row" data-source="Hoopsrumors"
-   data-name="mavericks’ dumont talks arena, ujiri, cuban, more with their lease at american airlines center set to expire in 2031, the mavericks would like to move into a new arena for the 2031/32 season, but there’s still no timeline for when construction might begin on a new"
-   href="https://www.hoopsrumors.com/2026/10/mavericks-dumont-talks-arena-ujiri-cuban-more.html" target="_blank" rel="noopener">
-  <div class="rank">43</div>
-  <div class="rbody">
-    <div class="rtitle">Mavericks’ Dumont Talks Arena, Ujiri, Cuban, More</div>
-    <div class="rsum">With their lease at American Airlines Center set to expire in 2031, the Mavericks would like to move into a new arena for the 2031/32 season, but there’s still no timeline for when construction might begin on a new</div>
-    <div class="meta"><span class="chip">Hoopsrumors</span></div>
-  </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.hoopsrumors.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://cdn.hoopsrumors.com/files/2026/04/USATSI_28573226-900x578.jpg" alt="" onerror="this.remove()"></div>
-</a>
-<a class="row" data-source="r/Euroleague"
-   data-name="post match thread: maccabi tel aviv - olimpia milano [euroleague regular season, round 4] "
-   href="https://www.reddit.com/r/Euroleague/comments/1x0xy3b/post_match_thread_maccabi_tel_aviv_olimpia_milano/" target="_blank" rel="noopener">
-  <div class="rank">44</div>
-  <div class="rbody">
-    <div class="rtitle">POST MATCH THREAD: Maccabi Tel Aviv - Olimpia Milano [EuroLeague Regular Season, Round 4]</div>
-    
-    <div class="meta"><span class="chip">r/Euroleague</span></div>
-  </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="r/NBA"
    data-name="[highlight] luka doncic gets trapped on the sideline and makes an absurd cross-court pass (with a replay). including walker kessler&#x27;s live reaction. "
    href="https://www.reddit.com/r/nba/comments/1x1b65k/highlight_luka_doncic_gets_trapped_on_the/" target="_blank" rel="noopener">
-  <div class="rank">45</div>
+  <div class="rank">38</div>
   <div class="rbody">
     <div class="rtitle">[Highlight] Luka Doncic gets trapped on the sideline and makes an absurd cross-court pass (with a replay). Including Walker Kessler&#x27;s live reaction.</div>
     
     <div class="meta"><span class="chip">r/NBA</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="Hoopsrumors"
-   data-name="hoops rumors front office subscriber chat transcript: 10/8/2026 hoops rumors’ arthur hill held a live chat today exclusively for trade rumors front office subscribers. topics included a potential karl-anthony towns–jalen duren trade, the sixers’ options at backup center,"
-   href="https://www.hoopsrumors.com/2026/10/hoops-rumors-front-office-subscriber-chat-10-8-2026.html" target="_blank" rel="noopener">
-  <div class="rank">46</div>
+   data-name="mavericks’ dumont talks arena, ujiri, cuban, more with their lease at american airlines center set to expire in 2031, the mavericks would like to move into a new arena for the 2031/32 season, but there’s still no timeline for when construction might begin on a new"
+   href="https://www.hoopsrumors.com/2026/10/mavericks-dumont-talks-arena-ujiri-cuban-more.html" target="_blank" rel="noopener">
+  <div class="rank">39</div>
   <div class="rbody">
-    <div class="rtitle">Hoops Rumors Front Office Subscriber Chat Transcript: 10/8/2026</div>
-    <div class="rsum">Hoops Rumors’ Arthur Hill held a live chat today exclusively for Trade Rumors Front Office subscribers. Topics included a potential Karl-Anthony Towns–Jalen Duren trade, the Sixers’ options at backup center,</div>
+    <div class="rtitle">Mavericks’ Dumont Talks Arena, Ujiri, Cuban, More</div>
+    <div class="rsum">With their lease at American Airlines Center set to expire in 2031, the Mavericks would like to move into a new arena for the 2031/32 season, but there’s still no timeline for when construction might begin on a new</div>
     <div class="meta"><span class="chip">Hoopsrumors</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.hoopsrumors.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://cdn.hoopsrumors.com/files/2021/11/NBA-official-Wilson-game-ball-900x600.jpg" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,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" alt=""></div>
 </a>
 <a class="row" data-source="r/Euroleague"
-   data-name="live matches thread [euroleague - october 08, 2026] "
-   href="https://www.reddit.com/r/Euroleague/comments/1x0tzt8/live_matches_thread_euroleague_october_08_2026/" target="_blank" rel="noopener">
-  <div class="rank">47</div>
+   data-name="post match thread: valencia - hapoel tel aviv [euroleague regular season, round 4] "
+   href="https://www.reddit.com/r/Euroleague/comments/1x122h7/post_match_thread_valencia_hapoel_tel_aviv/" target="_blank" rel="noopener">
+  <div class="rank">40</div>
   <div class="rbody">
-    <div class="rtitle">LIVE MATCHES THREAD [EuroLeague - October 08, 2026]</div>
+    <div class="rtitle">POST MATCH THREAD: Valencia - Hapoel Tel Aviv [EuroLeague Regular Season, Round 4]</div>
     
     <div class="meta"><span class="chip">r/Euroleague</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
 </a>
 <a class="row" data-source="r/NBA"
    data-name="[sny] bruce brown was asked if there’s frustration among players with the second apron: &quot;i&#x27;m sure there is. the new cba is good for max guys, new free agents and rookie extension guys. the middle guys, it kind of sucks for us. there&#x27;s not a lot of people getting that full mid-level&quot; "
    href="https://www.reddit.com/r/nba/comments/1x1a51r/sny_bruce_brown_was_asked_if_theres_frustration/" target="_blank" rel="noopener">
-  <div class="rank">48</div>
+  <div class="rank">41</div>
   <div class="rbody">
     <div class="rtitle">[SNY] Bruce Brown was asked if there’s frustration among players with the second apron: &quot;I&#x27;m sure there is. The new CBA is good for max guys, new free agents and rookie extension guys. The middle guys, it kind of sucks for us. There&#x27;s not a lot of people getting that full mid-level&quot;</div>
     
     <div class="meta"><span class="chip">r/NBA</span></div>
   </div>
-  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
+</a>
+<a class="row" data-source="Hoopsrumors"
+   data-name="hoops rumors front office subscriber chat transcript: 10/8/2026 hoops rumors’ arthur hill held a live chat today exclusively for trade rumors front office subscribers. topics included a potential karl-anthony towns–jalen duren trade, the sixers’ options at backup center,"
+   href="https://www.hoopsrumors.com/2026/10/hoops-rumors-front-office-subscriber-chat-10-8-2026.html" target="_blank" rel="noopener">
+  <div class="rank">42</div>
+  <div class="rbody">
+    <div class="rtitle">Hoops Rumors Front Office Subscriber Chat Transcript: 10/8/2026</div>
+    <div class="rsum">Hoops Rumors’ Arthur Hill held a live chat today exclusively for Trade Rumors Front Office subscribers. Topics included a potential Karl-Anthony Towns–Jalen Duren trade, the Sixers’ options at backup center,</div>
+    <div class="meta"><span class="chip">Hoopsrumors</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBwgHBgkIBwgKCgkLDRYPDQwMDRsUFRAWIB0iIiAdHx8kKDQsJCYxJx8fLT0tMTU3Ojo6Iys/RD84QzQ5OjcBCgoKDQwNGg8PGjclHyU3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3N//AABEIAEAAQAMBEQACEQEDEQH/xAAbAAABBQEBAAAAAAAAAAAAAAAFAgMEBgcAAf/EADcQAAEDAgUBBgQDCAMAAAAAAAECAwQFEQAGEiExEwciQVFhcRQVMoGRscEkQmJzgoOh8BYjJf/EABkBAQADAQEAAAAAAAAAAAAAAAACAwQBBf/EAC4RAAICAgECBAQFBQAAAAAAAAECAAMEERIhMRNBscEFMlFxFGGB0fAiIzNCYv/aAAwDAQACEQMRAD8AxzCJLREQW9TyiPK2ER4tNMqHN/AeWINLFmidniVqjPoaSsBJ2e8ACN7Hz2GMljAGa6q2cdJoMOqtRG1oRKStQNiFJ45/HjwxEMQOhnWq314ysZvzVFjnpPaXHEaFdEEKIuL7mxA5HF9sNknvI7AHaZfm2pRqg8hcNpTLKUmwUq5NzjVWoA6TNa7OdsdyvNfSNsXSqLGESYteuGpKybJKQB58G2ERKlOOFRWQPEHTiJk1ml5CzDToFNSw+2FucJSfE8/b3xgbYYkz1wodAF7yJmCp3ldZl0hw6jrTtYC3dHkD+ntaC9TsTUygKAx6/wA6SmZjqi6jUFPXtdCdRJ+o2/0fbGutNCeRaw30gRxRUAnwxeJkYxSdgBiUjPcInKcPFxcb2Jwieqfd0lXVsCdhe4A9MJ3c5p56OouIV7m+K2rBEurvas7EcdnvuAnVta3OIioCWNls0j95XCgfPFgWZy+4hKAVXKgSPLfEpHcet3sJydhE2HItKhy8hUJ9ynsvvKroS44WgpRRqOxNuP8AGESZDiUylZg7RK18qiSHKV0jFZdbHTQCgkgDgXsN8IkxOV6K32zSECnslhul/Fpj6f8ArDpOm+njgccXN8IkKTApdQzd2eVX5XEYVWY7rsthtsdNZDQKe7xtqOERWdaLRKtTaXNFKjRVfP8A5e58L3A411lNkG1ubfY4RIXa9MoUWFPoTlFbh1Fl5o0t5mNpStqyCtRVweVpt6DCJj21tsInYRN07M6jKp3Z7RDDUEmRWyw4SkG6FLNxv+eETnI70x/tYixG1PSHAylDSBdSiW1WsMIhwkK7aZqUkFRoAAA/mHCIGQw7FrfZNHktqaeahvpcbWLFJDCAQRhEpWeswVXNebxlqdKbZp7dT+HaS00BbUrSFK37xF+NhhEuGfKdLh9mmYINWdenfK5cdFPlykAOKQeiSQrx3UtN/Ib8YRMOPOEQpQ6Mqr/EkSm46Y6UqUpxNwQb+vpjPkZAp4jW9zXjYvj8jy0BDsKNmCHKRQo9acjR4/7az0xdOoH6gOQb+uKjnJ4QsA89SwfD38Y1b8t7+sTAfzFFrMGoxa661PrSCp2QBc7JBsocK/DEzlqBYdfJr1kRhMTWN/ONxuE1XnczVGemsut1SH3lzDcqXdOw9rDg7Y4+WqIja+aEwXd3TfyyRAOYa9JiZhk5hcbqF1IiOLF17AghNrAfveGI35q1OU4713ksfAa5A/IDfaDolBl1dyXNm1FLUlMopeW4LlTlxvcEeJGO25i1kALvY3FGC1qkltaOoQnLzPmCS9Rq3XHXY8EBai8bpPkbCxP34x1sxFrWwDe+0imC7WtWTrXcyu1uku0iShp11LyHE623EC2oe2LKLxcpIGtSrJx2ocKTsHruGckRxLYrEYr0B1lCCoC9r6xjJ8Qfg1bDyJ9pu+GoLFtQ+Y16w2zJQ9nF9tAP7PDLaifE3B/UYxlOOID9TubVflmsB5LqRW7fF5Q0m6Q0ux/tjFx+TI+49TKV+fG+x9BDnQabM99BBXJQSf6E6cYuTHgp7D3O5v4Kpdx3b2GoDyzvRsu+kp38ncbMs/3bvsPaYcP/ABUfc+8kUWKmUzVWVKKf/S13H8JSq33tiGQ5rKN/z7GWY1YsWxd/7+moOTV0jNFTPwrzsZ1IZd0JOpASLE+3ONBxycZOuiOo/aZfxIGVYeOweh/L84HzTAdgzm9cpUlp1vWypZ3CfI41YlosQ6XRHeY82lqrBttg9oiiVVFNiVJBDnVktBLKkgd1Q1c/iMMmg2sh+neMXJFKuPM9oT/5NDGYk1JMd4IdY6T6bC4PgRvvwMZ/wdngeFvqDsTUM6oZHigdxoxD2YIKapSVR2HxDpyVJ71tSrptx9hjoxbPCsDH+ppFsyrxayoPFdxUXNLSJU5TzTvRcStLASBcalEm+/rjj4TFV49x3nU+IKHcnsd6/Xc8oGYYMGmRY01l4uw1qW0W9wvVq58vqOO5OHZZYzIejd/5+kYubVXWquDtT0jcLMqI0WXdpfxD8xL4CfpA1JuL+wOJW4ZdlPkBr1kKs4IjbHUtv0jjOYYDVcqEjoPmHObCViwCkm2+198RbFtNKLsclklzKVvdtHiwg/MtWZqspkxW1oZYb0J1/UfW3hi/EoalTyPUmZ83IW9xwHQDU//Z" alt=""></div>
+</a>
+<a class="row" data-source="r/Euroleague"
+   data-name="post match thread: real madrid - partizan [euroleague regular season, round 4] "
+   href="https://www.reddit.com/r/Euroleague/comments/1x125kl/post_match_thread_real_madrid_partizan_euroleague/" target="_blank" rel="noopener">
+  <div class="rank">43</div>
+  <div class="rbody">
+    <div class="rtitle">POST MATCH THREAD: Real Madrid - Partizan [EuroLeague Regular Season, Round 4]</div>
+    
+    <div class="meta"><span class="chip">r/Euroleague</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
+</a>
+<a class="row" data-source="r/NBA"
+   data-name="[sean gregory] shai gilgeous-alexander on being called a “foul merchant” : “playing this game has done amazing things for my and my family’s life. and if a narrative on social media is the worst that comes from this game for me, well, i’d take that a million times out of a million times.” "
+   href="https://www.reddit.com/r/nba/comments/1x0tlf1/sean_gregory_shai_gilgeousalexander_on_being/" target="_blank" rel="noopener">
+  <div class="rank">44</div>
+  <div class="rbody">
+    <div class="rtitle">[Sean Gregory] Shai Gilgeous-Alexander on being called a “foul merchant” : “Playing this game has done amazing things for my and my family’s life. And if a narrative on social media is the worst that comes from this game for me, well, I’d take that a million times out of a million times.”</div>
+    
+    <div class="meta"><span class="chip">r/NBA</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAnFBMVEVHcEz/RQD/RQD/RgD/RQD/RQD/RwD/RQD/RQD/RQD/RQD/RQD+////RQD/QQDL1t36/f31+frw9fbQ3OPp8fMCBQjl7PDW4uj/OwAMFxrd6Ov/Xgr4a0H0hWr86uP8eVP+SwnhqZv+Vx38qZH3l3zp3d35vKfsPwnNxMPzzcM2LivDZ2DBOxxUTk16gIKMkZPbJwCzTjumrbBiZmgrqJW8AAAADHRSTlMA+bIOIOsGctCTNkm9WdahAAAEa0lEQVRYhZVX6XqqMBAVRcEigQAiWsImq0tte9//3e5kAYkg2vnFR3JOZsvMZDYbldVCNbS5vlRMU1nqc81QF6vxnaOiGmvdfBB9bahvwj+0ufIIB1EUXft45/Th4X01XmqhLZ/DqSy1ae0nTm8t0Z/bsXp1PGdYak8CslpPAlEQBIh/rhdj+MU0PsjyYx4j9JRhMZ/G55Fj46hMOMN8wPDifJTjDZMmEFY8+OGV/XG0EZKPM2iT+OpytjxBEAkCU0qIj6n4VZfTfr/9tRnejkQkzGU/H6bypwL4aX+qbSa408DU3zMA8KfrhRw8TMVxmo5A6YxQpwwA/I+Jsvrg+57n+4cQdUvL9mZNReCyBTyEIazdHYiVB73FtfDglAdO+2vCPsK0tuqUSIviXk16YL//4V8oCeMwQ/Iy84L6RAGE4PqABRe4Q+wKIIQe8OacesEYq1+wNcnivExP1/J4jLPEHICZGP0kZgewGxskISlZ8tqY509UkjCh/kOB2MgFEnrRWhAk5AgSm4EZl13q3yUqY6AI6R6SiFgo+mKmtvi4icRZALeHBO0S/WjiNprqzBD4XBxqb/AYmIvTMkdtPhgiiEE8ovSURCQQgWSFCGXN3/BQWXhOzPlFRPGo0VNix4xAn7GLhPI/E2xyRrCc8TQ62hJDUww8iZtCUsA+8kDOeA4dMQYKwVKcL5dzIeP7/+hGjDmBKQiI41AKxlD8fFdVdZbCEp3h3+Wn4IfbtLJwE0xhQrjzPEcwpN8VCsuw7CvcfCMUl5fU5njH8wpeWRTuRDNJdwef6bDxz9/IzEhGel6xad58kursb1hh9A+7lJeJpainrOJg5ojiXCWfn0nQj6xNguQzMyvwAjNg59aitOkz0dGAgRIAw+FcfYIgWQPE/jEC2LVr8ZBIbT1CSYqpJzFOGYHZ9wF0NPqvSjGFOzhN2guttZeJ6gAENBYFyWBz7khRyOFXRgqGd3DYlVaju85wH8C3lML2oQg1zsbuCeTR8Vj6LH6O59xro3ovKKZZeJ6gEBkhZZ4Iv0ND2EGgoPRKWur5nAE4HLf+vd2+mNxuv7XL+xKFe17aKqDQHt0VVRRC9/G5Fti6biW5WligoTvFHYFBy3o3mtBs6jhuMsGtRfuHQxcDRVelxkJzASg4h/Vvu90LoQo4Ar2750A7I9xbGyKW67qcwwMjOgLAMzTAXYt0+HZk7DVXYlEKlyritzpst/8sj4F3sGTlyb0rjLR34lpWS+LWX6ft9vRVuweOpSv5vat07b3fXoOwtloBEt9x/B2HMqnjXnvvTUn9/pql1h3wIGlvvFB6I448ZCUEKAYcYEJKkl6HlYYsaUZAKCNpw13mgjbcIU1KpOlAked+edBEiPX2wudyKEra4eUG/ziqDkZdRDUJwzgOw8wcjhbDcXtsUEFChisjw7Y2Nqg8k+H5q7/hB0+WP+HHnjzTw7osY4+u6cfCw/FD+Ox9/ccfnqvp19Jd5s+evm8RTD2+1UmGF8///zy82AIwH3Z6AAAAAElFTkSuQmCC" alt=""></div>
 </a></div><p class="empty">Nothing matches the current filters.</p></section>
-<footer class="foot">Generated 2026-10-09 10:32 by JARVIS · filters are local, links go to the shops/sources</footer>
+<footer class="foot">Generated 2026-10-09 11:45 by JARVIS · filters are local, links go to the shops/sources</footer>
 </div>
 <script>
 (function(){
   var fb=document.getElementById('f-brand'),fs=document.getElementById('f-shop'),
       fmin=document.getElementById('f-min'),fmax=document.getElementById('f-max'),
       fq=document.getElementById('f-q'),count=document.getElementById('f-count'),
+      fsort=document.getElementById('f-sort'),
       applyBtn=document.getElementById('f-apply'),
       resetBtn=document.getElementById('f-reset'),
       hint=document.getElementById('js-hint');
@@ -696,19 +660,44 @@ Chrome (not the Files/QuickLook preview).</p></noscript>
     if(count)count.textContent=shown+' / '+total+' shown';
   }
   function reset(){
-    [fb,fs,fmin,fmax,fq].forEach(function(el){if(el)el.value='';});
+    [fb,fs,fmin,fmax,fq,fsort].forEach(function(el){if(el)el.value='';});
     apply();
+  }
+  function sortSections(){
+    var mode=fsort&&fsort.value||'';
+    if(!mode) return;
+    document.querySelectorAll('section').forEach(function(sec){
+      var box=sec.querySelector('.grid,.rows');
+      if(!box) return;
+      var kids=[].slice.call(box.children);
+      kids.sort(function(a,b){
+        if(mode==='price-asc') return parseFloat(a.dataset.price)-parseFloat(b.dataset.price);
+        if(mode==='price-desc') return parseFloat(b.dataset.price)-parseFloat(a.dataset.price);
+        if(mode==='drop-desc'){
+          var pa=a.dataset.pct===''?Infinity:parseFloat(a.dataset.pct);
+          var pb=b.dataset.pct===''?Infinity:parseFloat(b.dataset.pct);
+          if(mode==='drop-desc'&&!b.dataset.pct&&a.dataset.pct) return -1;
+          if(mode==='drop-desc'&&!a.dataset.pct&&b.dataset.pct) return 1;
+          return pa-pb;   // most negative (biggest drop) first
+        }
+        return 0;
+      });
+      kids.forEach(function(k){ box.appendChild(k); });
+    });
   }
   // 'input' covers typing/sliders; 'change' covers selects and odd webviews
   // that never fire 'input'; the Apply button covers everything else
   // (e.g. hardened previews where events are delayed or swallowed).
-  [fb,fs,fmin,fmax,fq].forEach(function(el){
+  [fb,fs,fmin,fmax,fq,fsort].forEach(function(el){
     if(!el) return;
     el.addEventListener('input',apply);
-    el.addEventListener('change',apply);
+    el.addEventListener('change',function(){ apply(); sortSections(); });
   });
-  if(applyBtn) applyBtn.addEventListener('click',apply);
-  if(resetBtn) resetBtn.addEventListener('click',reset);
+  if(applyBtn) applyBtn.addEventListener('click',function(){ apply(); sortSections(); });
+  if(resetBtn) resetBtn.addEventListener('click',function(){
+    [fb,fs,fmin,fmax,fq,fsort].forEach(function(el){if(el)el.value='';});
+    apply(); sortSections();
+  });
   apply();
 })();</script>
 </body></html>
