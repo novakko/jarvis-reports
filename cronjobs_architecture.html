@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JARVIS — cron jobs architecture</title>
+<style>
+:root{
+  --bg:#0e1310; --panel:#151c17; --panel2:#1a231d; --line:#263128;
+  --ink:#e6ede8; --muted:#8fa096; --accent:#38c172; --cloud:#d9a53f;
+  --ext:#4f9dd9; --red:#e06c5a; --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);
+  font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  padding:28px 20px 70px;line-height:1.5}
+.wrap{max-width:1160px;margin:0 auto}
+h1{font-size:24px;letter-spacing:-.02em}
+h1 code{font-family:var(--mono);color:var(--accent);font-size:20px}
+.sub{color:var(--muted);font-size:13.5px;margin:6px 0 18px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;
+  padding:5px 12px;font-size:12px;color:var(--muted)}
+.chip b{color:var(--ink);font-weight:600}
+h2{font-size:16px;margin:34px 0 12px;letter-spacing:-.01em}
+h2 .n{color:var(--muted);font-weight:500;font-size:12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+/* timeline */
+.tl{overflow-x:auto}
+.tl svg{min-width:760px;width:100%;height:150px;display:block}
+/* tabs */
+.tabs{display:flex;gap:8px;margin:0 0 14px;flex-wrap:wrap}
+.tab{font:inherit;font-size:13px;font-weight:600;padding:8px 16px;border-radius:10px;
+  border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer}
+.tab.on{background:var(--accent);border-color:var(--accent);color:#08110b}
+.flow svg{width:100%;height:auto;display:block}
+.dg{fill:var(--panel2);stroke:var(--line);stroke-width:1.5;rx:10}
+.node{cursor:pointer}
+.node rect{fill:var(--panel2);stroke:var(--line);stroke-width:1.5;rx:10;transition:stroke .15s}
+.node:hover rect,.node.sel rect{stroke:var(--accent)}
+.node.local rect{stroke:#2c7a52}
+.node.cloud rect{stroke:#8a6d2f}
+.node.ext rect{stroke:#396a91}
+.node text{fill:var(--ink);font-size:12.5px;font-weight:600}
+.node .sub{fill:var(--muted);font-size:10px;font-weight:400}
+.edge{stroke:#4a5a4f;stroke-width:1.6;fill:none;marker-end:url(#arr)}
+.edge.flow{stroke:var(--accent);stroke-dasharray:5 7;animation:dash 1.4s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-12}}
+.tagr{font-family:var(--mono);font-size:9.5px;fill:var(--muted)}
+.dot{fill:var(--accent)}
+/* detail */
+.detail{margin-top:12px;background:var(--panel2);border:1px solid var(--line);
+  border-radius:12px;padding:14px 16px;min-height:86px}
+.detail .t{font-weight:700;font-size:14px;margin-bottom:4px}
+.detail .d{font-size:13px;color:var(--muted)}
+.detail .d b{color:var(--ink)}
+/* table */
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{color:var(--muted);text-align:left;font-weight:600;padding:7px 10px;border-bottom:1px solid var(--line)}
+td{padding:7px 10px;border-bottom:1px solid #1e2620;vertical-align:top}
+td code{font-family:var(--mono);font-size:11.5px;color:var(--accent)}
+.pill{border-radius:999px;padding:2px 9px;font-size:10.5px;font-weight:700;display:inline-block}
+.pill.local{background:#12331f;color:#5bd492}
+.pill.cloud{background:#38300f;color:#e5b95c}
+.pill.ext{background:#12293c;color:#7fb7e6}
+.note{background:var(--panel2);border:1px solid var(--line);border-radius:12px;
+  padding:14px 16px;font-size:13px;color:var(--muted);margin-top:10px}
+.note b{color:var(--ink)}
+.foot{margin-top:30px;color:var(--muted);font-size:11px;text-align:center}
+a{color:var(--accent)}
+</style>
+</head>
+<body><div class="wrap">
+<h1>JARVIS cron jobs — <code>backend architecture</code></h1>
+<div class="sub">How the three daily reports (shoes · AI · basketball) actually get built and delivered. Verified against the live system 2026-10-09.</div>
+<div class="chips">
+  <div class="chip"><b>3</b> daily jobs</div>
+  <div class="chip"><b>0</b> LLM calls in the daily path</div>
+  <div class="chip"><b>100%</b> deterministic build</div>
+  <div class="chip">delivery window <b>08:00–08:30</b></div>
+  <div class="chip">fail-safe: <b>report still ships</b> if any source dies</div>
+</div>
+
+<h2>Morning timeline <span class="n">local time, one typical day</span></h2>
+<div class="panel tl"><svg viewBox="0 0 1000 150" id="timeline"></svg></div>
+
+<h2>Data flow <span class="n">pick a job — hover/click any box for details · moving dashes = data in motion</span></h2>
+<div class="tabs">
+  <button class="tab on" data-job="ai">🤖 AI news — 08:00</button>
+  <button class="tab" data-job="basketball">🏀 Basketball — 08:05</button>
+  <button class="tab" data-job="shoes">👟 Shoes — 08:10</button>
+</div>
+<div class="panel flow"><svg viewBox="0 0 1000 620" id="diagram"></svg></div>
+<div class="detail" id="detail"><div class="t">Hover or tap a box</div>
+  <div class="d">Green border = runs locally on the MacBook. Amber = JARVIS-owned code calling a cloud service. Blue = third-party provider. The full daily path is deterministic Python — the LLM brain (GLM-5.3) is <b>not</b> part of it.</div></div>
+
+<h2>Every service, one table</h2>
+<div class="panel" style="overflow-x:auto">
+<table>
+<tr><th>Component</th><th>Where</th><th>Role in the daily reports</th><th>Talks to</th></tr>
+<tr><td><code>launchd</code> timers</td><td><span class="pill local">local</span></td><td>Fire AI 08:00, basketball 08:05; keep every service alive + restart on crash/boot</td><td>digest_run.sh, ShoeScanner bot</td></tr>
+<tr><td><code>digest_fetch.py</code></td><td><span class="pill local">local</span></td><td>Polite fetch of all RSS/API sources; tolerant parser; writes .txt + manifest; failures recorded, never fatal</td><td><span class="pill ext">3rd party</span> feeds</td></tr>
+<tr><td>News sources (AI)</td><td><span class="pill ext">3rd party</span></td><td>Techmeme RSS, HN Algolia API, r/MachineLearning, r/LocalLLaMA, arXiv cs.AI, TLDR AI</td><td>—</td></tr>
+<tr><td>Sports sources</td><td><span class="pill ext">3rd party</span></td><td>ESPN news + scoreboard APIs, r/NBA, r/Euroleague, EuroLeague news, HoopsRumors (rumors/transfers)</td><td>—</td></tr>
+<tr><td>Shop front-ends</td><td><span class="pill ext">3rd party</span></td><td>Sports Direct, Zalando, Amazon UK, adidas, M&M Direct, ProDirect — scraped daily by CrawlBroser (UK-15 catalogue)</td><td>—</td></tr>
+<tr><td><code>html_report.py</code></td><td><span class="pill local">local</span></td><td>The shared template engine: parse → dedupe → diff vs yesterday → render self-contained HTML (inline CSS/JS, embedded images via Pillow)</td><td>image CDNs + favicon service (download once)</td></tr>
+<tr><td>Headless Chrome</td><td><span class="pill local">local</span></td><td>Prints the HTML to the PDF edition (native iPhone preview)</td><td>—</td></tr>
+<tr><td><code>digest_verify_*.py</code></td><td><span class="pill local">local</span></td><td>Data-quality gate: silent when sources are healthy, one ⚠️ line when a source fails/stales. No LLM.</td><td>manifest.json</td></tr>
+<tr><td><code>publish_report_html.sh</code></td><td><span class="pill cloud">cloud</span></td><td>git-push to GitHub + regenerate stable pages (today-*.html) and the hub</td><td><span class="pill ext">3rd party</span> GitHub Pages</td></tr>
+<tr><td><code>hermes send</code></td><td><span class="pill local">local</span></td><td>Delivers “REPORT &lt;date&gt;” + Report Link + PDF to Telegram (no LLM, reuses bot credentials)</td><td><span class="pill ext">3rd party</span> Telegram Bot API</td></tr>
+<tr><td>ShoeScanner bot</td><td><span class="pill local">local</span></td><td>Standalone KeepAlive process (own token): internal scheduler → scrape → size-guard → snapshot → report</td><td>shops, Telegram</td></tr>
+<tr><td>Ollama (minicpm-v, qwen3-vl, gemma4)</td><td><span class="pill local">local</span></td><td><b>Not in the daily path.</b> Vision models serve on-demand photo investigations; gemma4 is the offline fallback brain for chats</td><td>—</td></tr>
+<tr><td>GLM-5.3-Flash @ Z.AI</td><td><span class="pill cloud">cloud</span></td><td><b>Not in the daily path.</b> The conversational brain when you chat with Jarvis; daily reports deliberately avoid it</td><td>—</td></tr>
+</table>
+</div>
+
+<h2>Why it used to look like “every 30 minutes” — and why that’s gone</h2>
+<div class="note">
+<b>Old 08:00 / 08:30 stagger:</b> when both digests were GLM-5.3 agent runs, they were spaced 30
+minutes apart so two heavy LLM sessions never hit the provider at once. Since the 2026-10-08
+rebuild the daily path is deterministic Python — <b>zero LLM calls, zero API limits</b> — so the
+stagger shrank to 5 minutes (08:00 → 08:05 → 08:10) and everything lands in your Telegram within
+≈15 minutes. <b>The old “30-minute restarts” you saw on Oct 4–5</b> were a watchdog bug (it
+kickstarted a healthy gateway every 30 min); fixed and documented — schedules were never 30-minute.
+<br><br>
+<b>Why not one single Telegram message:</b> Telegram delivers PDFs as individual file messages —
+three files cannot merge into one bubble. What you get instead is the next best thing: three
+back-to-back messages within minutes, each = title + date + Report Link + PDF, plus
+<a href="https://novakko.github.io/jarvis-reports/">one hub page</a> that always holds all three
+interactive reports.
+</div>
+
+<div class="foot">cronjobs_architecture.html · generated by JARVIS · source of truth: ~/Repo/hermesik/journal</div>
+</div>
+<script>
+/* ---------------- timeline ---------------- */
+(function(){
+  var svg=document.getElementById('timeline');
+  var x0=70,x1=950,t0=7.85*60,t1=8.65*60; // minutes-of-day window 7:51-8:39
+  function X(m){return x0+(m-t0)/(t1-t0)*(x1-x0);}
+  var s='';
+  for(var m=480;m<=520;m+=5){
+    var x=X(m);s+='<line x1="'+x+'" y1="30" x2="'+x+'" y2="108" stroke="#1e2620" stroke-width="1"/>';
+    s+='<text x="'+x+'" y="124" fill="#8fa096" font-size="10" text-anchor="middle">'+String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')+'</text>';
+  }
+  function bar(y,h,label,color,tstart,dur){
+    var a=X(tstart),b=X(Math.min(tstart+dur,t1));
+    s+='<rect x="'+a+'" y="'+y+'" width="'+(b-a)+'" height="'+h+'" rx="6" fill="'+color+'" opacity="0.9"/>';
+    s+='<text x="'+(a+8)+'" y="'+(y+h/2+4)+'" fill="#08110b" font-size="11" font-weight="700">'+label+'</text>';
+  }
+  bar(38,22,'🤖 AI','#5bd492',8*60,4);
+  bar(70,22,'🏀 Basketball','#e5b95c',8*60+5,4);
+  bar(102,22,'👟 Shoes','#7fb7e6',8*60+10,22);
+  s+='<text x="'+x0+'" y="20" fill="#8fa096" font-size="10">launchd / bot scheduler</text>';
+  s+='<text x="'+x1+'" y="20" fill="#8fa096" font-size="10" text-anchor="end">scrape tail ≈ 15 min</text>';
+  svg.innerHTML=s;
+})();
+
+/* ---------------- flow diagrams ---------------- */
+var JOBS={
+ ai:{nodes:[
+   {id:'t',x:30,y:40,w:150,type:'local',l:'launchd timer',s:'com.jarvisos.ai_digest · 08:00',
+    d:'macOS launchd fires <b>com.jarvisos.ai_digest</b> every day at 08:00. KeepAlive keeps nothing running between runs — it is a pure timer.'},
+   {id:'w',x:250,y:40,w:170,type:'local',l:'digest_run.sh ai',s:'orchestrator (bash)',
+    d:'Single-instance lock → fetch → build HTML+PDF → run verify job (retry once after 5 min if it fails) → publish → deliver via hermes send. Deterministic bash, no LLM.'},
+   {id:'src',x:520,y:10,w:210,type:'ext',l:'6 news sources',s:'Techmeme · HN API · arXiv · TLDR · r/ML · r/LocalLLaMA',
+    d:'Plain HTTPS GETs with a browser User-Agent and backoff. A dead source is recorded in manifest.json and flagged in the verify step — the report still ships from the rest.'},
+   {id:'fetch',x:520,y:120,w:170,type:'local',l:'digest_fetch.py',s:'tolerant parser → .txt + manifest',
+    d:'Writes one .txt per source (headline | link | summary lines) into state/digest_data/ai/ plus a manifest with status + freshness. Failures are data, not errors.'},
+   {id:'build',x:250,y:250,w:180,type:'local',l:'html_report.py',s:'Pillow venv · embeds images',
+    d:'Parses + dedupes + round-robins sources, pulls each source-site logo (embedded as data URI), renders the interactive HTML: full headlines, summaries, source filter, search, price-sort.'},
+   {id:'fav',x:520,y:250,w:170,type:'cloud',l:'favicon service',s:'Google s2 → embedded',
+    d:'One 64px icon per source site, downloaded at build time and embedded — the finished file has zero external references.'},
+   {id:'pdf',x:250,y:390,w:170,type:'local',l:'headless Chrome',s:'--print-to-pdf → ~0.5 MB',
+    d:'Prints the HTML to the PDF edition with a print stylesheet (filters hidden, 4-column grid). This is what previews natively on your iPhone.'},
+   {id:'cron',x:520,y:390,w:180,type:'local',l:'verify job (no LLM)',s:'silent unless a source fails',
+    d:'hermes cron run executes digest_verify_ai.py through the gateway: reads manifest.json, stays silent when all sources are ok, sends a single ⚠️ line when one failed or went stale.'},
+   {id:'pub',x:790,y:390,w:180,type:'cloud',l:'GitHub + Pages',s:'git push → site rebuild',
+    d:'publish_report_html.sh regenerates today-ai-news.html and index.html from the newest dated build, commits and pushes. The unknown “file deleter” from Oct 9 was designed out here — stable pages are built on the site, never stored.'},
+   {id:'send',x:520,y:520,w:180,type:'local',l:'hermes send',s:'no LLM · bot credentials only',
+    d:'“AI REPORT &lt;date&gt;” + 🔗 Report Link + the PDF, straight to the Telegram Bot API. No agent loop, no gateway needed.'},
+   {id:'ph',x:790,y:520,w:160,type:'ext',l:'your iPhone',s:'Telegram + Safari',
+    d:'PDF previews natively; Report Link opens Telegram’s in-app browser with full JavaScript — interactive filtering, sorting, search.'}],
+  edges:[['t','w'],['w','fetch'],['fetch','src',{back:true}],['fetch','w',{label:'data'}],
+   ['w','build'],['build','fav',{back:true}],['build','pdf'],['w','cron'],['w','pub'],['pub','send',{label:'link'}],['send','ph']]},
+ basketball:{nodes:[
+   {id:'t',x:30,y:40,w:150,type:'local',l:'launchd timer',s:'com.jarvisos.basketball_digest · 08:05',
+    d:'Same mechanism as AI, five minutes later — the old 30-minute stagger existed for LLM rate limits and disappeared when the pipeline became LLM-free.'},
+   {id:'w',x:250,y:40,w:170,type:'local',l:'digest_run.sh basketball',s:'same orchestrator, topic=basketball',
+    d:'Identical pipeline to the AI job — lock → fetch → build → verify → publish → deliver. Only the sources and the page name differ.'},
+   {id:'src',x:520,y:10,w:220,type:'ext',l:'6 sports sources',s:'ESPN news+scores APIs · r/NBA · r/Euroleague · EuroLeague news · HoopsRumors',
+    d:'HoopsRumors is the trade/free-agency rumor feed (added 2026-10-08). EuroLeague news occasionally 429s — the verify job flags it and the report still ships.'},
+   {id:'fetch',x:520,y:120,w:170,type:'local',l:'digest_fetch.py',s:'same tolerant parser',
+    d:'ESPN items arrive as JSON (news + live scores), the rest as RSS/HTML headlines. Everything lands in state/digest_data/basketball/.'},
+   {id:'build',x:250,y:250,w:180,type:'local',l:'html_report.py',s:'ranked rows · source logos',
+    d:'Same engine as AI: full headlines (unclamped), summaries where feeds give them, embedded source logos, warm cream theme, source filter + search.'},
+   {id:'fav',x:520,y:250,w:170,type:'cloud',l:'favicon service',s:'ESPN · Reddit · HoopsRumors marks',
+    d:'One logo per source, embedded — no per-article images by design.'},
+   {id:'pdf',x:250,y:390,w:170,type:'local',l:'headless Chrome',s:'~0.3 MB PDF',
+    d:'Same print pipeline as AI.'},
+   {id:'cron',x:520,y:390,w:180,type:'local',l:'verify job (no LLM)',s:'silent unless a source fails',
+    d:'digest_verify_basketball.py — flagged euroleague_news 429 on Oct 9 exactly as designed.'},
+   {id:'pub',x:790,y:390,w:180,type:'cloud',l:'GitHub + Pages',s:'today-basketball.html',
+    d:'Same repo, same stable-name scheme.'},
+   {id:'send',x:520,y:520,w:180,type:'local',l:'hermes send',s:'“BASKETBALL REPORT <date>”',
+    d:'Title + Report Link + PDF to Telegram.'},
+   {id:'ph',x:790,y:520,w:160,type:'ext',l:'your iPhone',s:'PDF previews instantly',
+    d:'Tap Report Link for the interactive version.'}],
+  edges:[['t','w'],['w','fetch'],['fetch','src',{back:true}],['fetch','w',{label:'data'}],
+   ['w','build'],['build','fav',{back:true}],['build','pdf'],['w','cron'],['w','pub'],['pub','send',{label:'link'}],['send','ph']]},
+ shoes:{nodes:[
+   {id:'bot',x:30,y:40,w:170,type:'local',l:'ShoeScanner bot',s:'com.crawlbroser.telegram · 08:10',
+    d:'A standalone KeepAlive process with its OWN Telegram token — zero Hermes involvement. Its internal 20-second scheduler notices the 08:10 mark and enqueues the day’s job.'},
+   {id:'scrape',x:270,y:40,w:190,type:'local',l:'CrawlBroser scraper',s:'local browser automation · 6 shops',
+    d:'Drives a real browser against six shop front-ends, filters the UK-15 catalogue, verifies the size filter actually applied (site-side proof), writes the day’s snapshot. Takes ≈10–15 min.'},
+   {id:'shops',x:540,y:10,w:230,type:'ext',l:'6 shop front-ends',s:'Sports Direct · Zalando · Amazon UK · adidas · M&M · ProDirect',
+    d:'The only cloud dependency that can genuinely fail — single-shop zeros are usually transient bot walls (verify with a full run before assuming rot).'},
+   {id:'snap',x:540,y:130,w:180,type:'local',l:'snapshot JSON',s:'append-only daily history',
+    d:'Every day: 460+ products with name, price, shop, image URL, size. Yesterday’s snapshot is the diff baseline for today’s drops/new — price history lives here.'},
+   {id:'guard',x:270,y:170,w:170,type:'local',l:'size guard',s:'wrong-size items refused',
+    d:'A 2026-10-02 fix: items are re-checked against UK 15 with site-side proof; anything mismatched is dropped and counted, never reported.'},
+   {id:'build',x:270,y:300,w:180,type:'local',l:'html_report.py',s:'438 images embedded (Pillow)',
+    d:'Diff vs yesterday → sections (drops → new → rest). Downloads every product photo, downscales to 200px JPEG and embeds as data URI — adaptive loop targets ≤15 MB.'},
+   {id:'cdn',x:540,y:300,w:170,type:'cloud',l:'shop image CDNs',s:'downloaded once at build',
+    d:'Product photos come from the shops’ own CDNs, then live inside the HTML — the finished file works offline.'},
+   {id:'logos',x:540,y:410,w:170,type:'cloud',l:'logo sources',s:'Simple Icons → favicons',
+    d:'Shop badge logos: Simple Icons SVG where available (adidas, Zalando), the shop’s own favicon otherwise (Amazon, Sports Direct, M&M, ProDirect). All embedded.'},
+   {id:'pdf',x:270,y:430,w:170,type:'local',l:'headless Chrome',s:'~4 MB PDF',
+    d:'Same print pipeline — 469 tiles, 4-column print grid.'},
+   {id:'pub',x:790,y:430,w:180,type:'cloud',l:'GitHub + Pages',s:'today-shoes.html',
+    d:'Same repo and hub as the other two reports.'},
+   {id:'send',x:520,y:540,w:180,type:'local',l:'bot → Telegram',s:'one-liner + link + PDF',
+    d:'“👟 SHOE REPORT &lt;date&gt; — N drops · N new · N tracked” + 🔗 Report Link + the PDF. Own token, no Hermes.'},
+   {id:'ph',x:790,y:540,w:160,type:'ext',l:'your iPhone',s:'works offline too',
+    d:'The HTML has zero external references — download it and it still shows everything; open in Safari for the filters.'}],
+  edges:[['bot','scrape'],['scrape','shops',{back:true}],['scrape','snap',{label:'snapshot'}],['snap','guard'],
+   ['guard','build'],['build','cdn',{back:true}],['build','logos',{back:true}],['build','pdf'],
+   ['pdf','pub'],['pub','send'],['send','ph']]}
+};
+
+var TYPES={
+ local:{cls:'local',label:'LOCAL — runs on the MacBook'},
+ cloud:{cls:'cloud',label:'CLOUD — JARVIS code calling a service'},
+ ext:{cls:'ext',label:'3RD PARTY — external provider'}
+};
+
+var svg=document.getElementById('diagram'),detail=document.getElementById('detail');
+function draw(job){
+  var j=JOBS[job],s='';
+  s+='<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4a5a4f"/></marker></defs>';
+  s+='<text x="16" y="26" class="tagr">LEGEND: <tspan fill="#5bd492">■ local (MacBook)</tspan>   <tspan fill="#e5b95c">■ JARVIS → cloud</tspan>   <tspan fill="#7fb7e6">■ 3rd party</tspan>   — moving dashes = data in motion</text>';
+  // edges first (under nodes)
+  j.edges.forEach(function(e){
+    var a=j.nodes.find(n=>n.id===e[0]),b=j.nodes.find(n=>n.id===e[1]);
+    var o=e[2]||{};
+    var x1=a.x+a.w, y1=a.y+30, x2=b.x, y2=b.y+30;
+    if(o.back){ x1=a.x; x2=b.x+b.w; }
+    var mx=(x1+x2)/2;
+    s+='<path class="edge flow" d="M'+x1+','+y1+' C'+mx+','+y1+' '+mx+','+y2+' '+x2+','+y2+'"/>';
+    if(o.label) s+='<text x="'+mx+'" y="'+((y1+y2)/2-6)+'" class="tagr" text-anchor="middle">'+o.label+'</text>';
+  });
+  j.nodes.forEach(function(n){
+    s+='<g class="node '+TYPES[n.type].cls+'" data-id="'+n.id+'">';
+    s+='<rect x="'+n.x+'" y="'+n.y+'" width="'+n.w+'" height="60" rx="10"/>';
+    s+='<text x="'+(n.x+12)+'" y="'+(n.y+25)+'">'+n.l+'</text>';
+    var words=n.s.split(' '),line='',dy=n.y+42,lines=[];
+    words.forEach(function(w){
+      if((line+' '+w).length>Math.floor(n.w/6.1)){lines.push(line);line=w;}else line=line?line+' '+w:w;
+    });
+    lines.push(line); lines.slice(0,2).forEach(function(l,i){
+      s+='<text class="sub" x="'+(n.x+12)+'" y="'+(dy+i*13)+'">'+l+'</text>';});
+    s+='</g>';
+  });
+  svg.innerHTML=s;
+  svg.querySelectorAll('.node').forEach(function(g){
+    g.addEventListener('click',function(){show(j,g.dataset.id);});
+    g.addEventListener('mouseenter',function(){show(j,g.dataset.id);});
+  });
+  show(j,j.nodes[0].id);
+}
+function show(j,id){
+  var n=j.nodes.find(x=>x.id===id);
+  detail.innerHTML='<div class="t">'+n.l+' <span style="color:var(--muted);font-weight:400">· '+TYPES[n.type].label+'</span></div><div class="d">'+n.d+'</div>';
+  svg.querySelectorAll('.node').forEach(g=>g.classList.toggle('sel',g.dataset.id===id));
+}
+document.querySelectorAll('.tab').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); draw(b.dataset.job);
+  });
+});
+draw('ai');
+</script>
+</body></html>
