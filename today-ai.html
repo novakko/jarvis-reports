@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI news - 2026-10-09</title><style>
+:root { --accent:#0e7a4a; --up:#c0392b; --down:#0e7a4a; --ink:#1c2420;
+        --muted:#66736c; --bg:#eef3ee; --card:#ffffff; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--bg); color:var(--ink);
+       font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+       padding:16px 14px 60px; }
+.wrap { max-width:1180px; margin:0 auto; }
+header.top { margin:2px 0 14px; }
+header.top h1 { font-size:22px; letter-spacing:-0.02em; }
+header.top .sub { color:var(--muted); font-size:13px; margin-top:4px; }
+header.top .sub b { color:var(--ink); }
+.legend { display:flex; gap:10px; margin-top:8px; font-size:12px; color:var(--muted);
+          flex-wrap:wrap; }
+.legend span b { font-weight:600; }
+.filters { position:sticky; top:0; z-index:5; background:var(--bg);
+  display:flex; flex-wrap:wrap; gap:8px; padding:10px 0; margin-bottom:6px;
+  border-bottom:1px solid #d9e4da; }
+.filters select, .filters input {
+  font:inherit; font-size:13px; padding:7px 10px; border:1px solid #cfdcd1;
+  border-radius:10px; background:var(--card); color:var(--ink); min-width:0; }
+.filters input[type=number] { width:86px; }
+.filters input[type=search] { flex:1 1 150px; }
+.filters .count { font-size:12px; color:var(--muted); align-self:center; margin-left:auto;
+  white-space:nowrap; }
+.fbtn { font:inherit; font-size:13px; font-weight:600; padding:7px 14px;
+  border-radius:10px; border:1px solid #cfdcd1; background:var(--card); color:var(--ink);
+  cursor:pointer; }
+.fbtn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+.fbtn:active { transform:scale(0.97); }
+.jshint { background:#fff3cd; color:#6b5410; padding:10px 12px; border-radius:10px;
+  font-size:13px; margin-bottom:10px; line-height:1.4; }
+section { margin-top:20px; }
+section h2 { font-size:15px; letter-spacing:-0.01em; margin-bottom:10px;
+  display:flex; align-items:baseline; gap:8px; }
+section h2 .n { color:var(--muted); font-weight:500; font-size:12px; }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(165px,1fr)); gap:12px; }
+.grid.wide { grid-template-columns:repeat(auto-fill,minmax(430px,1fr)); }
+.tile { background:var(--card); border-radius:14px; overflow:hidden;
+  display:flex; flex-direction:column; text-decoration:none; color:inherit;
+  border:1px solid #e2eae3; transition:transform .15s ease, box-shadow .15s ease; }
+.tile:active { transform:scale(0.985); }
+@media (hover:hover) { .tile:hover { transform:translateY(-2px);
+  box-shadow:0 6px 18px rgba(28,36,32,.10); } }
+.imgbox { position:relative; background:#f4f7f4; aspect-ratio:1/1; }
+.grid.wide .imgbox { aspect-ratio:16/9; }
+.imgbox img { width:100%; height:100%; object-fit:contain; display:block; }
+.grid.wide .imgbox img { object-fit:cover; }
+.imgbox .fallback { position:absolute; inset:0; display:flex; align-items:center;
+  justify-content:center; font-size:40px; }
+.shopbadge { position:absolute; right:6px; bottom:6px; background:rgba(255,255,255,.92);
+  border-radius:8px; padding:3px 6px; font-size:9.5px; font-weight:700; letter-spacing:.02em;
+  color:#3d4a42; display:flex; align-items:center; gap:4px; max-width:70%; }
+.shopbadge img { width:14px; height:14px; object-fit:contain; }
+.tag { position:absolute; left:6px; top:6px; background:rgba(28,36,32,.78); color:#fff;
+  font-size:9.5px; font-weight:700; padding:3px 7px; border-radius:8px; letter-spacing:.03em; }
+.tile .body { padding:9px 10px 11px; display:flex; flex-direction:column; gap:5px; flex:1; }
+.tile .name { font-size:12.5px; font-weight:600; line-height:1.25; }
+.tile .src { font-size:11px; color:var(--muted); }
+.pricerow { display:flex; align-items:baseline; gap:7px; margin-top:auto; flex-wrap:wrap; }
+.price { font-size:16px; font-weight:800; letter-spacing:-0.02em; }
+.price.down { color:var(--down); }
+.price.up { color:var(--up); }
+.prev { font-size:11.5px; color:var(--muted); text-decoration:line-through; }
+.delta { font-size:11px; font-weight:700; }
+.delta.down { color:var(--down); }
+.delta.up { color:var(--up); }
+.tile.wide .name { font-size:14.5px; line-height:1.3;
+  display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
+.tile.wide .body { padding:11px 12px 13px; gap:7px; }
+.tile.src, .tile .src { font-size:11.5px; color:var(--muted); line-height:1.35;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.meta { display:flex; gap:6px; align-items:center; font-size:11px; color:var(--muted);
+  flex-wrap:wrap; }
+.chip { background:#e7efe8; color:#3d4a42; border-radius:999px; padding:2px 8px;
+  font-size:10.5px; font-weight:600; }
+footer.foot { margin-top:26px; color:var(--muted); font-size:11px; text-align:center; }
+.empty { color:var(--muted); font-size:13px; padding:14px 4px; display:none; }
+@media (max-width:560px) {
+  .grid { grid-template-columns:repeat(2,1fr); }
+  .grid.wide { grid-template-columns:1fr; }
+  .filters input[type=number] { width:72px; }
+}
+/* ---- warm digest theme (ai / basketball row lists) ---- */
+body.warm { --bg:#f4eee1; --card:#fffdf6; --ink:#2b2620; --muted:#8a8071; }
+body.warm .filters { border-bottom-color:#e3d9c2; }
+body.warm .filters select, body.warm .filters input { border-color:#ddd2b8; }
+.rows { display:flex; flex-direction:column; gap:8px; }
+.row { display:flex; gap:12px; align-items:center; background:var(--card);
+  border:1px solid #ece3cf; border-radius:12px; padding:10px 12px;
+  text-decoration:none; color:inherit; transition:transform .12s ease, box-shadow .12s ease; }
+.row:active { transform:scale(0.995); }
+@media (hover:hover) { .row:hover { transform:translateY(-1px);
+  box-shadow:0 4px 14px rgba(43,38,32,.08); } }
+.row .rank { font-size:21px; font-weight:800; color:#cdc2a9; min-width:32px;
+  text-align:center; letter-spacing:-0.02em; }
+.rbody { flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
+.rtitle { font-size:14px; font-weight:650; line-height:1.3;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.rsum { font-size:12px; color:var(--muted); line-height:1.4;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.thumb { width:84px; height:84px; border-radius:10px; overflow:hidden; position:relative;
+  background:#f0e9da; flex-shrink:0; }
+.thumb .tgrad { position:absolute; inset:0; display:flex; align-items:center;
+  justify-content:center; font-size:30px; }
+.thumb img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.thumb img.tfav { object-fit:contain; padding:16px; }
+@media (max-width:560px) {
+  .row { gap:9px; padding:9px 10px; }
+  .row .rank { font-size:17px; min-width:24px; }
+  .thumb { width:64px; height:64px; }
+  .thumb img.tfav { padding:12px; }
+}
+</style></head>
+<body class="warm"><div class="wrap">
+<div id="js-hint" class="jshint"><b>Filters not reacting?</b> This viewer blocks JavaScript
+(Telegram's file preview does). Open this file in <b>Safari or Chrome</b> instead — on iPhone:
+tap the file, then share <span style="font-family:system-ui">&#8599;</span> &rarr; Open in Browser / Safari.
+Images and prices work everywhere.</div>
+<noscript><p class="jshint" style="display:block"><b>JavaScript is disabled in this preview.</b>
+Images and prices still work. To filter by brand, shop or price, open this file in Safari or
+Chrome (not the Files/QuickLook preview).</p></noscript>
+<header class="top"><h1>AI news digest</h1>
+<div class="sub"><b>60</b> items from <b>6</b> sources · tap a row to open the article</div>
+
+
+<div class="filters">
+  <select id="f-shop"><option value="">All sources</option>
+    <option>Hacker News</option><option>TLDR AI</option><option>Techmeme</option><option>arXiv cs.AI</option><option>r/LocalLLaMA</option><option>r/MachineLearning</option></select>
+  <input id="f-q" type="search" placeholder="Search headlines...">
+  <button id="f-apply" class="fbtn primary" type="button">Apply</button>
+  <button id="f-reset" class="fbtn" type="button">Reset</button>
+  <span class="count" id="f-count"></span>
+</div>
+</header>
+<section><h2>Today's picks <span class="n">60 items, 6 sources, 33 with article images</span></h2>
+<div class="rows"><a class="row" data-source="arXiv cs.AI"
+   data-name="an explainable header-centric framework for large-scale semantic table interpretation and data quality assessment arxiv:2610.10541v1 announce type: new abstract: knowledge graph (kg) quality depends not only on downstream graph validation, but also on the quality of tabular metadata used before integration. in metadata-only semantic"
+   href="https://arxiv.org/abs/2610.10541" target="_blank" rel="noopener">
+  <div class="rank">1</div>
+  <div class="rbody">
+    <div class="rtitle">An Explainable Header-Centric Framework for Large-Scale Semantic Table Interpretation and Data Quality Assessment</div>
+    <div class="rsum">arXiv:2610.10541v1 Announce Type: new Abstract: Knowledge Graph (KG) quality depends not only on downstream graph validation, but also on the quality of tabular metadata used before integration. In metadata-only Semantic</div>
+    <div class="meta"><span class="chip">arXiv cs.AI</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(35,45%,93%),hsl(35,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=arxiv.org&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-fb.png" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="Hacker News"
+   data-name="whistle: speech to text in 16.9 mb 741 points, 147 comments"
+   href="https://cactuscompute.com/blog/whistle" target="_blank" rel="noopener">
+  <div class="rank">2</div>
+  <div class="rbody">
+    <div class="rtitle">Whistle: Speech to Text in 16.9 MB</div>
+    <div class="rsum">741 points, 147 comments</div>
+    <div class="meta"><span class="chip">Hacker News</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(78,45%,93%),hsl(78,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=cactuscompute.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="r/LocalLLaMA"
+   data-name="strata rewrote their github history to wipe evidence of claude-authoring "
+   href="https://www.reddit.com/r/LocalLLaMA/comments/1x15a8w/strata_rewrote_their_github_history_to_wipe/" target="_blank" rel="noopener">
+  <div class="rank">3</div>
+  <div class="rbody">
+    <div class="rtitle">Strata rewrote their Github history to wipe evidence of Claude-authoring</div>
+    
+    <div class="meta"><span class="chip">r/LocalLLaMA</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="r/MachineLearning"
+   data-name="[d] self-promotion thread "
+   href="https://www.reddit.com/r/MachineLearning/comments/1wvi1j8/d_selfpromotion_thread/" target="_blank" rel="noopener">
+  <div class="rank">4</div>
+  <div class="rbody">
+    <div class="rtitle">[D] Self-Promotion Thread</div>
+    
+    <div class="meta"><span class="chip">r/MachineLearning</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="Techmeme"
+   data-name="global pc shipments dropped 20.1% yoy in q3 to 62.7m units due to higher prices and supply issues; lenovo dropped 22.6% yoy, hp 30.9%, dell 25%, and apple 11.3% (idc) idc : global pc shipments dropped 20.1% yoy in q3 to 62.7m units due to higher prices and supply issues; lenovo dropped 22.6% yoy, hp 30.9%, dell 25%, and apple 11.3% — q3 delivered the widely expected pc downturn,"
+   href="https://www.techmeme.com/261009/p4#a261009p4" target="_blank" rel="noopener">
+  <div class="rank">5</div>
+  <div class="rbody">
+    <div class="rtitle">Global PC shipments dropped 20.1% YoY in Q3 to 62.7M units due to higher prices and supply issues; Lenovo dropped 22.6% YoY, HP 30.9%, Dell 25%, and Apple 11.3% (IDC)</div>
+    <div class="rsum">IDC : Global PC shipments dropped 20.1% YoY in Q3 to 62.7M units due to higher prices and supply issues; Lenovo dropped 22.6% YoY, HP 30.9%, Dell 25%, and Apple 11.3% — Q3 delivered the widely expected PC downturn,</div>
+    <div class="meta"><span class="chip">Techmeme</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.techmeme.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://www.idc.com/wp-content/uploads/2026/10/image_63283a.png" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="TLDR AI"
+   data-name="chatgpt intelligent ui 🧠, claude haiku 5.5 ⚡, grok bot 3rd party models 🤖 "
+   href="https://tldr.tech/ai/2026-10-08" target="_blank" rel="noopener">
+  <div class="rank">6</div>
+  <div class="rbody">
+    <div class="rtitle">ChatGPT Intelligent UI 🧠, Claude Haiku 5.5 ⚡, Grok Bot 3rd party models 🤖</div>
+    
+    <div class="meta"><span class="chip">TLDR AI</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(70,45%,93%),hsl(70,50%,84%));">🧠</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=tldr.tech&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://tldr.tech/logo-jpg.jpg" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="arXiv cs.AI"
+   data-name="synthesis through simulation: generating coherent enterprise data via scalable agent-system interaction arxiv:2610.10549v1 announce type: new abstract: tool-calling agents have become central to enterprise ai, yet training and evaluating them at scale remains severely constrained due to business and legal restrictions on e"
+   href="https://arxiv.org/abs/2610.10549" target="_blank" rel="noopener">
+  <div class="rank">7</div>
+  <div class="rbody">
+    <div class="rtitle">Synthesis Through Simulation: Generating Coherent Enterprise Data via Scalable Agent-System Interaction</div>
+    <div class="rsum">arXiv:2610.10549v1 Announce Type: new Abstract: Tool-calling agents have become central to enterprise AI, yet training and evaluating them at scale remains severely constrained due to business and legal restrictions on e</div>
+    <div class="meta"><span class="chip">arXiv cs.AI</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(35,45%,93%),hsl(35,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=arxiv.org&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-fb.png" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="Hacker News"
+   data-name="why isn&#x27;t the industry freaking out about deepseek 4.1 flash? 700 points, 571 comments"
+   href="https://www.dgt.is/blog/2026-10-07-deepseek-freek-out/" target="_blank" rel="noopener">
+  <div class="rank">8</div>
+  <div class="rbody">
+    <div class="rtitle">Why isn&#x27;t the industry freaking out about DeepSeek 4.1 Flash?</div>
+    <div class="rsum">700 points, 571 comments</div>
+    <div class="meta"><span class="chip">Hacker News</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(78,45%,93%),hsl(78,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.dgt.is&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="r/LocalLLaMA"
+   data-name="[paper] engramedit: decoupled knowledge updates in llms through conditional memory "
+   href="https://www.reddit.com/r/LocalLLaMA/comments/1x1eb7w/paper_engramedit_decoupled_knowledge_updates_in/" target="_blank" rel="noopener">
+  <div class="rank">9</div>
+  <div class="rbody">
+    <div class="rtitle">[Paper] EngramEdit: Decoupled Knowledge Updates in LLMs through Conditional Memory</div>
+    
+    <div class="meta"><span class="chip">r/LocalLLaMA</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="r/MachineLearning"
+   data-name="[d] monthly who&#x27;s hiring and who wants to be hired? "
+   href="https://www.reddit.com/r/MachineLearning/comments/1wunvg4/d_monthly_whos_hiring_and_who_wants_to_be_hired/" target="_blank" rel="noopener">
+  <div class="rank">10</div>
+  <div class="rbody">
+    <div class="rtitle">[D] Monthly Who&#x27;s Hiring and Who wants to be Hired?</div>
+    
+    <div class="meta"><span class="chip">r/MachineLearning</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="Techmeme"
+   data-name="sources: apple told some suppliers to cut iphone 18 pro and pro max component production by 15%-20% as higher memory costs pushed up prices and hurt demand (nikkei asia) nikkei asia : sources: apple told some suppliers to cut iphone 18 pro and pro max component production by 15%-20% as higher memory costs pushed up prices and hurt demand — taipei — apple has told some of its"
+   href="https://www.techmeme.com/261009/p3#a261009p3" target="_blank" rel="noopener">
+  <div class="rank">11</div>
+  <div class="rbody">
+    <div class="rtitle">Sources: Apple told some suppliers to cut iPhone 18 Pro and Pro Max component production by 15%-20% as higher memory costs pushed up prices and hurt demand (Nikkei Asia)</div>
+    <div class="rsum">Nikkei Asia : Sources: Apple told some suppliers to cut iPhone 18 Pro and Pro Max component production by 15%-20% as higher memory costs pushed up prices and hurt demand — TAIPEI — Apple has told some of its</div>
+    <div class="meta"><span class="chip">Techmeme</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.techmeme.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://images.ft.com/v3/image/raw/https%3A%2F%2Fcms-image-bucket-productionv3-ap-northeast-1-a7d2.s3.ap-northeast-1.amazonaws.com%2Fimages%2F1%2F9%2F9%2F7%2F13297991-1-eng-GB%2Ff51a927dcb62-GettyImages-2295963788b.jpg?fit=cover&amp;gravity=faces&amp;dpr=2&amp;quality=medium&amp;source=nar-cms&amp;format=jpg&amp;width=1260&amp;height=630" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="TLDR AI"
+   data-name="mistral large 4 🧠, openai decisions api ❓, nano banana 2.1 🍌 "
+   href="https://tldr.tech/ai/2026-10-07" target="_blank" rel="noopener">
+  <div class="rank">12</div>
+  <div class="rbody">
+    <div class="rtitle">Mistral Large 4 🧠, OpenAI Decisions API ❓, Nano Banana 2.1 🍌</div>
+    
+    <div class="meta"><span class="chip">TLDR AI</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(70,45%,93%),hsl(70,50%,84%));">🧠</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=tldr.tech&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://tldr.tech/logo-jpg.jpg" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="arXiv cs.AI"
+   data-name="agent-controlled forgetting for tool-using agents: reversible context curation in practice arxiv:2610.10590v1 announce type: new abstract: tool-using agents repeatedly carry observations whose useful content can be much smaller than their original payload. we study agent-controlled forgetting: the acting model"
+   href="https://arxiv.org/abs/2610.10590" target="_blank" rel="noopener">
+  <div class="rank">13</div>
+  <div class="rbody">
+    <div class="rtitle">Agent-Controlled Forgetting for Tool-Using Agents: Reversible Context Curation in Practice</div>
+    <div class="rsum">arXiv:2610.10590v1 Announce Type: new Abstract: Tool-using agents repeatedly carry observations whose useful content can be much smaller than their original payload. We study agent-controlled forgetting: the acting model</div>
+    <div class="meta"><span class="chip">arXiv cs.AI</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(35,45%,93%),hsl(35,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=arxiv.org&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-fb.png" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="Hacker News"
+   data-name="man discovers his parents&#x27; coffee machine used 1tb of data in 10 days 661 points, 392 comments"
+   href="https://www.dexerto.com/entertainment/man-discovers-his-parents-coffee-machine-used-1tb-of-data-in-10-days-3416399/" target="_blank" rel="noopener">
+  <div class="rank">14</div>
+  <div class="rbody">
+    <div class="rtitle">Man discovers his parents&#x27; coffee machine used 1TB of data in 10 days</div>
+    <div class="rsum">661 points, 392 comments</div>
+    <div class="meta"><span class="chip">Hacker News</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(78,45%,93%),hsl(78,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.dexerto.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://www.dexerto.com/cdn-image/wp-content/uploads/2026/10/07/coffee-maker-stock-photo.jpg" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="r/LocalLLaMA"
+   data-name="qwen3.8-27b: 159 tok/s on r9700, 64 tok/s on strix halo "
+   href="https://www.reddit.com/r/LocalLLaMA/comments/1x18e95/qwen3827b_159_toks_on_r9700_64_toks_on_strix_halo/" target="_blank" rel="noopener">
+  <div class="rank">15</div>
+  <div class="rbody">
+    <div class="rtitle">Qwen3.8-27B: 159 tok/s on R9700, 64 tok/s on Strix Halo</div>
+    
+    <div class="meta"><span class="chip">r/LocalLLaMA</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="r/MachineLearning"
+   data-name="nvidia’s erroneous paper accepted as icml’s spotlight [d] "
+   href="https://www.reddit.com/r/MachineLearning/comments/1x0i6b5/nvidias_erroneous_paper_accepted_as_icmls/" target="_blank" rel="noopener">
+  <div class="rank">16</div>
+  <div class="rbody">
+    <div class="rtitle">Nvidia’s erroneous paper accepted as ICML’s spotlight [D]</div>
+    
+    <div class="meta"><span class="chip">r/MachineLearning</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="Techmeme"
+   data-name="sources: softbank is seeking to raise up to $100b from gulf investors for a fund to buy companies and improve their operations with ai and other advanced tech (financial times) financial times : sources: softbank is seeking to raise up to $100b from gulf investors for a fund to buy companies and improve their operations with ai and other advanced tech — founder and chief executive masayos"
+   href="https://www.techmeme.com/261009/p2#a261009p2" target="_blank" rel="noopener">
+  <div class="rank">17</div>
+  <div class="rbody">
+    <div class="rtitle">Sources: SoftBank is seeking to raise up to $100B from Gulf investors for a fund to buy companies and improve their operations with AI and other advanced tech (Financial Times)</div>
+    <div class="rsum">Financial Times : Sources: SoftBank is seeking to raise up to $100B from Gulf investors for a fund to buy companies and improve their operations with AI and other advanced tech — Founder and chief executive Masayos</div>
+    <div class="meta"><span class="chip">Techmeme</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.techmeme.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://images.ft.com/v3/image/raw/https%3A%2F%2Fd1e00ek4ebabms.cloudfront.net%2Fproduction%2F79c91b3a-915a-4f62-ab44-1ee5c150e85d.jpg?source=next-article&amp;fit=scale-down&amp;quality=highest&amp;width=700&amp;dpr=1" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="TLDR AI"
+   data-name="instinct group chats 💬, reflection’s 501b model 🧠, openai text watermarks 🏷️ "
+   href="https://tldr.tech/ai/2026-10-06" target="_blank" rel="noopener">
+  <div class="rank">18</div>
+  <div class="rbody">
+    <div class="rtitle">Instinct group chats 💬, Reflection’s 501B model 🧠, OpenAI text watermarks 🏷️</div>
+    
+    <div class="meta"><span class="chip">TLDR AI</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(70,45%,93%),hsl(70,50%,84%));">💬</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=tldr.tech&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="arXiv cs.AI"
+   data-name="verification and self-improvement in agentic ai: foundations and limits arxiv:2610.10611v1 announce type: new abstract: agentic ai systems can improve by searching longer, receiving additional support, or modifying how they propose and verify outputs. a performance score does not distinguish"
+   href="https://arxiv.org/abs/2610.10611" target="_blank" rel="noopener">
+  <div class="rank">19</div>
+  <div class="rbody">
+    <div class="rtitle">Verification and Self-Improvement in Agentic AI: Foundations and Limits</div>
+    <div class="rsum">arXiv:2610.10611v1 Announce Type: new Abstract: Agentic AI systems can improve by searching longer, receiving additional support, or modifying how they propose and verify outputs. A performance score does not distinguish</div>
+    <div class="meta"><span class="chip">arXiv cs.AI</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(35,45%,93%),hsl(35,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=arxiv.org&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-fb.png" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="Hacker News"
+   data-name="i hired an illustrator to draw my house. now it&#x27;s my home assistant dashboard 596 points, 109 comments"
+   href="https://antonfrolov.substack.com/p/i-hired-an-illustrator-to-draw-my" target="_blank" rel="noopener">
+  <div class="rank">20</div>
+  <div class="rbody">
+    <div class="rtitle">I hired an illustrator to draw my house. Now it&#x27;s my Home Assistant dashboard</div>
+    <div class="rsum">596 points, 109 comments</div>
+    <div class="meta"><span class="chip">Hacker News</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(78,45%,93%),hsl(78,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=antonfrolov.substack.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://substackcdn.com/image/fetch/$s_!huqE!,w_1200,h_675,c_fill,f_jpg,q_auto:good,fl_progressive:steep,g_auto/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fea228abe-574d-4d58-9922-775c987f1f7b_1920x1080.webp" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="r/LocalLLaMA"
+   data-name="$2800 rig with 8x radeon pro v620 (256 gb vram) + custom vllm fork = qwen3.8-flash-next at 60 to 100 t/s decode and 3000+ t/s prefill "
+   href="https://www.reddit.com/r/LocalLLaMA/comments/1x0wnz1/2800_rig_with_8x_radeon_pro_v620_256_gb_vram/" target="_blank" rel="noopener">
+  <div class="rank">21</div>
+  <div class="rbody">
+    <div class="rtitle">$2800 rig with 8x Radeon Pro V620 (256 GB VRAM) + custom vLLM fork = Qwen3.8-Flash-Next at 60 to 100 t/s decode and 3000+ t/s prefill</div>
+    
+    <div class="meta"><span class="chip">r/LocalLLaMA</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="r/MachineLearning"
+   data-name="thinkingbox: solving an agent task once vs. solving it 20/20: 507 stateful workflows graded on terminal database state [r] "
+   href="https://www.reddit.com/r/MachineLearning/comments/1x17shf/thinkingbox_solving_an_agent_task_once_vs_solving/" target="_blank" rel="noopener">
+  <div class="rank">22</div>
+  <div class="rbody">
+    <div class="rtitle">ThinkingBox: Solving an agent task once vs. solving it 20/20: 507 stateful workflows graded on terminal database state [R]</div>
+    
+    <div class="meta"><span class="chip">r/MachineLearning</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="Techmeme"
+   data-name="anthropic is setting up a &quot;presidential engagement&quot; program for the 2028 us elections that will offer ai policy education to candidates in both parties (emily forlini/fortune) emily forlini / fortune : anthropic is setting up a “presidential engagement” program for the 2028 us elections that will offer ai policy education to candidates in both parties — anthropic is setting u"
+   href="https://www.techmeme.com/261009/p1#a261009p1" target="_blank" rel="noopener">
+  <div class="rank">23</div>
+  <div class="rbody">
+    <div class="rtitle">Anthropic is setting up a &quot;presidential engagement&quot; program for the 2028 US elections that will offer AI policy education to candidates in both parties (Emily Forlini/Fortune)</div>
+    <div class="rsum">Emily Forlini / Fortune : Anthropic is setting up a “presidential engagement” program for the 2028 US elections that will offer AI policy education to candidates in both parties — Anthropic is setting u</div>
+    <div class="meta"><span class="chip">Techmeme</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.techmeme.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://fortune.com/img-assets/wp-content/uploads/2026/10/GettyImages-2297781315-e1791491801228.jpg?resize=1200,600" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="TLDR AI"
+   data-name="prime inference 📈, agent population 📈, claude academy 🎓 "
+   href="https://tldr.tech/ai/2026-10-05" target="_blank" rel="noopener">
+  <div class="rank">24</div>
+  <div class="rbody">
+    <div class="rtitle">Prime Inference 📈, agent population 📈, Claude academy 🎓</div>
+    
+    <div class="meta"><span class="chip">TLDR AI</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(70,45%,93%),hsl(70,50%,84%));">📈</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=tldr.tech&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="arXiv cs.AI"
+   data-name="the harness as the only mutable surface: compliance-bounded self-evolution of llm agents in credit pipelines, with a measured admission gate arxiv:2610.10629v1 announce type: new abstract: self-improving llm agents can adapt a credit pipeline to a changed rule, but an agent that rewrites itself destroys the artefact a supervisor reviews: a named change, a rec"
+   href="https://arxiv.org/abs/2610.10629" target="_blank" rel="noopener">
+  <div class="rank">25</div>
+  <div class="rbody">
+    <div class="rtitle">The Harness as the Only Mutable Surface: Compliance-Bounded Self-Evolution of LLM Agents in Credit Pipelines, with a Measured Admission Gate</div>
+    <div class="rsum">arXiv:2610.10629v1 Announce Type: new Abstract: Self-improving LLM agents can adapt a credit pipeline to a changed rule, but an agent that rewrites itself destroys the artefact a supervisor reviews: a named change, a rec</div>
+    <div class="meta"><span class="chip">arXiv cs.AI</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(35,45%,93%),hsl(35,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=arxiv.org&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-fb.png" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="Hacker News"
+   data-name="theranos.world 428 points, 149 comments"
+   href="https://www.theranos.world/" target="_blank" rel="noopener">
+  <div class="rank">26</div>
+  <div class="rbody">
+    <div class="rtitle">Theranos.world</div>
+    <div class="rsum">428 points, 149 comments</div>
+    <div class="meta"><span class="chip">Hacker News</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(78,45%,93%),hsl(78,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.theranos.world&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://www.theranos.world/assets/theranos-world-social-v1.jpg" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="r/LocalLLaMA"
+   data-name="last week some of south korea&#x27;s biggest banks were hit by a cyberattack. we now know the entire hack may have been done by a single person. he used a combined stack of an open-source ai penetration tool named artex, deepseek v4.1-flash, glm-5.3, grok 4.6, and claude code (crowdstrike) "
+   href="https://www.reddit.com/r/LocalLLaMA/comments/1x0n4pt/last_week_some_of_south_koreas_biggest_banks_were/" target="_blank" rel="noopener">
+  <div class="rank">27</div>
+  <div class="rbody">
+    <div class="rtitle">Last week some of South Korea&#x27;s biggest banks were hit by a cyberattack. We now know the entire hack may have been done by a single person. He used a combined stack of an open-source AI penetration tool named ARTEX, DeepSeek v4.1-Flash, GLM-5.3, Grok 4.6, and Claude Code (CrowdStrike)</div>
+    
+    <div class="meta"><span class="chip">r/LocalLLaMA</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="r/MachineLearning"
+   data-name="i built marn: a pytorch library for training neural networks through low-dimensional parameter mappings [p] "
+   href="https://www.reddit.com/r/MachineLearning/comments/1x1fjrv/i_built_marn_a_pytorch_library_for_training/" target="_blank" rel="noopener">
+  <div class="rank">28</div>
+  <div class="rbody">
+    <div class="rtitle">I built MaRN: a PyTorch library for training neural networks through low-dimensional parameter mappings [P]</div>
+    
+    <div class="meta"><span class="chip">r/MachineLearning</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="Techmeme"
+   data-name="microsoft denies jd vance&#x27;s claim it replaced thousands of us workers with foreign workers last year, saying most h-1b applications were for existing employees (associated press) associated press : microsoft denies jd vance&#x27;s claim it replaced thousands of us workers with foreign workers last year, saying most h-1b applications were for existing employees — president donald trump&#x27;s administ"
+   href="https://www.techmeme.com/261008/p55#a261008p55" target="_blank" rel="noopener">
+  <div class="rank">29</div>
+  <div class="rbody">
+    <div class="rtitle">Microsoft denies JD Vance&#x27;s claim it replaced thousands of US workers with foreign workers last year, saying most H-1B applications were for existing employees (Associated Press)</div>
+    <div class="rsum">Associated Press : Microsoft denies JD Vance&#x27;s claim it replaced thousands of US workers with foreign workers last year, saying most H-1B applications were for existing employees — President Donald Trump&#x27;s administ</div>
+    <div class="meta"><span class="chip">Techmeme</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.techmeme.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://dims.apnews.com/dims4/default/bb80ffb/2147483647/strip/true/crop/4108x2737+0+1/resize/980x653!/quality/90/?url=https%3A%2F%2Fassets.apnews.com%2F55%2F78%2Ff7835c80162b9357e66c818ea0c0%2F8546e50156ee4b1d8f2c2a70b9e70cbe" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="TLDR AI"
+   data-name="decision models 🤖, claude-shaped science 🧪, openai safety firings 🚨 "
+   href="https://tldr.tech/ai/2026-10-02" target="_blank" rel="noopener">
+  <div class="rank">30</div>
+  <div class="rbody">
+    <div class="rtitle">Decision models 🤖, Claude-shaped science 🧪, OpenAI safety firings 🚨</div>
+    
+    <div class="meta"><span class="chip">TLDR AI</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(70,45%,93%),hsl(70,50%,84%));">🤖</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=tldr.tech&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://tldr.tech/logo-jpg.jpg" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="arXiv cs.AI"
+   data-name="speaking the navigator&#x27;s language: trajectory-grounded instruction translation for frozen aerial vln agents arxiv:2610.10635v1 announce type: new abstract: aerial vision-and-language navigation (vln) agents are typically trained on detail-rich, trajectory-aligned commands, whereas users issue short, intent-driven instructions;"
+   href="https://arxiv.org/abs/2610.10635" target="_blank" rel="noopener">
+  <div class="rank">31</div>
+  <div class="rbody">
+    <div class="rtitle">Speaking the Navigator&#x27;s Language: Trajectory-Grounded Instruction Translation for Frozen Aerial VLN Agents</div>
+    <div class="rsum">arXiv:2610.10635v1 Announce Type: new Abstract: Aerial vision-and-language navigation (VLN) agents are typically trained on detail-rich, trajectory-aligned commands, whereas users issue short, intent-driven instructions;</div>
+    <div class="meta"><span class="chip">arXiv cs.AI</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(35,45%,93%),hsl(35,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=arxiv.org&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-fb.png" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="Hacker News"
+   data-name="yes, and 395 points, 118 comments"
+   href="https://htmx.org/essays/yes-and/" target="_blank" rel="noopener">
+  <div class="rank">32</div>
+  <div class="rbody">
+    <div class="rtitle">Yes, and</div>
+    <div class="rsum">395 points, 118 comments</div>
+    <div class="meta"><span class="chip">Hacker News</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(78,45%,93%),hsl(78,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=htmx.org&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="r/LocalLLaMA"
+   data-name="running decision model locally on an rtx 4090 to find out which one is the fastest "
+   href="https://www.reddit.com/r/LocalLLaMA/comments/1x0wg85/running_decision_model_locally_on_an_rtx_4090_to/" target="_blank" rel="noopener">
+  <div class="rank">33</div>
+  <div class="rbody">
+    <div class="rtitle">Running decision model locally on an RTX 4090 to find out which one is the fastest</div>
+    
+    <div class="meta"><span class="chip">r/LocalLLaMA</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="r/MachineLearning"
+   data-name="whatever happened to baba is ai from 2024? [d] "
+   href="https://www.reddit.com/r/MachineLearning/comments/1x113il/whatever_happened_to_baba_is_ai_from_2024_d/" target="_blank" rel="noopener">
+  <div class="rank">34</div>
+  <div class="rbody">
+    <div class="rtitle">Whatever happened to BABA is AI from 2024? [D]</div>
+    
+    <div class="meta"><span class="chip">r/MachineLearning</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="Techmeme"
+   data-name="a us judge sentenced raheim hamilton, co-creator of the dark web marketplace empire market, to 40 years in prison for facilitating $430m in illegal transactions (sergiu gatlan/bleepingcomputer) sergiu gatlan / bleepingcomputer : a us judge sentenced raheim hamilton, co-creator of the dark web marketplace empire market, to 40 years in prison for facilitating $430m in illegal transactions — the co-creator o"
+   href="https://www.techmeme.com/261008/p54#a261008p54" target="_blank" rel="noopener">
+  <div class="rank">35</div>
+  <div class="rbody">
+    <div class="rtitle">A US judge sentenced Raheim Hamilton, co-creator of the dark web marketplace Empire Market, to 40 years in prison for facilitating $430M in illegal transactions (Sergiu Gatlan/BleepingComputer)</div>
+    <div class="rsum">Sergiu Gatlan / BleepingComputer : A US judge sentenced Raheim Hamilton, co-creator of the dark web marketplace Empire Market, to 40 years in prison for facilitating $430M in illegal transactions — The co-creator o</div>
+    <div class="meta"><span class="chip">Techmeme</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.techmeme.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://www.bleepstatic.com/content/hl-images/2026/09/25/Hacker-prison.jpg" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="TLDR AI"
+   data-name="gemini 4 argon 🧠, inside openai’s chip ⚡, distillation takedown 🕵️ "
+   href="https://tldr.tech/ai/2026-10-01" target="_blank" rel="noopener">
+  <div class="rank">36</div>
+  <div class="rbody">
+    <div class="rtitle">Gemini 4 Argon 🧠, inside OpenAI’s chip ⚡, distillation takedown 🕵️</div>
+    
+    <div class="meta"><span class="chip">TLDR AI</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(70,45%,93%),hsl(70,50%,84%));">🧠</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=tldr.tech&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://tldr.tech/logo-jpg.jpg" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="arXiv cs.AI"
+   data-name="plan-and-patch: diffusion language models for agentic planning arxiv:2610.10786v1 announce type: new abstract: planning is increasingly important for long-horizon agents, where successful execution requires coordinating subgoals, tool use, and intermediate outcomes over many steps."
+   href="https://arxiv.org/abs/2610.10786" target="_blank" rel="noopener">
+  <div class="rank">37</div>
+  <div class="rbody">
+    <div class="rtitle">Plan-and-Patch: Diffusion Language Models for Agentic Planning</div>
+    <div class="rsum">arXiv:2610.10786v1 Announce Type: new Abstract: Planning is increasingly important for long-horizon agents, where successful execution requires coordinating subgoals, tool use, and intermediate outcomes over many steps.</div>
+    <div class="meta"><span class="chip">arXiv cs.AI</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(35,45%,93%),hsl(35,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=arxiv.org&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-fb.png" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="Hacker News"
+   data-name="openai withdraws three mathematical results 302 points, 572 comments"
+   href="https://twitter.com/danintheory/status/2108065033070789090" target="_blank" rel="noopener">
+  <div class="rank">38</div>
+  <div class="rbody">
+    <div class="rtitle">OpenAI withdraws three mathematical results</div>
+    <div class="rsum">302 points, 572 comments</div>
+    <div class="meta"><span class="chip">Hacker News</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(78,45%,93%),hsl(78,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=twitter.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://pbs.twimg.com/card_img/2108065027521724416/U43cU3Cf?format=webp&amp;name=medium" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="r/LocalLLaMA"
+   data-name="qwen 3.6 35b appreciation post "
+   href="https://www.reddit.com/r/LocalLLaMA/comments/1x17brf/qwen_36_35b_appreciation_post/" target="_blank" rel="noopener">
+  <div class="rank">39</div>
+  <div class="rbody">
+    <div class="rtitle">Qwen 3.6 35B appreciation post</div>
+    
+    <div class="meta"><span class="chip">r/LocalLLaMA</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="r/MachineLearning"
+   data-name="ai agent gaming tournament - hosted by ucla trustworthy ai lab w/ prize pool [n] "
+   href="https://www.reddit.com/r/MachineLearning/comments/1x0zlys/ai_agent_gaming_tournament_hosted_by_ucla/" target="_blank" rel="noopener">
+  <div class="rank">40</div>
+  <div class="rbody">
+    <div class="rtitle">AI Agent Gaming Tournament - hosted by UCLA Trustworthy AI Lab w/ prize pool [N]</div>
+    
+    <div class="meta"><span class="chip">r/MachineLearning</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="Techmeme"
+   data-name="sources: flock plans to let go of ~270 employees, or 18% of its staff, at the end of october; the layoffs come after a voluntary buyout program in september (reuters) reuters : sources: flock plans to let go of ~270 employees, or 18% of its staff, at the end of october; the layoffs come after a voluntary buyout program in september — flock safety plans to let go of about 18% of"
+   href="https://www.techmeme.com/261008/p53#a261008p53" target="_blank" rel="noopener">
+  <div class="rank">41</div>
+  <div class="rbody">
+    <div class="rtitle">Sources: Flock plans to let go of ~270 employees, or 18% of its staff, at the end of October; the layoffs come after a voluntary buyout program in September (Reuters)</div>
+    <div class="rsum">Reuters : Sources: Flock plans to let go of ~270 employees, or 18% of its staff, at the end of October; the layoffs come after a voluntary buyout program in September — Flock Safety plans to let go of about 18% of</div>
+    <div class="meta"><span class="chip">Techmeme</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.techmeme.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://www.reuters.com/resizer/v2/KQ37WG3ZIZL7XBV2IMESFHWKAU.jpg?auth=d84f2d266da06aac7e902f3637040c263d59923b3f54eec84eba1b26d7efacc8&amp;height=1005&amp;width=1920&amp;quality=80&amp;smart=true" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="TLDR AI"
+   data-name="openai dots 🟡, gpt-6.1 sol ⚡, software factories 🏭 "
+   href="https://tldr.tech/ai/2026-09-30" target="_blank" rel="noopener">
+  <div class="rank">42</div>
+  <div class="rbody">
+    <div class="rtitle">OpenAI Dots 🟡, GPT-6.1 Sol ⚡, software factories 🏭</div>
+    
+    <div class="meta"><span class="chip">TLDR AI</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(70,45%,93%),hsl(70,50%,84%));">🟡</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=tldr.tech&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://tldr.tech/logo-jpg.jpg" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="arXiv cs.AI"
+   data-name="whose ground truth? embracing ambiguity in human-centered ai arxiv:2610.10805v1 announce type: new abstract: as ai systems increasingly interact with people and make decisions about them, understanding human interpretations becomes an important part of developing human-centered ai"
+   href="https://arxiv.org/abs/2610.10805" target="_blank" rel="noopener">
+  <div class="rank">43</div>
+  <div class="rbody">
+    <div class="rtitle">Whose Ground Truth? Embracing Ambiguity in Human-Centered AI</div>
+    <div class="rsum">arXiv:2610.10805v1 Announce Type: new Abstract: As AI systems increasingly interact with people and make decisions about them, understanding human interpretations becomes an important part of developing human-centered AI</div>
+    <div class="meta"><span class="chip">arXiv cs.AI</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(35,45%,93%),hsl(35,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=arxiv.org&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-fb.png" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="Hacker News"
+   data-name="beauty in dvd menus 299 points, 158 comments"
+   href="https://vale.rocks/posts/dvd-menus" target="_blank" rel="noopener">
+  <div class="rank">44</div>
+  <div class="rbody">
+    <div class="rtitle">Beauty in DVD Menus</div>
+    <div class="rsum">299 points, 158 comments</div>
+    <div class="meta"><span class="chip">Hacker News</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(78,45%,93%),hsl(78,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=vale.rocks&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://vale.rocks/assets/og/post.webp" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="r/LocalLLaMA"
+   data-name="quantization of linear-attention (qwen &amp; kimi) "
+   href="https://www.reddit.com/r/LocalLLaMA/comments/1x18bsm/quantization_of_linearattention_qwen_kimi/" target="_blank" rel="noopener">
+  <div class="rank">45</div>
+  <div class="rbody">
+    <div class="rtitle">Quantization of Linear-Attention (Qwen &amp; Kimi)</div>
+    
+    <div class="meta"><span class="chip">r/LocalLLaMA</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="r/MachineLearning"
+   data-name="have urms and uts been integrated into frontier models? or did they disappear into the dustbin of forgotten papers? [d] "
+   href="https://www.reddit.com/r/MachineLearning/comments/1x11ufl/have_urms_and_uts_been_integrated_into_frontier/" target="_blank" rel="noopener">
+  <div class="rank">46</div>
+  <div class="rbody">
+    <div class="rtitle">Have URMs and UTs been integrated into frontier models? Or did they disappear into the dustbin of forgotten papers? [D]</div>
+    
+    <div class="meta"><span class="chip">r/MachineLearning</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="Techmeme"
+   data-name="satya nadella and michael dell were awarded the national medal of technology and innovation by the white house during an appearance alongside other tech leaders (washington post) washington post : satya nadella and michael dell were awarded the national medal of technology and innovation by the white house during an appearance alongside other tech leaders — president donald trump celebrated"
+   href="https://www.techmeme.com/261008/p52#a261008p52" target="_blank" rel="noopener">
+  <div class="rank">47</div>
+  <div class="rbody">
+    <div class="rtitle">Satya Nadella and Michael Dell were awarded the National Medal of Technology and Innovation by the White House during an appearance alongside other tech leaders (Washington Post)</div>
+    <div class="rsum">Washington Post : Satya Nadella and Michael Dell were awarded the National Medal of Technology and Innovation by the White House during an appearance alongside other tech leaders — President Donald Trump celebrated</div>
+    <div class="meta"><span class="chip">Techmeme</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.techmeme.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://www.washingtonpost.com/wp-apps/imrs.php?src=https://arc-anglerfish-washpost-prod-washpost.s3.amazonaws.com/public/H4VD6XGDIQI7DALQNAKBTLY4ZE_size-normalized.jpg&amp;w=1440" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="TLDR AI"
+   data-name="claude sonnet 5.5 🧠, anthropic ipo leaks 📝, amd buys world labs 💰 "
+   href="https://tldr.tech/ai/2026-09-29" target="_blank" rel="noopener">
+  <div class="rank">48</div>
+  <div class="rbody">
+    <div class="rtitle">Claude Sonnet 5.5 🧠, Anthropic IPO leaks 📝, AMD buys World Labs 💰</div>
+    
+    <div class="meta"><span class="chip">TLDR AI</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(70,45%,93%),hsl(70,50%,84%));">🧠</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=tldr.tech&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://tldr.tech/logo-jpg.jpg" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="arXiv cs.AI"
+   data-name="on the clock: towards punctual and productive time-budgeted ai agents arxiv:2610.10833v1 announce type: new abstract: we study whether small llm agents can operate effectively under explicit wall-clock time budgets by both respecting the allocated runtime and using available time productiv"
+   href="https://arxiv.org/abs/2610.10833" target="_blank" rel="noopener">
+  <div class="rank">49</div>
+  <div class="rbody">
+    <div class="rtitle">On the Clock: Towards Punctual and Productive Time-Budgeted AI Agents</div>
+    <div class="rsum">arXiv:2610.10833v1 Announce Type: new Abstract: We study whether small LLM agents can operate effectively under explicit wall-clock time budgets by both respecting the allocated runtime and using available time productiv</div>
+    <div class="meta"><span class="chip">arXiv cs.AI</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(35,45%,93%),hsl(35,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=arxiv.org&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-fb.png" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="Hacker News"
+   data-name="adhd as a circadian rhythm disorder: evidence and implications for chronotherapy (2025) 287 points, 181 comments"
+   href="https://www.frontiersin.org/journals/psychiatry/articles/10.3389/fpsyt.2025.1697900/full" target="_blank" rel="noopener">
+  <div class="rank">50</div>
+  <div class="rbody">
+    <div class="rtitle">ADHD as a circadian rhythm disorder: evidence and implications for chronotherapy (2025)</div>
+    <div class="rsum">287 points, 181 comments</div>
+    <div class="meta"><span class="chip">Hacker News</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(78,45%,93%),hsl(78,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.frontiersin.org&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="r/LocalLLaMA"
+   data-name="stepfun step 5 preview showing up in openrouter "
+   href="https://www.reddit.com/r/LocalLLaMA/comments/1x19lvs/stepfun_step_5_preview_showing_up_in_openrouter/" target="_blank" rel="noopener">
+  <div class="rank">51</div>
+  <div class="rbody">
+    <div class="rtitle">StepFun Step 5 preview showing up in openrouter</div>
+    
+    <div class="meta"><span class="chip">r/LocalLLaMA</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="r/MachineLearning"
+   data-name="the alchemy of semi-supervision [r] "
+   href="https://www.reddit.com/r/MachineLearning/comments/1x14a61/the_alchemy_of_semisupervision_r/" target="_blank" rel="noopener">
+  <div class="rank">52</div>
+  <div class="rbody">
+    <div class="rtitle">The Alchemy of Semi-Supervision [R]</div>
+    
+    <div class="meta"><span class="chip">r/MachineLearning</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="Techmeme"
+   data-name="president trump awards elon musk, jensen huang, lisa su, and sergey brin the national medal of science at a white house summit promoting innovation (jared perlo/nbc news) jared perlo / nbc news : president trump awards elon musk, jensen huang, lisa su, and sergey brin the national medal of science at a white house summit promoting innovation — president donald trump joined michael k"
+   href="https://www.techmeme.com/261008/p51#a261008p51" target="_blank" rel="noopener">
+  <div class="rank">53</div>
+  <div class="rbody">
+    <div class="rtitle">President Trump awards Elon Musk, Jensen Huang, Lisa Su, and Sergey Brin the National Medal of Science at a White House summit promoting innovation (Jared Perlo/NBC News)</div>
+    <div class="rsum">Jared Perlo / NBC News : President Trump awards Elon Musk, Jensen Huang, Lisa Su, and Sergey Brin the National Medal of Science at a White House summit promoting innovation — President Donald Trump joined Michael K</div>
+    <div class="meta"><span class="chip">Techmeme</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.techmeme.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://media-cldnry.s-nbcnews.com/image/upload/t_nbcnews-fp-1200-630,f_auto,q_auto:best/rockcms/2026-10/261008-musk-trump-vsb-1649-35ce09.jpg" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="TLDR AI"
+   data-name="muse manifesto 📜, openai training pause 🚨, trading compute 🤝 "
+   href="https://tldr.tech/ai/2026-09-28" target="_blank" rel="noopener">
+  <div class="rank">54</div>
+  <div class="rbody">
+    <div class="rtitle">Muse manifesto 📜, OpenAI training pause 🚨, trading compute 🤝</div>
+    
+    <div class="meta"><span class="chip">TLDR AI</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(70,45%,93%),hsl(70,50%,84%));">📜</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=tldr.tech&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://tldr.tech/logo-jpg.jpg" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="arXiv cs.AI"
+   data-name="self-supervised keyframe discovery for horizon-invariant behavior cloning arxiv:2610.10857v1 announce type: new abstract: behavior cloning (bc) in non-markovian environments is a challenging problem because policies have to reason over contextual information over long horizons. existing policy"
+   href="https://arxiv.org/abs/2610.10857" target="_blank" rel="noopener">
+  <div class="rank">55</div>
+  <div class="rbody">
+    <div class="rtitle">Self-Supervised Keyframe Discovery for Horizon-Invariant Behavior Cloning</div>
+    <div class="rsum">arXiv:2610.10857v1 Announce Type: new Abstract: Behavior cloning (BC) in non-Markovian environments is a challenging problem because policies have to reason over contextual information over long horizons. Existing policy</div>
+    <div class="meta"><span class="chip">arXiv cs.AI</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(35,45%,93%),hsl(35,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=arxiv.org&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-fb.png" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="Hacker News"
+   data-name="ask hn: what do you run on a $5 vps that&#x27;s worth keeping online 24/7? 223 points, 340 comments"
+   href="https://news.ycombinator.com/item?id=49985548" target="_blank" rel="noopener">
+  <div class="rank">56</div>
+  <div class="rbody">
+    <div class="rtitle">Ask HN: What do you run on a $5 VPS that&#x27;s worth keeping online 24/7?</div>
+    <div class="rsum">223 points, 340 comments</div>
+    <div class="meta"><span class="chip">Hacker News</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(78,45%,93%),hsl(78,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=news.ycombinator.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="r/LocalLLaMA"
+   data-name="jevman: ai decision models play pac-man "
+   href="https://www.reddit.com/r/LocalLLaMA/comments/1x0sm1b/jevman_ai_decision_models_play_pacman/" target="_blank" rel="noopener">
+  <div class="rank">57</div>
+  <div class="rbody">
+    <div class="rtitle">jevman: AI decision models play Pac-Man</div>
+    
+    <div class="meta"><span class="chip">r/LocalLLaMA</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(61,45%,93%),hsl(61,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="r/MachineLearning"
+   data-name="moonworks lunara: modeling artistic intelligence [r] "
+   href="https://www.reddit.com/r/MachineLearning/comments/1x13zf7/moonworks_lunara_modeling_artistic_intelligence_r/" target="_blank" rel="noopener">
+  <div class="rank">58</div>
+  <div class="rbody">
+    <div class="rtitle">Moonworks Lunara: Modeling Artistic Intelligence [R]</div>
+    
+    <div class="meta"><span class="chip">r/MachineLearning</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(44,45%,93%),hsl(44,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.reddit.com&amp;sz=64" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="Techmeme"
+   data-name="meta bans bytedance ads and paid marketing, plus third-party campaigns linking to tiktok, in the us, canada, egypt, indonesia, japan, thailand, and vietnam (bloomberg) bloomberg : meta bans bytedance ads and paid marketing, plus third-party campaigns linking to tiktok, in the us, canada, egypt, indonesia, japan, thailand, and vietnam — meta platforms inc. banned advertisements in"
+   href="https://www.techmeme.com/261008/p50#a261008p50" target="_blank" rel="noopener">
+  <div class="rank">59</div>
+  <div class="rbody">
+    <div class="rtitle">Meta bans ByteDance ads and paid marketing, plus third-party campaigns linking to TikTok, in the US, Canada, Egypt, Indonesia, Japan, Thailand, and Vietnam (Bloomberg)</div>
+    <div class="rsum">Bloomberg : Meta bans ByteDance ads and paid marketing, plus third-party campaigns linking to TikTok, in the US, Canada, Egypt, Indonesia, Japan, Thailand, and Vietnam — Meta Platforms Inc. banned advertisements in</div>
+    <div class="meta"><span class="chip">Techmeme</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(87,45%,93%),hsl(87,50%,84%));">📰</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=www.techmeme.com&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://assets.bwbx.io/images/users/iqjWHBFdfxIU/imjSW4OM.nMU/v0/1200x675.jpg" alt="" onerror="this.remove()"></div>
+</a>
+<a class="row" data-source="TLDR AI"
+   data-name="chatgpt pro max 🤖, muse realtime avatar 🎭, deepseek $1b arr 💰 "
+   href="https://tldr.tech/ai/2026-09-25" target="_blank" rel="noopener">
+  <div class="rank">60</div>
+  <div class="rbody">
+    <div class="rtitle">ChatGPT Pro Max 🤖, Muse realtime avatar 🎭, DeepSeek $1B ARR 💰</div>
+    
+    <div class="meta"><span class="chip">TLDR AI</span></div>
+  </div>
+  <div class="thumb"><span class="tgrad" style="background:linear-gradient(135deg,hsl(70,45%,93%),hsl(70,50%,84%));">🤖</span><img class="tfav" loading="lazy" src="https://www.google.com/s2/favicons?domain=tldr.tech&amp;sz=64" alt="" onerror="this.remove()"><img loading="lazy" src="https://tldr.tech/logo-jpg.jpg" alt="" onerror="this.remove()"></div>
+</a></div><p class="empty">Nothing matches the current filters.</p></section>
+<footer class="foot">Generated 2026-10-09 10:32 by JARVIS · filters are local, links go to the shops/sources</footer>
+</div>
+<script>
+(function(){
+  var fb=document.getElementById('f-brand'),fs=document.getElementById('f-shop'),
+      fmin=document.getElementById('f-min'),fmax=document.getElementById('f-max'),
+      fq=document.getElementById('f-q'),count=document.getElementById('f-count'),
+      applyBtn=document.getElementById('f-apply'),
+      resetBtn=document.getElementById('f-reset'),
+      hint=document.getElementById('js-hint');
+  if(hint) hint.style.display='none';          // JS runs -> the preview notice goes away
+  function num(el){var v=parseFloat(el&&el.value);return isNaN(v)?null:v;}
+  function apply(){
+    var b=fb&&fb.value||'',s=fs&&fs.value||'',mn=num(fmin),mx=num(fmax),
+        q=(fq&&fq.value||'').toLowerCase(),shown=0,total=0;
+    document.querySelectorAll('.tile,.row').forEach(function(t){
+      total++;
+      var ok=(!b||t.dataset.brand===b)&&(!s||t.dataset.shop===s||t.dataset.source===s)
+        &&(mn===null||parseFloat(t.dataset.price)>=mn)
+        &&(mx===null||parseFloat(t.dataset.price)<=mx)
+        &&(!q||(t.dataset.name||'').indexOf(q)>=0);
+      t.style.display=ok?'':'none'; if(ok)shown++;
+    });
+    document.querySelectorAll('section').forEach(function(sec){
+      var vis=0;sec.querySelectorAll('.tile,.row').forEach(function(t){
+        if(t.style.display!=='none')vis++;});
+      sec.querySelector('.empty').style.display=vis?'none':'block';
+    });
+    if(count)count.textContent=shown+' / '+total+' shown';
+  }
+  function reset(){
+    [fb,fs,fmin,fmax,fq].forEach(function(el){if(el)el.value='';});
+    apply();
+  }
+  // 'input' covers typing/sliders; 'change' covers selects and odd webviews
+  // that never fire 'input'; the Apply button covers everything else
+  // (e.g. hardened previews where events are delayed or swallowed).
+  [fb,fs,fmin,fmax,fq].forEach(function(el){
+    if(!el) return;
+    el.addEventListener('input',apply);
+    el.addEventListener('change',apply);
+  });
+  if(applyBtn) applyBtn.addEventListener('click',apply);
+  if(resetBtn) resetBtn.addEventListener('click',reset);
+  apply();
+})();</script>
+</body></html>
