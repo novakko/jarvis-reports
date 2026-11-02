@@ -1,0 +1,767 @@
+# Build the BRAIN-DUMP mod for Claude Code (no internet)
+
+**Tested on Claude Code 2.1.316.** You are Claude Code on a MacBook. Build the BRAIN-DUMP mod below on this machine, exactly as written. The complete source is in this document, so nothing needs downloading.
+
+## Rules
+
+- No internet. Do not use `npm`, `npx`, `curl`, `claude plugin install` or `claude plugin marketplace`. The mod runs from a plain local folder.
+- Do not change, improve or tidy the source. It already holds the requested behaviour. The only exception is step 6.
+- The mod may only use the Claude models Opus, Sonnet and Haiku. Do not add any other model or provider.
+- Edit nothing outside `~/.claude-mods/brain-dump` and your settings file, which is `settings.json` in `CLAUDE_CONFIG_DIR` if that is set, else `~/.claude/settings.json`.
+- If an organisation policy on this machine blocks local mods, stop and tell the person. Do not work around it.
+
+## What you are building
+
+**Name on disk:** `brain-dump` (plugin name). Command `/shape`.
+
+**What it does.** A long, loose prompt gets an offer to turn it into a clear four-part brief before it is sent.
+
+**Flow:**
+1. It triggers on a prompt typed in the box or sent from the phone, with 120 words or more, that does not start with `/` and does not contain `THE JOB`. Prompts from anything else are left alone.
+2. It asks: `This looks like a brain dump. Shape it into a clear brief first?` with options `Shape it` and `Send as is` (header `Brain dump`). `Send as is`, or dismissing the question, sends the prompt unchanged.
+3. Step A: one **Sonnet** call (low effort, 800 max tokens, 45 s timeout) looks only for real gaps or conflicts and returns JSON with 0 to 3 questions of 2 or 3 options each. A failed call or bad JSON means zero questions, logged, and the flow goes on.
+4. Each question is asked in the dialog, headed `Dump 1 of 2`. A typed answer is used as given. A dismissed one is marked `skipped, no answer` and becomes `unknown: ask me` in the brief.
+5. Step B: one **Sonnet** call (low effort, 2000 max tokens, 60 s timeout) writes the brief with the headings `THE JOB`, `THE WHY`, `THE GUARDRAILS`, `DONE MEANS`, keeping every fact and adding none.
+6. House style is enforced in code: em and en dashes become commas, ship/ships/shipped/shipping become deliver forms, and code fences and anything before `THE JOB` are removed. A reply missing a heading counts as failed.
+7. The brief replaces the text in the prompt box, the original is dropped (`shaped into a brief`), and a toast says `Shaped into a brief. Check it, then press Enter.` The person reads and edits it and sends it themselves.
+8. On any failure: toast `Could not shape it: <why>. Sent as is.`, and the original goes through. Nothing typed is ever lost.
+
+**While working:** a toast `Shaping your brain dump...`, and the status line shows `Shaping your brain dump: reading for gaps`, `... question 1 of 2`, `... writing the brief`, then cleared.
+
+**Log:** `<config dir>/mods-logs/brain-dump.log`. The config dir is `CLAUDE_CONFIG_DIR`, else `$HOME/.claude`.
+
+**Switches:**
+- `/shape` toggles shaping, answers and toasts `Brain dump shaping is on.` or `off.`, and is remembered across sessions.
+- Every 3 seconds the mod reads `<config dir>/mods/switches.json`, and `{"brain-dump": false}` turns it off everywhere. While that is set, `/shape` answers `Brain-Dump Shaper is off. Turn it on with /mods.` There is no `/mods` command in this setup, so to turn it back on, edit that file. Keep the message as it is.
+
+## Steps
+
+Do these in order.
+
+### 1. Check the machine
+
+Run `claude --version`. Mods need 2.1.287 or newer, so below that, stop and tell the person. Run `claude plugin list`. If any entry is named `brain-dump` or starts `brain-dump@`, stop and ask before going on, because two copies would run at once. If `~/.claude-mods/brain-dump` already exists and has files in it, show them and ask before replacing them.
+
+### 2. Put the files in place
+
+The source sits at the end of this document between `<<<<<<<< FILE: <path>` and `>>>>>>>> END FILE` lines. The instructions end at the line `=== END OF INSTRUCTIONS ===`. On the file route below you do not need to read past it.
+
+**If this document is a file on disk**, use this. It copies every byte, so use it whenever you can:
+
+```sh
+PROMPT='/absolute/path/of/this/document.md'
+DEST="$HOME/.claude-mods/brain-dump"; mkdir -p "$DEST"
+awk -v dest="$DEST" '
+/^<<<<<<<< FILE: /{f=dest "/" substr($0,16); d=f; sub(/\/[^\/]*$/,"",d); system("mkdir -p \"" d "\""); printf "" > f; next}
+/^>>>>>>>> END FILE$/{close(f); f=""; next}
+f!=""{print > f}' "$PROMPT"
+```
+
+**If you only have this as pasted text**, skip that command and create each file yourself at `~/.claude-mods/brain-dump/<path>`, with its exact contents, including the last block, `.checksums.sha256`. Leave out the marker lines, the blank line between blocks and any line numbers. Copy character for character, taking care with symbols such as `●`, `▰` and `→`, and end each file with one newline.
+
+### 3. Prove the files are exact
+
+```sh
+cd "$HOME/.claude-mods/brain-dump" && shasum -a 256 -c .checksums.sha256
+```
+
+Every line must say `OK`. On a mismatch, redo that file from this document. Never edit the checksums. Then delete `.checksums.sha256`.
+
+### 4. Validate and test
+
+```sh
+claude plugin validate "$HOME/.claude-mods/brain-dump"
+claude plugin test "$HOME/.claude-mods/brain-dump"
+```
+
+Neither needs the mod to be turned on. The last line of validation must be `✔ Validation passed` (with or without warnings). Anything else in that output, such as problems the plugin directory refuses and missing-author or icon warnings, does not matter, as this mod is never submitted anywhere. Tests must show **11 pass, 0 fail**.
+
+### 5. Turn it on
+
+Find your settings file: `settings.json` in `CLAUDE_CONFIG_DIR` if that is set, else `~/.claude/settings.json`. Use your Read and Edit tools on its full absolute path. Create the file with `{}` if it is missing, and add an `env` object if it has none. In `env`, make sure `CLAUDE_CODE_PLUGIN_DIRS` includes the absolute path of the mod folder, with `~` expanded, such as `/Users/<name>/.claude-mods/brain-dump`. If the variable already has a value, append with a `:` and keep what is there. Do not add a duplicate. Change nothing else, and leave the file as valid JSON.
+
+Example: `"env": { "CLAUDE_CODE_PLUGIN_DIRS": "/Users/<name>/.claude-mods/brain-dump" }`
+
+### 6. Only if step 4 failed
+
+If the checksums passed but validation or a test failed, this Claude Code build differs from 2.1.316. The API types at `~/.claude-mods/brain-dump/.claude-plugin/types/claude-code/index.d.ts` appear only once the mod has loaded, so they are normally absent; without them, work from the failure output alone. Make the smallest fix that keeps the behaviour above, and rerun step 4. List every change in your report. If you cannot get it passing, say so plainly and do not do step 5.
+
+### 7. Report
+
+Tell the person:
+- the checksum, validation and test results, and whether step 6 was needed
+- to start a new Claude Code session, because a running one will not load the mod
+- what they should see: `/shape` answers and turns shaping off, and running it again turns it back on. Then a prompt of 120 words or more that is not a slash command and has no `THE JOB` offers to shape it.
+
+=== END OF INSTRUCTIONS ===
+
+<<<<<<<< FILE: .claude-plugin/plugin.json
+{
+  "name": "brain-dump",
+  "version": "0.2.0",
+  "description": "Offers to shape a long, loose prompt into a four-part brief (the job, the why, the guardrails, done means), asking up to three questions about real gaps first",
+  "author": {
+    "name": "Ben AI",
+    "url": "https://www.benai.co"
+  },
+  "types": "./types/index.d.ts"
+}
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: hooks/hooks.json
+{ "modules": ["./register.tsx"] }
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: hooks/register.test.tsx
+import { expect, mock, test } from 'claude-code/testing'
+
+const BRIEF = `THE JOB
+Write a one-page summary of the Q3 churn numbers for Ben.
+
+THE WHY
+For Ben, to use in the Monday team call.
+
+THE GUARDRAILS
+- Use the Stripe export from 3 October.
+- Keep it under 300 words.
+
+DONE MEANS
+- Ben can read it in two minutes and knows the top three reasons.`
+
+const filler =
+  'so basically I was thinking about the churn thing and um we need something for Ben for Monday and it should use the Stripe export from the third of October and keep it short like under three hundred words and I want the top three reasons people leave and honestly I keep going back and forth on how much detail to put in because Ben does not like long docs and the team call is only thirty minutes and we also need to make sure the numbers match what Sam said last week about the cohort'
+
+// Typed loosely: the AskUserQuestion matcher's full type is too deep for tsc.
+type LooseOn = (event: string, match: object, hook: (_$: unknown, e: { questions: { question: string }[] }) => Promise<unknown>) => void
+
+const longDump = `${filler} ${filler}`.split(/\s+/).slice(0, 150).join(' ')
+
+for (const surface of ['desktop', 'terminal'] as const) {
+  test(`shapes a brain dump, sends as is, and skips short or shaped prompts (${surface})`, { timeoutMs: 30000 }, async ($, on) => {
+    const store: Record<string, unknown> = {}
+    const files: Record<string, string> = {}
+    let answer = 'Shape it'
+    let asks = 0
+    let modelCalls = 0
+    let modelFails = false
+    const filled: string[] = []
+    const passed: string[] = []
+
+    mock.env(on, { HOME: '/home/t' })
+    on('session.start', async ($, e) => ({ cwd: e.cwd }) as never)
+    on('command.register', async () => ({ value: undefined }) as never)
+    on('store.get', async ($, e) => ({ value: store[(e as { key: string }).key] }) as never)
+    on('store.set', async ($, e) => {
+      const { key, value } = e as { key: string; value: unknown }
+      store[key] = value
+      return { value: undefined } as never
+    })
+    on('fs.exists', async ($, e) => ({ value: (e as { path: string }).path in files }) as never)
+    on('fs.read', async ($, e) => ({ value: files[(e as { path: string }).path] ?? '' }) as never)
+    on('fs.write', async ($, e) => {
+      const { path, text } = e as { path: string; text: string }
+      files[path] = text
+      return { value: undefined } as never
+    })
+    on('process.run', async () => ({ value: { exitCode: 0, stdout: '', stderr: '' } }) as never)
+    on('ui.toast', async () => ({ value: undefined }) as never)
+    ;(on as unknown as LooseOn)('tool.call', { tool: 'AskUserQuestion' }, async (_$, e) => {
+      asks += 1
+      const { questions } = e
+      const q = questions[0]?.question ?? ''
+      return { result: { questions, answers: { [q]: answer } } }
+    })
+    on('ui.status', async () => ({ value: undefined }) as never)
+    on('model.complete', async ($, e) => {
+      modelCalls += 1
+      if (modelFails) return { value: { isAnswered: false, reason: 'api-error', status: 529, error: 'overloaded', usage: {} } } as never
+      const gaps = (e.system ?? '').includes('Return JSON only')
+      return { value: { isAnswered: true, text: gaps ? '{"questions":[]}' : BRIEF, usage: {} } } as never
+    })
+    on('prompt.fill', async ($, e) => {
+      filled.push((e as { text: string }).text)
+      return { isFilled: true } as never
+    })
+    on('prompt.submit', async ($, e) => {
+      passed.push(e.text)
+      return { text: e.text }
+    })
+
+    await $.session.start({ source: 'startup', cwd: '/tmp', surface, isInteractive: true } as never)
+    const composer = { kind: 'composer' } as const
+
+    // 1. A 150-word dump, answered Shape it: dropped, and the box gets the brief.
+    const r1 = await $.prompt.submit({ text: longDump, origin: composer, wait: false } as never)
+    expect(asks, 'asked once').toBe(1)
+    expect(modelCalls, 'gap check plus brief').toBe(2)
+    expect((r1 as { drop?: string }).drop, 'original dropped').toBe('shaped into a brief')
+    expect(passed.length, 'nothing sent').toBe(0)
+    expect(filled.length, 'box filled once').toBe(1)
+    for (const h of ['THE JOB', 'THE WHY', 'THE GUARDRAILS', 'DONE MEANS']) expect(filled[0] ?? '', `brief has ${h}`).toContain(h)
+
+    // 2. Send as is: next gets the original text.
+    answer = 'Send as is'
+    await $.prompt.submit({ text: longDump, origin: composer, wait: false } as never)
+    expect(asks, 'asked again').toBe(2)
+    expect(passed[0], 'original sent unchanged').toBe(longDump)
+    expect(filled.length, 'box untouched').toBe(1)
+
+    // 3. A 20-word prompt: no ask.
+    const short = longDump.split(' ').slice(0, 20).join(' ')
+    await $.prompt.submit({ text: short, origin: composer, wait: false } as never)
+    expect(asks, 'no ask for 20 words').toBe(2)
+    expect(passed[1]).toBe(short)
+
+    // 4. Already shaped: no ask.
+    const shaped = `THE JOB\n${longDump}`
+    await $.prompt.submit({ text: shaped, origin: composer, wait: false } as never)
+    expect(asks, 'no ask when THE JOB is there').toBe(2)
+    expect(passed[2]).toBe(shaped)
+
+    // A plugin's own long prompt is left alone.
+    await $.prompt.submit({ text: longDump, origin: { kind: 'task-notification' }, wait: false } as never)
+    expect(asks, 'no ask for a notification').toBe(2)
+
+    // A failed model call: the original goes through and the log says why.
+    answer = 'Shape it'
+    modelFails = true
+    await $.prompt.submit({ text: longDump, origin: composer, wait: false } as never)
+    expect(passed[passed.length - 1], 'original sent after a failure').toBe(longDump)
+    const logged = Object.entries(files).find(([k]) => k.endsWith('/.claude/mods-logs/brain-dump.log'))
+    expect(logged?.[1] ?? '', 'failure logged').toContain('overloaded')
+  })
+}
+
+for (const surface of ['desktop', 'terminal'] as const) {
+  test(`does nothing when switched off in /mods (${surface})`, { timeoutMs: 30000 }, async ($, on) => {
+    let switches = ''
+    let asks = 0
+    const passed: string[] = []
+    const isSwitches = (e: unknown) => (e as { path: string }).path.endsWith('/.claude/mods/switches.json')
+    on('session.start', async ($, e) => ({ cwd: e.cwd }) as never)
+    on('command.register', async () => ({ value: undefined }) as never)
+    const clock = mock.clock(on, { now: 0 })
+    mock.env(on, { HOME: '/home/t' })
+    on('store.get', async () => ({ value: undefined }) as never)
+    on('store.set', async () => ({ value: undefined }) as never)
+    on('fs.exists', async ($, e) => ({ value: isSwitches(e) && switches !== '' }) as never)
+    on('fs.read', async ($, e) => ({ value: isSwitches(e) ? switches : '' }) as never)
+    ;(on as unknown as LooseOn)('tool.call', { tool: 'AskUserQuestion' }, async (_$, e) => {
+      asks += 1
+      const { questions } = e
+      return { result: { questions, answers: { [questions[0]?.question ?? '']: 'Send as is' } } }
+    })
+    on('prompt.submit', async ($, e) => {
+      passed.push(e.text)
+      return { text: e.text }
+    })
+    await $.session.start({ source: 'startup', cwd: '/tmp', surface, isInteractive: true } as never)
+    await clock.settle()
+    switches = JSON.stringify({ 'brain-dump': false })
+    await clock.advance(3100)
+
+    await $.prompt.submit({ text: longDump, origin: { kind: 'composer' }, wait: false } as never)
+    expect(asks, 'no offer when off').toBe(0)
+    expect(passed[0], 'the dump goes through as typed').toBe(longDump)
+    const said = await $.command.run({ command: 'shape', args: '' } as never)
+    expect(JSON.stringify(said), 'the command says it is off').toContain('Turn it on with /mods')
+  })
+}
+
+// The two-step shaper: step A reads for gaps, the questions are asked, step B
+// writes the brief with the answers. model.complete answers each call in turn.
+type On = Parameters<NonNullable<Parameters<typeof test>[2]>>[1]
+type Rig = {
+  replies: string[]
+  answers: Record<string, string | null>
+  calls: number
+  asks: { q: string; header: string }[]
+  prompts: string[]
+  filled: string[]
+  statuses: (string | undefined)[]
+  files: Record<string, string>
+}
+
+function rig(on: On, replies: string[], answers: Record<string, string | null>): Rig {
+  const r: Rig = { replies, answers, calls: 0, asks: [], prompts: [], filled: [], statuses: [], files: {} }
+  mock.clock(on, { now: 0 })
+  mock.env(on, { HOME: '/home/t' })
+  on('session.start', async ($, e) => ({ cwd: e.cwd }) as never)
+  on('command.register', async () => ({ value: undefined }) as never)
+  on('store.get', async () => ({ value: undefined }) as never)
+  on('store.set', async () => ({ value: undefined }) as never)
+  on('fs.exists', async ($, e) => ({ value: (e as { path: string }).path in r.files }) as never)
+  on('fs.read', async ($, e) => ({ value: r.files[(e as { path: string }).path] ?? '' }) as never)
+  on('fs.write', async ($, e) => {
+    const { path, text } = e as { path: string; text: string }
+    r.files[path] = text
+    return { value: undefined } as never
+  })
+  on('process.run', async () => ({ value: { exitCode: 0, stdout: '', stderr: '' } }) as never)
+  on('ui.toast', async () => ({ value: undefined }) as never)
+  on('ui.status', async ($, e) => {
+    r.statuses.push((e as { text: string | undefined }).text)
+    return { value: undefined } as never
+  })
+  ;(on as unknown as LooseOn)('tool.call', { tool: 'AskUserQuestion' }, async (_$, e) => {
+    const { questions } = e
+    const first = questions[0] as { question: string; header: string }
+    r.asks.push({ q: first.question, header: first.header })
+    const a = first.question.startsWith('This looks like a brain dump') ? 'Shape it' : r.answers[first.question]
+    if (a === null || a === undefined) return { deny: 'dismissed' }
+    return { result: { questions, answers: { [first.question]: a } } }
+  })
+  on('model.complete', async ($, e) => {
+    r.prompts.push(e.prompt)
+    const text = r.replies[r.calls] ?? BRIEF
+    r.calls += 1
+    return { value: { isAnswered: true, text, usage: {} } } as never
+  })
+  on('prompt.fill', async ($, e) => {
+    r.filled.push((e as { text: string }).text)
+    return { isFilled: true } as never
+  })
+  on('prompt.submit', async ($, e) => ({ text: e.text }))
+  return r
+}
+
+const logOf = (r: Rig) => Object.entries(r.files).find(([k]) => k.endsWith('/.claude/mods-logs/brain-dump.log'))?.[1] ?? ''
+
+for (const surface of ['desktop', 'terminal'] as const) {
+  test(`zero questions goes straight to the brief (${surface})`, { timeoutMs: 30000 }, async ($, on) => {
+    const r = rig(on, ['{"questions":[]}', BRIEF], {})
+    await $.session.start({ source: 'startup', cwd: '/tmp', surface, isInteractive: true } as never)
+    const out = await $.prompt.submit({ text: longDump, origin: { kind: 'composer' }, wait: false } as never)
+    expect(r.asks.length, 'only the Shape it offer is asked').toBe(1)
+    expect(r.prompts.length, 'gap check plus brief').toBe(2)
+    expect(r.prompts[1] ?? '', 'no answers block when nothing was asked').not.toContain('<answers>')
+    expect((out as { drop?: string }).drop, 'original dropped').toBe('shaped into a brief')
+    expect(r.filled[0] ?? '', 'box holds the brief').toContain('THE JOB')
+    expect(r.statuses.some(s => s?.includes('reading for gaps')), 'shows reading for gaps').toBe(true)
+    expect(r.statuses.some(s => s?.includes('writing the brief')), 'shows writing the brief').toBe(true)
+    expect(r.statuses[r.statuses.length - 1], 'status cleared when done').toBe(undefined)
+    expect(logOf(r), 'log has the count and time').toMatch(/shaped in \d+\.\ds: 0 questions/)
+  })
+
+  test(`two questions are asked and their answers reach the brief prompt (${surface})`, { timeoutMs: 30000 }, async ($, on) => {
+    const q1 = 'Is the summary for Ben only, or the whole team?'
+    const q2 = 'When do you need it?'
+    const q3 = 'Which Stripe export should I use?'
+    const gaps = '```json\n' + JSON.stringify({ questions: [{ q: q1, options: ['Ben only', 'Whole team'] }, { q: q2, options: ['Today', 'Monday'] }] }) + '\n```'
+    const r = rig(on, [gaps, BRIEF], { [q1]: 'Ben only', [q2]: 'By Friday noon' })
+    await $.session.start({ source: 'startup', cwd: '/tmp', surface, isInteractive: true } as never)
+    await $.prompt.submit({ text: longDump, origin: { kind: 'composer' }, wait: false } as never)
+    expect(r.asks.length, 'offer plus two questions').toBe(3)
+    expect(r.asks[1]?.header, 'first header').toBe('Dump 1 of 2')
+    expect(r.asks[2]?.header, 'second header').toBe('Dump 2 of 2')
+    const stepB = r.prompts[1] ?? ''
+    expect(stepB, 'step B has the dump').toContain(longDump)
+    expect(stepB, 'step B has question 1').toContain(q1)
+    expect(stepB, 'step B has answer 1').toContain('A: Ben only')
+    expect(stepB, 'step B has the typed answer').toContain('A: By Friday noon')
+    expect(r.filled.length, 'box filled').toBe(1)
+    expect(logOf(r), 'log counts them').toContain('2 questions, 2 answered, 0 skipped')
+
+    // A dismissed question is skipped and marked for "unknown: ask me".
+    const gaps2 = JSON.stringify({ questions: [{ q: q1, options: ['Ben only', 'Whole team'] }, { q: q3, options: ['3 October', 'Latest'] }] })
+    r.prompts.length = 0
+    r.calls = 0
+    r.replies = [gaps2, BRIEF]
+    r.answers = { [q1]: 'Whole team', [q3]: null }
+    await $.prompt.submit({ text: longDump, origin: { kind: 'composer' }, wait: false } as never)
+    const stepB2 = r.prompts[1] ?? ''
+    expect(stepB2, 'answered one is there').toContain('A: Whole team')
+    expect(stepB2, 'skipped one is marked').toContain(`Q: ${q3}\nA: skipped, no answer`)
+    expect(stepB2, 'skipped means unknown: ask me').toContain('unknown: ask me')
+    expect(r.asks.length, 'offer plus two more questions').toBe(6)
+    expect(r.filled.length, 'still makes a brief').toBe(2)
+    expect(logOf(r), 'log counts the skip').toContain('2 questions, 1 answered, 1 skipped')
+  })
+
+  test(`bad JSON from the gap check still makes a brief (${surface})`, { timeoutMs: 30000 }, async ($, on) => {
+    const r = rig(on, ['Sure! I think the dump is mostly clear, maybe ask about the deadline.', BRIEF], {})
+    await $.session.start({ source: 'startup', cwd: '/tmp', surface, isInteractive: true } as never)
+    const out = await $.prompt.submit({ text: longDump, origin: { kind: 'composer' }, wait: false } as never)
+    expect(r.asks.length, 'no questions after bad JSON').toBe(1)
+    expect(r.prompts.length, 'brief still written').toBe(2)
+    expect((out as { drop?: string }).drop, 'original dropped').toBe('shaped into a brief')
+    expect(r.filled[0] ?? '', 'box holds the brief').toContain('DONE MEANS')
+    expect(logOf(r), 'parse failure logged').toContain('gap check parse failed')
+    expect(r.statuses[r.statuses.length - 1], 'status cleared').toBe(undefined)
+  })
+}
+
+test('config dir follows CLAUDE_CONFIG_DIR, not the plugin path', { timeoutMs: 30000 }, async ($, on) => {
+  const reads: string[] = []
+  mock.env(on, { HOME: '/home/t', CLAUDE_CONFIG_DIR: '/cfg' })
+  mock.clock(on, { now: 0 })
+  on('session.start', async ($, e) => ({ cwd: e.cwd }) as never)
+  on('command.register', async () => ({ value: undefined }) as never)
+  on('store.get', async () => ({ value: undefined }) as never)
+  on('fs.exists', async (_$, e) => {
+    reads.push((e as { path: string }).path)
+    return { value: false } as never
+  })
+  await $.session.start({ source: 'startup', cwd: '/tmp', surface: 'terminal', isInteractive: true } as never)
+  expect(reads).toContain('/cfg/mods/switches.json')
+})
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: hooks/register.tsx
+import type { EngineInterface, PromptSubmitInput, Register } from 'claude-code'
+
+// A long, loose prompt (a voice-note brain dump) gets an offer: shape it into
+// the four-part brief first. Shaped text goes back in the prompt box for the
+// person to read and edit; their next Enter sends it, since it holds THE JOB.
+
+const CMD = 'shape'
+const MIN_WORDS = 120
+const MODEL = 'sonnet'
+const QUESTION = 'This looks like a brain dump. Shape it into a clear brief first?'
+const SHAPE = 'Shape it'
+const AS_IS = 'Send as is'
+const DROP_REASON = 'shaped into a brief'
+const DONE_TOAST = 'Shaped into a brief. Check it, then press Enter.'
+const HEADINGS = ['THE JOB', 'THE WHY', 'THE GUARDRAILS', 'DONE MEANS'] as const
+const MAX_QUESTIONS = 3
+const SKIPPED = 'skipped, no answer'
+const STATUS_START = 'Shaping your brain dump...'
+const STATUS_GAPS = 'Shaping your brain dump: reading for gaps'
+const STATUS_WRITE = 'Shaping your brain dump: writing the brief'
+// The dialog's chip holds 12 characters at most, so "Dump 1 of 2", not "Brain dump · 1 of 2".
+const askHeader = (i: number, n: number) => `Dump ${i} of ${n}`
+const ENABLED = { plugin: 'brain-dump', key: 'enabled' } as const
+
+const SYSTEM = `You rewrite a person's spoken brain dump into a clear brief for an AI assistant.
+
+Output exactly this shape and nothing else, no preamble, no code fences:
+
+THE JOB
+<one or two lines: what to make or do>
+
+THE WHY
+<who it is for and what it is used for>
+
+THE GUARDRAILS
+- <rules, limits, things to avoid, sources to use>
+
+DONE MEANS
+- <how we know it is finished and right>
+
+Rules:
+- Keep every fact, name, number, date, link, file and tool from the dump. Drop only filler and repeats.
+- Add no new facts, numbers, names or requirements that are not in the dump.
+- Where the dump says nothing for a part, write "unknown: ask me" for that part.
+- The prompt may carry <answers>: follow-up questions the person answered. Treat each answer as their own words and use it in the part it belongs to. Where an answer says it was skipped, write that point as "unknown: ask me" in the part it belongs to.
+- Write in the person's voice (I, we, my), as if they wrote the brief themselves.
+- Plain, short English. Short lines and bullets.
+- Never use em dashes or en dashes. Never use the word "ship"; say publish or deliver instead.`
+
+// Step A: a second, cheap read that only looks for real gaps or conflicts.
+const GAPS_SYSTEM = `You read a person's spoken brain dump before it is turned into a brief for an AI assistant.
+Find only real gaps: two instructions in the dump that contradict each other, or a must-know fact that is missing and would change the work (for example who it is for, the deadline, the format, or which source to use).
+
+Return JSON only, no prose, no code fences, in exactly this shape:
+{"questions":[{"q":"<short question ending in a question mark>","options":["<option>","<option>"]}]}
+
+Rules:
+- 0 to 3 questions. When the dump is clear, return {"questions":[]}. Fewer is better.
+- Never ask about something the dump already answers, and never ask about style or nice-to-haves.
+- For a conflict, name both sides in the question and offer each side as an option.
+- Each question has 2 or 3 short options (1 to 5 words), taken from the dump where possible. No "Other" option; the person can type their own.
+- Plain, short English. Never use em dashes or en dashes. Never use the word "ship"; say publish or deliver instead.`
+
+export type Gap = { q: string; options: string[] }
+export type QA = { q: string; a: string | null }
+
+let home = ''
+
+// Config dir: CLAUDE_CONFIG_DIR, else $HOME/.claude. Empty when neither is known.
+async function configHome($: EngineInterface) {
+  const dir = await $.env.get('CLAUDE_CONFIG_DIR')
+  if (dir) return dir
+  const h = await $.env.get('HOME')
+  return h ? `${h}/.claude` : ''
+}
+
+// The /mods switchboard turns this mod off in every chat with switches.json.
+const NAME = 'brain-dump'
+let off = false
+
+async function readSwitch($: EngineInterface) {
+  let now = false
+  try {
+    const base = await configHome($)
+    if (!base) return
+    const path = `${base}/mods/switches.json`
+    if (await $.fs.exists(path)) {
+      const json = JSON.parse(String(await $.fs.read(path))) as Record<string, unknown>
+      now = json[NAME] === false
+    }
+  } catch {
+    now = off
+  }
+  if (now === off) return
+  off = now
+  try {
+    $.ui.invalidate('ui.render')
+  } catch {
+    // The next state change redraws anyway.
+  }
+}
+
+const words = (text: string) => text.trim().split(/\s+/).filter(Boolean).length
+
+// The person's own prompt: typed at the box, or sent from their phone.
+const fromPerson = (e: PromptSubmitInput) => e.origin.kind === 'composer' || e.origin.kind === 'bridge'
+
+export const isBrainDump = (text: string) => {
+  const t = text.trim()
+  if (t.startsWith('/')) return false
+  if (t.includes('THE JOB')) return false
+  return words(t) >= MIN_WORDS
+}
+
+// Holds the model to the house style even when it slips.
+const stripFences = (raw: string) =>
+  raw
+    .trim()
+    .replace(/^```[a-z]*\n?/i, '')
+    .replace(/\n?```$/, '')
+    .trim()
+
+export const houseStyle = (raw: string) => {
+  let t = raw
+  t = t.replace(/\s*[—–]\s*/g, ', ')
+  t = t.replace(/\bship(s|ped|ping)?\b/gi, (w, end: string | undefined) => {
+    const base = end === 's' ? 'delivers' : end === 'ped' ? 'delivered' : end === 'ping' ? 'delivering' : 'deliver'
+    return w.startsWith('S') ? `D${base.slice(1)}` : base
+  })
+  return t
+}
+
+export const tidy = (raw: string) => {
+  const t = houseStyle(stripFences(raw))
+  const start = t.indexOf('THE JOB')
+  return start > 0 ? t.slice(start) : t
+}
+
+const hasAllHeadings = (text: string) => HEADINGS.every(h => text.includes(h))
+
+async function log($: EngineInterface, line: string) {
+  try {
+    if (!home) return
+    const dir = `${home}/mods-logs`
+    const path = `${dir}/brain-dump.log`
+    let old = ''
+    if (await $.fs.exists(path).catch(() => false)) old = String(await $.fs.read(path))
+    else await $.process.run(['mkdir', '-p', dir])
+    await $.fs.write(path, `${old}${new Date().toISOString()} ${line}\n`)
+  } catch {
+    // Logging must never break a prompt.
+  }
+}
+
+async function isOn($: EngineInterface) {
+  const v = await $.store.get('enabled').catch(() => undefined)
+  return v !== false
+}
+
+const failWhy = (r: { reason: string; error?: string; status?: number | null }) =>
+  r.reason === 'api-error' ? `the model call failed (${r.error}${r.status ? ` ${r.status}` : ''})` : r.reason === 'aborted' ? 'the model call timed out' : 'the model gave no text'
+
+// Reads step A's reply. Throws on anything that is not the JSON we asked for;
+// the caller turns that into zero questions.
+export const parseGaps = (raw: string): Gap[] => {
+  const t = stripFences(raw)
+  const a = t.indexOf('{')
+  const b = t.lastIndexOf('}')
+  if (a < 0 || b <= a) throw new Error('no JSON object in the reply')
+  const json = JSON.parse(t.slice(a, b + 1)) as { questions?: unknown }
+  if (!Array.isArray(json.questions)) throw new Error('no questions list in the reply')
+  const out: Gap[] = []
+  for (const item of json.questions) {
+    if (out.length >= MAX_QUESTIONS) break
+    const { q, options } = (item ?? {}) as { q?: unknown; options?: unknown }
+    if (typeof q !== 'string' || !q.trim() || !Array.isArray(options)) continue
+    const opts: string[] = []
+    for (const o of options) {
+      const label = typeof o === 'string' ? houseStyle(o.trim()) : ''
+      if (!label || /^other$/i.test(label) || opts.includes(label)) continue
+      if (opts.length < 3) opts.push(label)
+    }
+    if (opts.length < 2) continue
+    let question = houseStyle(q.trim())
+    if (!question.endsWith('?')) question = `${question}?`
+    out.push({ q: question, options: opts })
+  }
+  return out
+}
+
+// Step A. Never throws: a failed call or bad JSON means zero questions, logged.
+async function findGaps($: EngineInterface, dump: string): Promise<Gap[]> {
+  try {
+    const r = await $.model.complete({
+      model: MODEL,
+      system: GAPS_SYSTEM,
+      prompt: `Here is the brain dump. Return the JSON.\n\n<dump>\n${dump}\n</dump>`,
+      maxTokens: 800,
+      effort: 'low',
+      timeoutMs: 45_000,
+    })
+    if (!r.isAnswered) {
+      await log($, `gap check failed: ${failWhy(r)}; going on with 0 questions`)
+      return []
+    }
+    try {
+      return parseGaps(r.text)
+    } catch (err) {
+      const why = err instanceof Error ? err.message : String(err)
+      await log($, `gap check parse failed: ${why}; reply began ${JSON.stringify(r.text.slice(0, 80))}; going on with 0 questions`)
+      return []
+    }
+  } catch (err) {
+    await log($, `gap check threw: ${err instanceof Error ? err.message : String(err)}; going on with 0 questions`)
+    return []
+  }
+}
+
+// Asks each gap in the engine's dialog. A typed answer under "Other" comes back
+// as the text itself. Dismissing one skips it.
+async function askGaps($: EngineInterface, gaps: Gap[]): Promise<QA[]> {
+  const out: QA[] = []
+  for (const [i, g] of gaps.entries()) {
+    $.ui.status(`Shaping your brain dump: question ${i + 1} of ${gaps.length}`)
+    let a: string | null = null
+    try {
+      const said = (await $.ui.ask(g.q, { options: g.options, header: askHeader(i + 1, gaps.length) })).trim()
+      a = said || null
+    } catch {
+      a = null
+    }
+    out.push({ q: g.q, a })
+  }
+  return out
+}
+
+export const briefPrompt = (dump: string, qa: QA[]) => {
+  let p = `Here is the brain dump. Rewrite it into the brief.\n\n<dump>\n${dump}\n</dump>`
+  if (qa.length) {
+    const lines = qa.map(x => `Q: ${x.q}\nA: ${x.a ?? SKIPPED}`).join('\n\n')
+    p += `\n\nI asked the person these follow-up questions first. Use their answers in the brief. For a skipped one, write that point as "unknown: ask me" in the part it belongs to.\n\n<answers>\n${lines}\n</answers>`
+  }
+  return p
+}
+
+// Step B: the brief itself, now with the answers.
+async function shape($: EngineInterface, dump: string, qa: QA[]): Promise<string> {
+  const r = await $.model.complete({
+    model: MODEL,
+    system: SYSTEM,
+    prompt: briefPrompt(dump, qa),
+    maxTokens: 2000,
+    effort: 'low',
+    timeoutMs: 60_000,
+  })
+  if (!r.isAnswered) throw new Error(failWhy(r))
+  const brief = tidy(r.text)
+  if (!hasAllHeadings(brief)) throw new Error('the brief came back without all four parts')
+  return brief
+}
+
+export const register: Register = on => {
+  on('session.start', async ($, e, next) => {
+    const result = await next(e)
+    home = await configHome($)
+    await $.command.register({ name: CMD, description: 'Turn brain dump shaping on or off' })
+    await $.state.set(ENABLED, await isOn($))
+    await readSwitch($).catch(() => undefined)
+    $.clock.every(3000, () => {
+      void readSwitch($).catch(() => undefined)
+    })
+    return result
+  })
+
+  on('command.run', { command: CMD }, async $ => {
+    if (off) return { text: 'Brain-Dump Shaper is off. Turn it on with /mods.' }
+    const now = !(await isOn($))
+    await $.store.set('enabled', now)
+    await $.state.set(ENABLED, now)
+    const text = now ? 'Brain dump shaping is on.' : 'Brain dump shaping is off.'
+    $.ui.toast(text)
+    return { text }
+  })
+
+  on('prompt.submit', async ($, e, next) => {
+    if (off) return next(e)
+    if (!fromPerson(e) || !isBrainDump(e.text)) return next(e)
+    if (!(await isOn($))) return next(e)
+
+    let answer = ''
+    try {
+      answer = await $.ui.ask(QUESTION, { options: [SHAPE, AS_IS], header: 'Brain dump' })
+    } catch {
+      // Dismissed, or no one to ask: send it as typed.
+      return next(e)
+    }
+    if (answer !== SHAPE) return next(e)
+
+    const started = Date.now()
+    const secs = () => `${((Date.now() - started) / 1000).toFixed(1)}s`
+    let brief = ''
+    let qa: QA[] = []
+    try {
+      $.ui.toast(STATUS_START)
+      $.ui.status(STATUS_GAPS)
+      const gaps = await findGaps($, e.text)
+      qa = await askGaps($, gaps)
+      $.ui.status(STATUS_WRITE)
+      brief = await shape($, e.text, qa)
+    } catch (err) {
+      const why = err instanceof Error ? err.message : String(err)
+      $.ui.status(undefined)
+      $.ui.toast(`Could not shape it: ${why}. Sent as is.`)
+      await log($, `shape failed after ${secs()} (${qa.length} questions): ${why}`)
+      return next(e)
+    }
+    $.ui.status(undefined)
+    const skipped = qa.filter(x => x.a === null).length
+    await log($, `shaped in ${secs()}: ${qa.length} questions, ${qa.length - skipped} answered, ${skipped} skipped`)
+
+    const filled = await $.prompt.fill({ text: brief, mode: 'replace' }).catch((err: unknown) => {
+      void log($, `prompt.fill threw: ${err instanceof Error ? err.message : String(err)}`)
+      return null
+    })
+    if (!filled?.isFilled) {
+      const why = filled?.refusal ? `the prompt box refused it (${filled.refusal})` : 'the prompt box did not take it'
+      $.ui.toast(`Could not shape it: ${why}. Sent as is.`)
+      await log($, `prompt.fill refused: ${why}`)
+      return next(e)
+    }
+
+    $.ui.toast(DONE_TOAST)
+    return { drop: DROP_REASON }
+  })
+}
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: types/index.d.ts
+export type BrainDumpState = {
+  /** False after /shape turns the mod off. Mirrors the store. */
+  enabled: boolean
+}
+
+declare module 'claude-code' {
+  interface PluginState {
+    "brain-dump": { enabled: boolean }
+  }
+}
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: .checksums.sha256
+e67512ef354f39f0bd565196a167b11077a0bc4ffecaaf182109b995258ededd  .claude-plugin/plugin.json
+d842d789476d67282d0f04b7e5fdc68a3d981ccec65dd79cfa2d11eed13fb828  hooks/hooks.json
+a604f679fce02d236f04ef818e12e19bbffa722480a6ce4c64b43205d3c71a05  hooks/register.test.tsx
+cf99a23999cd7f2a22c8659e3948a18031d8ac68cf4a104b62caef67ae97ffad  hooks/register.tsx
+61b9793e3b8d1339b752df0d82ec559ea1a4da527b61af50e4c7886194cb90af  types/index.d.ts
+>>>>>>>> END FILE

@@ -1,0 +1,3237 @@
+# Build the SUBAGENT MONITOR mod for Claude Code (no internet)
+
+**Tested on Claude Code 2.1.316.** You are Claude Code on a MacBook. Build the SUBAGENT MONITOR mod below on this machine, exactly as written. The complete source is in this document, so nothing needs downloading.
+
+## Rules
+
+- No internet. Do not use `npm`, `npx`, `curl`, `claude plugin install` or `claude plugin marketplace`. The mod runs from a plain local folder.
+- Do not change, improve or tidy the source. It already holds the requested behaviour. The only exception is step 6.
+- The mod may only use the Claude models Opus, Sonnet and Haiku. Do not add any other model or provider.
+- Edit nothing outside `~/.claude-mods/flightdeck` and your settings file, which is `settings.json` in `CLAUDE_CONFIG_DIR` if that is set, else `~/.claude/settings.json`.
+- If an organisation policy on this machine blocks local mods, stop and tell the person. Do not work around it.
+
+## What you are building
+
+**Name on disk:** `flightdeck` (plugin name, command `/flightdeck`, pane id `flightdeck`). It is a modified copy of the MIT-licensed Flightdeck 0.5.1. Keep `LICENSE` and `NOTICE`.
+
+**What the person sees.** A live dashboard pane that opens when a session starts, default layout `monitor`:
+- Header: `[ CLAUDE CODE ] 🚀 SUBAGENT MONITOR (v0.7.3) ── SESSION: #TAG | TIME: m:ss | COST: $x.xx`. As the pane narrows it drops version, then session, then time. The cost stays.
+- `SUBSCRIPTION USAGE` box: up to three gradient bars (cyan to magenta) with percent and time to reset. The percent turns red at 90. With no limits it says `no plan limits reported (API session)`.
+- One shared frame with a section per subagent, running first, then finished newest first, up to 6, then `+N more`. Row one: `SUBAGENT_NN`, status, quoted type, `COST: $0.000`. Then rows `Model:`, `Task:`, `Skills:`, `Tokens:`.
+- A `[SUBAGENT_NN] tool → target` line for up to 4 running agents (`no subagents running` when none), and a footer `flightdeck [working…|listening…]`.
+- Digits 1-6 expand a card to show its skills, its last three tool calls and its answer (focus the pane with ctrl+x tab).
+
+**The three requested changes, already in the source below:**
+1. **Active is yellow, not green.** ACTIVE status is `🟡 ACTIVE` in `#fde047` (theme palette: `warning`), and so is the `[SUBAGENT_NN]` tag. Running agents in the other layouts are yellow too.
+2. **Completed is slightly grey.** DONE is a plain `✓ DONE` in `#9ca3af` (theme palette: `inactive`), and the rest of a done card is drawn dim. The emoji `✅` is gone because an emoji cannot be greyed. FAILED stays red so failures stand out. In the monitor only, THINKING stays pink and IDLE stays blue; the other layouts draw every running agent yellow. A card whose last step hit max_tokens is drawn red.
+3. **Skills per subagent.** When a subagent calls the Skill tool, the skill name lands on its own card, once each, in order. It shows in the monitor's `Skills:` row (`—` when none), in the compact layout's windows, in the expanded panel, and in the swimlane and mini info text, which move to a row of their own when a skill exists so that no skill is cut off. Mini shows at most 3 agents, and desktop's time-axis drawing carries no skills. Only skills run through the Skill tool are seen, and the main chat has no card, so its skills are not listed.
+
+**Everything else that must stay:**
+- Hard limit of 4 concurrent subagents. Past it the Agent tool call is refused with `4 subagents already running; wait for one to finish before starting another.` Parallel launches are decided one at a time. A running agent silent for 15 minutes stops counting. Options `maxAgents` (0 = off) and `agentStaleMinutes`.
+- Model routing, option `agentRoutes`, default `general-purpose=sonnet,claude=sonnet,Explore=haiku`. It applies only when the subagent names no model, is not a fork, is an engine agent, and the parent runs Opus. An explicit model always wins.
+- Estimated costs from `hooks/pricing.ts`. Unlisted models show `$—`, never a guess.
+- Other layouts: `/flightdeck layout monitor|auto|compact|wide|mini`, with main, architect, gate, agents, loops, receipt and log panels. Also `/flightdeck close` and `/flightdeck reset`.
+- Default palette is `pastel`, which is what the original setup uses. `theme` is an option.
+- The status line entry `ctx N% · agents a/b · …`.
+- A running card turns IDLE after 60 seconds of silence (120 while thinking; a long tool call stays ACTIVE until the 15-minute limit). Row one shortens on narrow panes.
+- A layout set by command lasts for the session only. `/clear` empties the pane. Credentials are masked in the gate detail.
+- Options, including `openOnStart` and `statusLine`, are in the `/config` menu.
+
+**Note on tests:** the original 77-test suite is not included because of its size. `tests/adjustments.test.tsx` covers the changes above.
+
+## Steps
+
+Do these in order.
+
+### 1. Check the machine
+
+Run `claude --version`. Mods need 2.1.287 or newer, so below that, stop and tell the person. Run `claude plugin list`. If any entry is named `flightdeck` or starts `flightdeck@`, stop and ask before going on, because two copies would run at once. If `~/.claude-mods/flightdeck` already exists and has files in it, show them and ask before replacing them.
+
+### 2. Put the files in place
+
+The source sits at the end of this document between `<<<<<<<< FILE: <path>` and `>>>>>>>> END FILE` lines. The instructions end at the line `=== END OF INSTRUCTIONS ===`. On the file route below you do not need to read past it.
+
+**If this document is a file on disk**, use this. It copies every byte, so use it whenever you can:
+
+```sh
+PROMPT='/absolute/path/of/this/document.md'
+DEST="$HOME/.claude-mods/flightdeck"; mkdir -p "$DEST"
+awk -v dest="$DEST" '
+/^<<<<<<<< FILE: /{f=dest "/" substr($0,16); d=f; sub(/\/[^\/]*$/,"",d); system("mkdir -p \"" d "\""); printf "" > f; next}
+/^>>>>>>>> END FILE$/{close(f); f=""; next}
+f!=""{print > f}' "$PROMPT"
+```
+
+**If you only have this as pasted text**, skip that command and create each file yourself at `~/.claude-mods/flightdeck/<path>`, with its exact contents, including the last block, `.checksums.sha256`. Leave out the marker lines, the blank line between blocks and any line numbers. Copy character for character, taking care with symbols such as `●`, `▰` and `→`, and end each file with one newline.
+
+### 3. Prove the files are exact
+
+```sh
+cd "$HOME/.claude-mods/flightdeck" && shasum -a 256 -c .checksums.sha256
+```
+
+Every line must say `OK`. On a mismatch, redo that file from this document. Never edit the checksums. Then delete `.checksums.sha256`.
+
+### 4. Validate and test
+
+```sh
+claude plugin validate "$HOME/.claude-mods/flightdeck"
+claude plugin test "$HOME/.claude-mods/flightdeck"
+```
+
+Neither needs the mod to be turned on. The last line of validation must be `✔ Validation passed` (with or without warnings). Anything else in that output, such as problems the plugin directory refuses and missing-author or icon warnings, does not matter, as this mod is never submitted anywhere. Tests must show **6 pass, 0 fail**.
+
+### 5. Turn it on
+
+Find your settings file: `settings.json` in `CLAUDE_CONFIG_DIR` if that is set, else `~/.claude/settings.json`. Use your Read and Edit tools on its full absolute path. Create the file with `{}` if it is missing, and add an `env` object if it has none. In `env`, make sure `CLAUDE_CODE_PLUGIN_DIRS` includes the absolute path of the mod folder, with `~` expanded, such as `/Users/<name>/.claude-mods/flightdeck`. If the variable already has a value, append with a `:` and keep what is there. Do not add a duplicate. Change nothing else, and leave the file as valid JSON.
+
+Example: `"env": { "CLAUDE_CODE_PLUGIN_DIRS": "/Users/<name>/.claude-mods/flightdeck" }`
+
+### 6. Only if step 4 failed
+
+If the checksums passed but validation or a test failed, this Claude Code build differs from 2.1.316. The API types at `~/.claude-mods/flightdeck/.claude-plugin/types/claude-code/index.d.ts` appear only once the mod has loaded, so they are normally absent; without them, work from the failure output alone. Make the smallest fix that keeps the behaviour above, and rerun step 4. List every change in your report. If you cannot get it passing, say so plainly and do not do step 5.
+
+### 7. Report
+
+Tell the person:
+- the checksum, validation and test results, and whether step 6 was needed
+- to start a new Claude Code session, because a running one will not load the mod
+- what they should see: a pane titled Flightdeck opens by itself and its header starts `[ CLAUDE CODE ] 🚀 SUBAGENT MONITOR` and ends with `COST:`. The version shows only from about 93 columns. On a narrow terminal the pane waits; run `/flightdeck`.
+
+=== END OF INSTRUCTIONS ===
+
+<<<<<<<< FILE: .claude-plugin/plugin.json
+{
+  "name": "flightdeck",
+  "version": "0.7.3",
+  "description": "Fork of Flightdeck 0.5.1 (MIT) for local-mods: live agent dashboard with a subagent monitor layout (subscription usage bars, per-subagent status, model, task, skills, cost, tokens), run totals, a hard limit on concurrent subagents, and model routing for subagents that would inherit an expensive parent",
+  "author": {
+    "name": "Stephen Casella",
+    "url": "https://github.com/scasella"
+  },
+  "homepage": "https://github.com/scasella/claude-flightdeck",
+  "repository": "https://github.com/scasella/claude-flightdeck",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "claude-code-mod",
+    "claude-code-plugin",
+    "dashboard",
+    "subagents",
+    "agents",
+    "observability",
+    "tui"
+  ],
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "architectPattern": {
+      "title": "Architect pattern",
+      "description": "Regular expression (case-insensitive) for the agent types and server tools that count as the on-call architect, e.g. advisor|architect|reviewer",
+      "type": "string",
+      "default": "advisor|architect"
+    },
+    "architectLabel": {
+      "title": "Architect label",
+      "description": "Name shown for the architect role",
+      "type": "string",
+      "default": "ARCHITECT"
+    },
+    "gateLabel": {
+      "title": "Gate label",
+      "description": "Name shown for the permission panel",
+      "type": "string",
+      "default": "GATE"
+    },
+    "panels": {
+      "title": "Panels",
+      "description": "Comma-separated panels in display order: main, architect, gate, agents, loops, receipt, log. Leave one out to hide it.",
+      "type": "string",
+      "default": "main,architect,gate,agents,loops,receipt,log"
+    },
+    "motion": {
+      "title": "Motion",
+      "description": "Animate the connectors while real work flows, or keep them still",
+      "type": "string",
+      "options": [
+        "while-active",
+        "off"
+      ],
+      "default": "while-active"
+    },
+    "moments": {
+      "title": "Architect moments",
+      "description": "Show the inferred moment of each consult (before a plan, error repeats, before done)",
+      "type": "boolean",
+      "default": true
+    },
+    "matchDescriptions": {
+      "title": "Match agent descriptions",
+      "description": "Also count an agent type as the architect when its description (not just its name) matches the pattern",
+      "type": "boolean",
+      "default": false
+    },
+    "maxCards": {
+      "title": "Cards before swimlanes",
+      "description": "Subagent cards drawn in the monitor (and windows in the other layouts); more agents than this show +N more, or switch to swimlanes (1-6)",
+      "type": "number",
+      "default": 6
+    },
+    "paneColumns": {
+      "title": "Pane width",
+      "description": "Columns the pane asks for when docked beside a fullscreen transcript, 40 or more. Claude Code caps the dock at 45% of the terminal, and a width you dragged it to wins.",
+      "type": "number",
+      "default": 66
+    },
+    "layout": {
+      "title": "Layout",
+      "description": "monitor: subscription usage bars and one card per subagent, docked or inline. auto: a summary of at most 8 rows when the pane sits inline above the prompt, two columns from 110 columns when docked, one column otherwise. The session log, gate and other panels are in compact (/flightdeck layout compact).",
+      "type": "string",
+      "options": [
+        "monitor",
+        "auto",
+        "compact",
+        "wide",
+        "mini"
+      ],
+      "default": "monitor"
+    },
+    "agentRoutes": {
+      "title": "Agent routes",
+      "description": "Comma-separated type=model pairs: a subagent of that type is started on that model when it names none and the parent runs Opus (never forks, never other parents). Empty turns routing off.",
+      "type": "string",
+      "default": "general-purpose=sonnet,claude=sonnet,Explore=haiku"
+    },
+    "palette": {
+      "title": "Palette",
+      "description": "theme follows your Claude Code theme (light, dark, colour-blind); pastel is fixed colours tuned for dark terminals",
+      "type": "string",
+      "options": [
+        "theme",
+        "pastel"
+      ],
+      "default": "pastel"
+    },
+    "openOnStart": {
+      "title": "Open on start",
+      "description": "Open the pane when a session starts",
+      "type": "boolean",
+      "default": true
+    },
+    "statusLine": {
+      "title": "Status line",
+      "description": "Show context, agents, consults and denials in the status line",
+      "type": "boolean",
+      "default": true
+    },
+    "maxAgents": {
+      "title": "Max concurrent subagents",
+      "description": "Hard limit: the Agent tool call is refused while this many subagents run. 0 turns the limit off.",
+      "type": "number",
+      "default": 4
+    },
+    "agentStaleMinutes": {
+      "title": "Stale agent minutes",
+      "description": "A running subagent with no step or tool call for this long stops counting toward the limit (self-heal after a crash)",
+      "type": "number",
+      "default": 15
+    }
+  }
+}
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: LICENSE
+MIT License
+
+Copyright (c) 2026 Stephen Casella
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: NOTICE
+This plugin is a modified copy of Flightdeck 0.5.1
+https://github.com/scasella/claude-flightdeck
+Copyright (c) 2026 Stephen Casella, MIT License (see LICENSE).
+
+Changes in this fork (local-mods): model and token display in swimlanes and the
+inline summary, per-subagent three-line windows, run totals and estimated cost
+(hooks/pricing.ts), a hard limit on concurrent subagents, architect agents on
+cards, yellow active and greyed completed subagents, skills per subagent.
+Not endorsed by the upstream author. Do not install it together with
+flightdeck@claude-flightdeck.
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: hooks/core.ts
+// Pure data: defaults, reducers, formatting and layout math. Nothing here touches `$`, so every
+// behaviour is testable directly (the test kit cannot raise a subagent's tool call or a
+// permission check inside a call; these functions are what the hooks apply).
+import type {
+  AgentCard,
+  Architect,
+  Bucket,
+  Check,
+  Gate,
+  Layout,
+  LogLine,
+  Loop,
+  Main,
+  Moment,
+  Receipt,
+  Roster,
+  Tally,
+  ToolNote,
+  Turn,
+  Usage,
+  View,
+} from '../types'
+
+import { costOf, priceOf, windowOf } from './pricing'
+
+export const SCHEMA_VERSION = 2
+
+/** Shown in the monitor's header; keep it equal to plugin.json's version. */
+export const VERSION = '0.7.3'
+
+// ---------------------------------------------------------------- defaults
+
+export const DEFAULT_MAIN: Main = { model: '', effort: '', mode: '', steps: 0, isRunning: false, speed: null }
+export const DEFAULT_USAGE: Usage = {
+  pct: null,
+  tokens: null,
+  window: 0,
+  compactWindow: null,
+  compactFor: 0,
+  compactMisses: 0,
+  costUsd: null,
+  limits: [],
+  compactions: 0,
+  lastCompactAt: null,
+  startedAt: 0,
+  tag: '',
+}
+export const DEFAULT_ARCHITECT: Architect = { consults: [], ids: [], seen: [], lastAdvice: '' }
+const ZERO: Tally = { rule: 0, ask: 0, cleared: 0, deny: 0 }
+export const DEFAULT_GATE: Gate = { recent: [], totals: { file: ZERO, shell: ZERO, other: ZERO } }
+export const DEFAULT_TURN: Turn = { edits: 0, errorStreak: 0, errors: 0, isReviewing: false, startedAt: 0, costAtStart: null }
+export const DEFAULT_VIEW: View = { expanded: null, gateOpen: null, layout: null }
+export const DEFAULT_ROSTER: Roster = { architectTypes: [] }
+
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
+
+/** A stored object merged over its defaults, so a value saved under an older shape still reads. */
+export const normalize = <T extends object>(def: T, stored: unknown): T =>
+  isObject(stored) ? ({ ...def, ...stored } as T) : def
+
+/** A stored list, or empty when what is stored is not a list. */
+export const listOf = <T>(stored: unknown): T[] => (Array.isArray(stored) ? (stored as T[]) : [])
+
+export const normalizeGate = (stored: unknown): Gate => {
+  const g = normalize(DEFAULT_GATE, stored)
+  const totals = normalize(DEFAULT_GATE.totals, g.totals)
+  return {
+    recent: listOf<Check>(g.recent),
+    totals: { file: normalize(ZERO, totals.file), shell: normalize(ZERO, totals.shell), other: normalize(ZERO, totals.other) },
+  }
+}
+
+export const normalizeCard = (stored: unknown): AgentCard =>
+  normalize<AgentCard>(
+    {
+      id: '',
+      type: 'agent',
+      model: '',
+      description: '',
+      status: 'running',
+      spawnedAt: 0,
+      endedAt: null,
+      ctx: 0,
+      out: 0,
+      inTok: 0,
+      cacheRead: 0,
+      cacheWrite: 0,
+      cost: 0,
+      effort: '',
+      lastAt: 0,
+      steps: 0,
+      lastStop: null,
+      tools: [],
+      answer: '',
+      phase: null,
+      doing: '',
+      skills: [],
+    },
+    stored,
+  )
+
+export const normalizeLog = (stored: unknown): LogLine[] =>
+  listOf<Record<string, unknown>>(stored).map(l => ({
+    at: typeof l.at === 'number' ? l.at : 0,
+    who: String(l.who ?? ''),
+    text: String(l.text ?? ''),
+    agentId: typeof l.agentId === 'string' ? l.agentId : null,
+    kind: l.kind === 'error' || l.kind === 'consult' || l.kind === 'done' ? l.kind : 'info',
+  }))
+
+// ---------------------------------------------------------------- config
+
+export type Panel = 'main' | 'architect' | 'gate' | 'agents' | 'loops' | 'receipt' | 'log'
+const PANELS: readonly Panel[] = ['main', 'architect', 'gate', 'agents', 'loops', 'receipt', 'log']
+
+export type Config = {
+  architect: RegExp
+  architectLabel: string
+  gateLabel: string
+  panels: Panel[]
+  motion: boolean
+  moments: boolean
+  matchDescriptions: boolean
+  maxCards: number
+  agentRoutes: Record<string, string>
+  maxAgents: number
+  agentStaleMs: number
+  paneColumns: number
+  layout: Layout
+  palette: Palette
+  openOnStart: boolean
+  statusLine: boolean
+}
+
+export const DEFAULT_ROUTES = 'general-purpose=sonnet,claude=sonnet,Explore=haiku'
+
+/** `type=model,type=model` read leniently: a piece without both sides is skipped. */
+const parseRoutes = (s: string): Record<string, string> => {
+  const out: Record<string, string> = {}
+  for (const piece of s.split(',')) {
+    const [type = '', model = ''] = piece.split('=').map(x => x.trim())
+    if (type && model) out[type] = model
+  }
+  return out
+}
+
+const safeRegExp = (source: string, fallback: string) => {
+  try {
+    return new RegExp(source || fallback, 'i')
+  } catch {
+    return new RegExp(fallback, 'i')
+  }
+}
+
+/** The plugin's `/config` values, read leniently: anything malformed falls back to the default. */
+export const parseConfig = (o: Readonly<Record<string, unknown>>): Config => {
+  const str = (k: string, d: string) => (typeof o[k] === 'string' && o[k] !== '' ? (o[k] as string) : d)
+  const bool = (k: string, d: boolean) => (typeof o[k] === 'boolean' ? (o[k] as boolean) : d)
+  const panels = str('panels', PANELS.join(','))
+    .split(',')
+    .map(s => s.trim())
+    .filter((p): p is Panel => (PANELS as readonly string[]).includes(p))
+  const layout = str('layout', 'monitor')
+  const max = typeof o.maxCards === 'number' ? Math.round(o.maxCards) : 6
+  const whole = (k: string, d: number) => (typeof o[k] === 'number' && Number.isFinite(o[k]) ? Math.round(o[k] as number) : d)
+  const cols = typeof o.paneColumns === 'number' && Number.isFinite(o.paneColumns) ? Math.round(o.paneColumns) : 66
+  return {
+    architect: safeRegExp(str('architectPattern', ''), 'advisor|architect'),
+    architectLabel: str('architectLabel', 'ARCHITECT'),
+    gateLabel: str('gateLabel', 'GATE'),
+    panels: panels.length > 0 ? [...new Set(panels)] : [...PANELS],
+    motion: str('motion', 'while-active') !== 'off',
+    moments: bool('moments', true),
+    matchDescriptions: bool('matchDescriptions', false),
+    maxCards: Math.min(6, Math.max(1, max)),
+    // An empty string turns routing off; only a missing or non-string value takes the default.
+    agentRoutes: parseRoutes(typeof o.agentRoutes === 'string' ? o.agentRoutes : DEFAULT_ROUTES),
+    // 0 lifts the limit on concurrent subagents.
+    maxAgents: Math.min(50, Math.max(0, whole('maxAgents', 4))),
+    agentStaleMs: Math.max(1, whole('agentStaleMinutes', 15)) * 60_000,
+    // The body clamps its drawing at 40 columns, so a narrower dock would only clip it.
+    paneColumns: Math.max(40, cols),
+    layout: layout === 'compact' || layout === 'wide' || layout === 'mini' || layout === 'auto' ? layout : 'monitor',
+    palette: str('palette', 'pastel') === 'theme' ? 'theme' : 'pastel',
+    openOnStart: bool('openOnStart', true),
+    statusLine: bool('statusLine', true),
+  }
+}
+
+// ---------------------------------------------------------------- palette
+
+export type Palette = 'theme' | 'pastel'
+export type Colors = Record<'main' | 'agent' | 'active' | 'done' | 'gate' | 'cleared' | 'arch' | 'amber' | 'warn' | 'dim' | 'faint' | 'text', string>
+
+/**
+ * `theme` names the person's own theme colours (they follow light, dark and colour-blind themes);
+ * `pastel` is fixed hex tuned for dark terminals.
+ */
+export const PALETTES: Record<Palette, Colors> = {
+  theme: {
+    main: 'claude',
+    agent: 'suggestion',
+    active: 'warning',
+    done: 'inactive',
+    gate: 'success',
+    cleared: 'permission',
+    arch: 'merged',
+    amber: 'warning',
+    warn: 'error',
+    dim: 'inactive',
+    faint: 'subtle',
+    text: 'text',
+  },
+  pastel: {
+    main: '#7dd3fc',
+    agent: '#93c5fd',
+    active: '#fde047',
+    done: '#9ca3af',
+    gate: '#86efac',
+    cleared: '#5eead4',
+    arch: '#c4b5fd',
+    amber: '#fcd34d',
+    warn: '#fca5a5',
+    dim: '#6b7280',
+    faint: '#3f4654',
+    text: '#e5e7eb',
+  },
+}
+
+/** SVG cannot name theme keys: mid-tone colours that read on light and dark backgrounds. */
+export const SVG_COLORS = { running: '#eab308', done: '#9ca3af', failed: '#dc2626', other: '#8b5cf6', label: '#6b7280' }
+
+// ---------------------------------------------------------------- formatting
+
+/** `claude-opus-5-5` → `Opus 5.5`; anything else is shown as given. */
+/**
+ * A model id as people say it, from any provider's spelling: `claude-opus-5-5[1m]` → `Opus 5.5 1M`,
+ * `us.anthropic.claude-sonnet-4-5-20250929-v1:0` → `Sonnet 4.5`, `claude-3-5-haiku-20241022` →
+ * `Haiku 3.5`. Anything else is shown as given, cut to 22 characters.
+ */
+export const prettyModel = (id: string) => {
+  if (!id) return '—'
+  const cap = (f: string) => f.charAt(0).toUpperCase() + f.slice(1)
+  const big = /\[1m\]|-1m\b/i.test(id) ? ' 1M' : ''
+  const now = /claude-([a-z]+)-(\d+)(?:-(\d{1,2}))?(?:-\d{8})?(?![\d])/i.exec(id)
+  if (now?.[1] && !/^\d/.test(now[1])) return `${cap(now[1].toLowerCase())} ${now[2]}${now[3] ? `.${now[3]}` : ''}${big}`
+  const old = /claude-(\d+)(?:-(\d))?-([a-z]+)/i.exec(id)
+  if (old?.[3]) return `${cap(old[3].toLowerCase())} ${old[1]}${old[2] ? `.${old[2]}` : ''}${big}`
+  return shorten(id, 22)
+}
+
+export const shorten = (s: string, n: number) => {
+  const one = s.replace(/\s+/g, ' ').trim()
+  return n <= 0 ? '' : one.length > n ? `${one.slice(0, Math.max(0, n - 1)).trimEnd()}…` : one
+}
+
+export const kTokens = (n: number) =>
+  n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1000 ? `${Math.round(n / 1000)}k` : String(n)
+
+export const fmtDuration = (ms: number) => {
+  const s = Math.max(0, Math.round(ms / 1000))
+  if (s < 60) return `${s}s`
+  const m = Math.floor(s / 60)
+  return m < 60 ? `${m}m${String(s % 60).padStart(2, '0')}s` : `${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}m`
+}
+
+/** A running clock as the live cards draw it: m:ss, or XhYY past an hour. */
+export const fmtTimer = (ms: number) => {
+  const s = Math.max(0, Math.floor(ms / 1000))
+  const m = Math.floor(s / 60)
+  return m < 60 ? `${m}:${String(s % 60).padStart(2, '0')}` : `${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}`
+}
+
+export const fmtClock = (ms: number) => (ms > 0 ? new Date(ms).toTimeString().slice(0, 8) : '--:--:--')
+
+/** `1 error`, `2 errors`. */
+export const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
+
+export const fmtUsd = (n: number) => (n >= 100 ? `$${Math.round(n)}` : `$${n.toFixed(2)}`)
+
+/** Whether a measurement says nothing the stored usage does not: the write (and its redraw) is skipped. */
+export const isSameMeasure = (u: Usage, m: Pick<Usage, 'pct' | 'tokens' | 'window' | 'costUsd' | 'limits'>) =>
+  u.pct === m.pct &&
+  u.tokens === m.tokens &&
+  u.window === m.window &&
+  u.costUsd === m.costUsd &&
+  u.limits.length === m.limits.length &&
+  u.limits.every((l, i) => l.kind === m.limits[i]?.kind && l.pct === m.limits[i]?.pct && (l.resetsAt ?? null) === (m.limits[i]?.resetsAt ?? null))
+
+const STOPS = [[0x5e, 0xea, 0xd4], [0x93, 0xc5, 0xfd], [0xc0, 0x84, 0xfc], [0xe8, 0x79, 0xf9]] as const
+
+/** Cell `i` of a `width`-cell bar, along a cyan → blue → violet → magenta gradient, as `#rrggbb`. */
+export const gradientCell = (i: number, width: number) => {
+  const t = width <= 1 ? 0 : Math.min(1, Math.max(0, i / (width - 1))) * (STOPS.length - 1)
+  const k = Math.min(STOPS.length - 2, Math.floor(t))
+  const a = STOPS[k]!
+  const b = STOPS[k + 1]!
+  return `#${[0, 1, 2].map(c => Math.round(a[c]! + (b[c]! - a[c]!) * (t - k)).toString(16).padStart(2, '0')).join('')}`
+}
+
+/**
+ * How soon a request began to answer: from when it was sent to its first piece of response; null when
+ * none came. No output rate: the reported tokens include thinking, which may arrive unstreamed before
+ * that first piece, so tokens over the visible stream read in the thousands per second.
+ */
+export const stepSpeed = (sentAt: number, firstAt: number | null) => (firstAt === null ? null : { ttftMs: Math.max(0, firstAt - sentAt) })
+
+/** `ttft 0.8s`. */
+export const fmtSpeed = (s: { ttftMs: number }) => `ttft ${(s.ttftMs / 1000).toFixed(1)}s`
+
+/** The compaction window a context breakdown reports: its `rawMaxTokens` when auto-compaction is on and that is smaller than the model's `window`; else null. */
+export const compactWindowOf = (b: { rawMaxTokens: number; isAutoCompactEnabled: boolean } | null | undefined, window: number): number | null =>
+  b && b.isAutoCompactEnabled && b.rawMaxTokens > 0 && b.rawMaxTokens < window ? b.rawMaxTokens : null
+
+/**
+ * What the context gauge measures: the compaction window when one is set smaller than the model's,
+ * else the model's window, and the fill of it from the real `tokens` reading. No gauge (null) without one.
+ */
+export const contextFill = (u: Pick<Usage, 'tokens' | 'window' | 'compactWindow'>): { pct: number | null; window: number } => {
+  const window = u.compactWindow !== null && u.compactWindow > 0 && u.compactWindow < u.window ? u.compactWindow : u.window
+  return { window, pct: u.tokens !== null && window > 0 ? (u.tokens * 100) / window : null }
+}
+
+/** Reads of the compaction window that may miss (no session bound yet) before a model window stops asking. */
+export const COMPACT_TRIES = 3
+
+/**
+ * A measurement of model window `window`: whether it reads the compaction window (not read for this
+ * window yet, fewer than COMPACT_TRIES misses), and the usage with that read claimed. A new window
+ * starts its misses afresh.
+ */
+export const claimCompactRead = (u: Usage, window: number): { usage: Usage; isClaimed: boolean } => {
+  const misses = u.window === window ? u.compactMisses : 0
+  const isClaimed = window > 0 && u.compactFor !== window && misses < COMPACT_TRIES
+  return { usage: { ...u, compactFor: isClaimed ? window : u.compactFor, compactMisses: misses }, isClaimed }
+}
+
+/**
+ * The usage after a compaction-window read for model window `window`. Dropped when a newer claim took
+ * its place (a model switch); a read that failed or came back with no breakdown is a miss, asked
+ * again at the next measurement.
+ */
+export const afterCompactRead = (
+  u: Usage,
+  window: number,
+  b: { rawMaxTokens: number; isAutoCompactEnabled: boolean } | null | undefined,
+): Usage =>
+  u.compactFor !== window
+    ? u
+    : b
+      ? { ...u, compactWindow: compactWindowOf(b, window), compactMisses: 0 }
+      : { ...u, compactWindow: null, compactFor: 0, compactMisses: u.compactMisses + 1 }
+
+/** A new main-loop model may compact in another window (`modelSettings`): read afresh at the next measurement. */
+export const forgetCompactRead = (u: Usage): Usage => ({ ...u, compactWindow: null, compactFor: 0, compactMisses: 0 })
+
+/** A gauge of `width` cells: ▰ filled, ▱ empty. */
+export const gauge = (pct: number, width: number) => {
+  const full = Math.max(0, Math.min(width, Math.round((pct / 100) * width)))
+  return { on: '▰'.repeat(full), off: '▱'.repeat(width - full) }
+}
+
+/** A rate-limit reading as the pane keeps it, its ISO reset time turned into ms since the epoch. */
+export const limitOf = (r: { kind: string; percentUsed: number; resetsAt?: string }) => {
+  const at = r.resetsAt ? Date.parse(r.resetsAt) : NaN
+  return { kind: r.kind, pct: r.percentUsed, resetsAt: Number.isFinite(at) ? at : null }
+}
+
+/** Time left until a window resets, its two largest units: `25m`, `3h10m`, `4d2h`; empty when unknown or past. */
+export const fmtResetIn = (resetsAt: number | null | undefined, now: number) => {
+  if (resetsAt === null || resetsAt === undefined || resetsAt <= now) return ''
+  const m = Math.max(1, Math.floor((resetsAt - now) / 60_000))
+  const d = Math.floor(m / 1440)
+  const h = Math.floor((m % 1440) / 60)
+  if (d > 0) return `${d}d${h}h`
+  return h > 0 ? `${h}h${String(m % 60).padStart(2, '0')}m` : `${m}m`
+}
+
+/** A rate-limit window's short name: `five_hour` → `5h`, `seven_day_opus` → `7d opus`. */
+export const limitLabel = (kind: string) =>
+  kind
+    .replace(/five[_ -]?hours?/i, '5h')
+    .replace(/seven[_ -]?days?/i, '7d')
+    .replace(/[_-]+/g, ' ')
+    .trim()
+
+// ---------------------------------------------------------------- redaction
+
+const SECRETS: [RegExp, string][] = [
+  [/(authorization\s*[:=]\s*)(bearer\s+|basic\s+)?\S+/gi, '$1$2•••'],
+  [/\b(bearer)\s+[A-Za-z0-9._~+/-]{8,}=*/gi, '$1 •••'],
+  [/\b(sk|pk|rk|ghp|gho|ghs|github_pat|xox[abprs])[-_][A-Za-z0-9_-]{8,}/g, '•••'],
+  [/((?:api[_-]?key|access[_-]?token|token|secret|password|passwd|pwd)\s*[=:]\s*)("[^"]*"|'[^']*'|\S+)/gi, '$1•••'],
+  [/(--(?:token|password|api-key|secret)[= ])\S+/gi, '$1•••'],
+  [/(\b[A-Z][A-Z0-9_]*(?:KEY|TOKEN|SECRET|PASSWORD)=)\S+/g, '$1•••'],
+  [/(\b[a-z][a-z0-9+.-]*:\/\/[^\s/:@]+:)[^\s@]+@/gi, '$1•••@'],
+]
+
+/** What the gate drill-down may store: credentials masked before anything is written to state. */
+export const redact = (s: string) => SECRETS.reduce((t, [re, to]) => t.replace(re, to), s)
+
+// ---------------------------------------------------------------- tools and gate
+
+const FILE_TOOLS = new Set(['Read', 'Edit', 'Write', 'NotebookEdit', 'Glob', 'Grep'])
+const SHELL_TOOLS = new Set(['Bash', 'PowerShell'])
+export const EDIT_TOOLS = new Set(['Edit', 'Write', 'NotebookEdit'])
+
+export const bucketOf = (tool: string): Bucket =>
+  FILE_TOOLS.has(tool) ? 'file' : SHELL_TOOLS.has(tool) ? 'shell' : 'other'
+
+/** One line saying what a call was about: its command, path or pattern; redacted. */
+export const describeInput = (tool: string, input: unknown) => {
+  const i = isObject(input) ? input : {}
+  const path = typeof i.file_path === 'string' ? i.file_path.split(/[\\/]/).slice(-2).join('/') : ''
+  const what =
+    typeof i.command === 'string'
+      ? i.command
+      : path || (typeof i.pattern === 'string' ? i.pattern : typeof i.url === 'string' ? i.url : typeof i.description === 'string' ? i.description : '')
+  return redact(what ? `${tool} → ${what}` : tool)
+}
+
+/** Keeps the last `max` checks, but never drops a pending ask: its settle must still find it. */
+export const trimRecent = (list: Check[], max: number): Check[] => {
+  let extra = list.length - max
+  if (extra <= 0) return list
+  const out: Check[] = []
+  for (const c of list) {
+    if (extra > 0 && c.verdict !== 'ask') {
+      extra -= 1
+      continue
+    }
+    out.push(c)
+  }
+  return out.slice(-max * 2)
+}
+
+export const recordCheck = (g: Gate, c: Check): Gate => {
+  const t = g.totals[c.bucket]
+  return {
+    recent: trimRecent([...g.recent, c], 80),
+    totals: { ...g.totals, [c.bucket]: { ...t, [c.verdict]: t[c.verdict] + 1 } },
+  }
+}
+
+/** An `ask` settled by the call that followed it: it ran (cleared) or was refused (deny). */
+export const settleCheck = (g: Gate, id: string, didRun: boolean): Gate => {
+  const c = g.recent.find(r => r.id === id && r.verdict === 'ask')
+  if (!c) return g
+  const verdict = didRun ? 'cleared' : 'deny'
+  const t = g.totals[c.bucket]
+  return {
+    recent: g.recent.map(r => (r === c ? { ...r, verdict } : r)),
+    totals: { ...g.totals, [c.bucket]: { ...t, ask: Math.max(0, t.ask - 1), [verdict]: t[verdict] + 1 } },
+  }
+}
+
+export const gateSummary = (g: Gate) => {
+  const all = (['file', 'shell', 'other'] as const).reduce(
+    (s, k) => ({
+      rule: s.rule + g.totals[k].rule,
+      ask: s.ask + g.totals[k].ask,
+      cleared: s.cleared + g.totals[k].cleared,
+      deny: s.deny + g.totals[k].deny,
+    }),
+    { ...ZERO },
+  )
+  return { ...all, total: all.rule + all.ask + all.cleared + all.deny }
+}
+
+// ---------------------------------------------------------------- turn and architect
+
+/**
+ * The turn after one tool call. Errors count in the main loop only (a subagent's failure is its
+ * own); edits count from every loop, so delegated work still reaches "before done".
+ */
+export const afterCall = (t: Turn, c: { inSubagent: boolean; hasFailed: boolean; isEdit: boolean }): Turn => ({
+  ...t,
+  errorStreak: c.inSubagent ? t.errorStreak : c.hasFailed ? t.errorStreak + 1 : 0,
+  errors: t.errors + (!c.inSubagent && c.hasFailed ? 1 : 0),
+  edits: t.edits + (c.isEdit ? 1 : 0),
+})
+
+/** Which of the architect's three moments a consult falls at: an inference over this turn so far. */
+export const momentOf = (t: Pick<Turn, 'edits' | 'errorStreak'>): Moment =>
+  t.errorStreak >= 2 ? 'error repeats' : t.edits === 0 ? 'before a plan' : 'before done'
+
+export const startConsult = (a: Architect, c: { id: string; at: number; moment: Moment; via: string }): Architect =>
+  a.consults.some(x => x.id === c.id) ? a : { ...a, consults: [...a.consults, { ...c, endAt: null }].slice(-40) }
+
+/** Ends the open consult (the latest without an end), or the one named. */
+export const endConsult = (a: Architect, at: number, advice: string | null, id?: string): Architect => {
+  const open = [...a.consults].reverse().find(c => c.endAt === null && (id === undefined || c.id === id))
+  return {
+    ...a,
+    consults: a.consults.map(c => (c === open ? { ...c, endAt: at } : c)),
+    lastAdvice: advice ?? a.lastAdvice,
+  }
+}
+
+export const isAdvising = (a: Architect) => a.consults.some(c => c.endAt === null)
+
+/** A one-row timeline of consults across `width` cells: ◆ a consult, ━ while it ran. */
+export const consultTimeline = (a: Architect, now: number, width: number) => {
+  if (a.consults.length === 0 || width < 4) return '─'.repeat(Math.max(0, width))
+  const first = a.consults[0]?.at ?? now
+  const span = Math.max(1, now - first)
+  const cells = Array.from({ length: width }, () => '─')
+  for (const c of a.consults) {
+    const from = Math.min(width - 1, Math.floor(((c.at - first) / span) * (width - 1)))
+    const to = Math.min(width - 1, Math.floor((((c.endAt ?? now) - first) / span) * (width - 1)))
+    for (let i = from + 1; i <= to; i += 1) cells[i] = '━'
+    cells[from] = '◆'
+  }
+  return cells.join('')
+}
+
+export const receiptOf = (t: Turn, o: { durationMs: number; agentsSince: number; costNow: number | null; reason: string }): Receipt => ({
+  durationMs: o.durationMs,
+  agents: o.agentsSince,
+  edits: t.edits,
+  errors: t.errors,
+  costDelta: o.costNow !== null && t.costAtStart !== null && o.costNow - t.costAtStart >= 0.005 ? o.costNow - t.costAtStart : null,
+  reason: o.reason,
+})
+
+// ---------------------------------------------------------------- agents and loops
+
+type StepUsage = { input_tokens?: number; cache_read_input_tokens?: number; cache_creation_input_tokens?: number; output_tokens?: number } | null
+
+/** A card after one of its model requests: its context is the latest step's whole input; output, input and cache tokens and the estimated cost add up. */
+export const applyStep = (
+  c: AgentCard,
+  s: { model: string; usage: StepUsage; stopReason: string | null; effort?: unknown; at?: number },
+): AgentCard => {
+  const u = s.usage ?? {}
+  const t = { input: u.input_tokens ?? 0, cacheRead: u.cache_read_input_tokens ?? 0, cacheWrite: u.cache_creation_input_tokens ?? 0, output: u.output_tokens ?? 0 }
+  const ctx = t.input + t.cacheRead + t.cacheWrite
+  // A spawn model may be an alias ('sonnet') with no price: the step's real id replaces it.
+  const model = c.model && priceOf(c.model) ? c.model : s.model || c.model
+  return {
+    ...c,
+    model,
+    steps: c.steps + 1,
+    ctx: ctx > 0 ? ctx : c.ctx,
+    out: c.out + t.output,
+    inTok: c.inTok + t.input,
+    cacheRead: c.cacheRead + t.cacheRead,
+    cacheWrite: c.cacheWrite + t.cacheWrite,
+    cost: c.cost + (costOf(model, t) ?? 0),
+    effort: s.effort === undefined || s.effort === null ? c.effort : String(s.effort),
+    lastAt: s.at ?? c.lastAt,
+    lastStop: s.stopReason,
+  }
+}
+
+export const noteTool = (c: AgentCard, n: ToolNote): AgentCard => ({ ...c, tools: [...c.tools, n].slice(-3) })
+
+/** A skill the agent ran, each once, in the order it first ran them. */
+export const addSkill = (c: AgentCard, skill: string): AgentCard => (c.skills.includes(skill) ? c : { ...c, skills: [...c.skills, skill] })
+
+/** A surface module's fault key, `desktop:rail.tsx`, from `hooks/rail.tsx` or `hooks\rail.tsx` alike. */
+export const faultKey = (surface: string, module: string) => `${surface}:${module.split(/[\\/]/).pop()}`
+
+/** A card whose agent was resumed after it finished (SendMessage): running again, its clock from its first spawn. */
+export const resumeCard = (c: AgentCard): AgentCard => ({ ...c, status: 'running', endedAt: null })
+
+/**
+ * A spawned card joins the list. An id already there is that agent resumed: its card runs again
+ * where it stands, with its tallies and the new task and model, so no two cards share keys.
+ */
+export const addCard = (cards: AgentCard[], card: AgentCard): AgentCard[] =>
+  cards.some(c => c.id === card.id)
+    ? cards.map(c => (c.id === card.id ? resumeCard({ ...c, description: card.description || c.description, model: card.model || c.model }) : c))
+    : [...cards, card].slice(-24)
+
+export const stepLoop = (loops: Loop[], id: string, at: number): Loop[] => {
+  const found = loops.find(l => l.id === id)
+  const next = found
+    ? loops.map(l => (l === found ? { ...l, steps: l.steps + 1, lastAt: at } : l))
+    : [...loops, { id, steps: 1, firstAt: at, lastAt: at, isDone: false }]
+  return next.slice(-60)
+}
+
+export const LOOP_ACTIVE_MS = 15_000
+export const isLoopActive = (l: Loop, now: number) => !l.isDone && now - l.lastAt < LOOP_ACTIVE_MS
+
+/** Swimlane geometry: each agent's bar on one shared axis from the first spawn to now. */
+export const lanes = (cards: AgentCard[], now: number, width: number) => {
+  const start = Math.min(...cards.map(c => c.spawnedAt).filter(n => n > 0), now)
+  const span = Math.max(1, now - start)
+  return cards.map(c => {
+    const from = Math.floor(((Math.max(c.spawnedAt, start) - start) / span) * width)
+    const to = Math.max(from + 1, Math.ceil((((c.endedAt ?? now) - start) / span) * width))
+    return { id: c.id, before: Math.min(from, width), bar: Math.min(to, width) - Math.min(from, width), after: width - Math.min(to, width) }
+  })
+}
+
+// ---------------------------------------------------------------- layout
+
+/** How many log lines fit: what the other panels leave, never fewer than 4 nor more than 8. */
+export const logRows = (bodyRows: number, used: number) => Math.max(4, Math.min(8, bodyRows - used - 3))
+
+/** Legend items that fit on one row of `width` cells, in order; the rest are dropped. */
+export const fitLegend = <T extends { label: string }>(items: T[], width: number) => {
+  const out: T[] = []
+  let used = 0
+  for (const it of items) {
+    const w = it.label.length + 4
+    if (used + w > width) break
+    out.push(it)
+    used += w
+  }
+  return out
+}
+
+/** The cells a string takes in a terminal: one per character. */
+export const cellWidth = (s: string) => [...s].length
+
+/**
+ * How many pieces of a line fit in `room` cells, in order from the start: each piece is `lead` extra cells
+ * then `width`, and pieces sit `gap` cells apart. The rest are left out, as the legend's items are.
+ */
+export const piecesThatFit = (pieces: readonly { width: number; lead?: number }[], room: number, gap: number) => {
+  let used = 0
+  for (let i = 0; i < pieces.length; i += 1) {
+    const p = pieces[i]!
+    const next = used + (i > 0 ? gap : 0) + (p.lead ?? 0) + p.width
+    if (next > room) return i
+    used = next
+  }
+  return pieces.length
+}
+
+/**
+ * How many marks (■ ✗ ● ○ ✓) a row of `cells` columns holds. A terminal draws each mark in one
+ * cell; a graphical surface draws them wider (■ measured about 1.4 cells on the desktop app), so
+ * there a row holds fewer and its newest marks still show.
+ */
+export const marksIn = (cells: number, isTerminal: boolean) => (isTerminal ? cells : Math.floor(cells / 1.5))
+
+/** A card's title row: the task in the agent's own words, the type only when there is none. */
+export const cardTitle = (c: AgentCard) => c.description || c.type
+
+/** A title split over two rows at a word boundary: `first` cells on row one, `rest` on row two. */
+export const titleLines = (title: string, first: number, rest: number): [string, string] => {
+  const t = title.replace(/\s+/g, ' ').trim()
+  if (t.length <= first) return [t, '']
+  const cut = t.lastIndexOf(' ', first)
+  const at = cut > 0 ? cut : first
+  return [t.slice(0, at).trim(), shorten(t.slice(at), rest)]
+}
+
+/**
+ * What a turn's opening text was, for the log: the person's words, or for a turn the engine
+ * opened with a tagged message (a subagent's hand-back, a task notification), that message's kind.
+ */
+export const promptLine = (text: string): { who: string; text: string } => {
+  const tag = /^\s*<([a-z][\w-]*)/i.exec(text)?.[1]
+  if (!tag) return { who: 'you', text: shorten(text, 70) }
+  const from = /\bfrom="([^"]+)"/.exec(text)?.[1]
+  return { who: 'engine', text: shorten(`${tag.replace(/[-_]/g, ' ')}${from ? ` from ${from.slice(0, 8)}` : ''}`, 70) }
+}
+
+/**
+ * A subagent's hand-back message: who sent it and the first line of what it said. The report
+ * follows a framing header in the message; without one, the first line after the opening tag.
+ */
+export const handbackOf = (text: string): { from: string; body: string } | null => {
+  const from = /^\s*<agent-message\s+from="([^"]+)"/.exec(text)?.[1]
+  if (!from) return null
+  const afterHeader = text.split(/The report follows:\s*\n/)[1]
+  const rest = afterHeader ?? text.replace(/^\s*<agent-message[^>]*>/, '')
+  const body =
+    rest
+      .split('\n')
+      .map(l => l.trim())
+      .find(l => l && !l.startsWith('[') && !l.startsWith('<') && !l.startsWith('</')) ?? ''
+  return body ? { from, body } : null
+}
+
+/** The advice line a pane shows for a report: its first real line, markdown markers stripped, cut to 160. */
+export const adviceLine = (report: string) => {
+  const first = report.split('\n').map(l => l.trim()).find(l => l && !l.startsWith('[') && !l.startsWith('<')) ?? ''
+  return shorten(first.replace(/\*\*|__/g, '').replace(/^[#>*\s-]+/, ''), 160)
+}
+
+export const elapsedOf = (c: AgentCard, now: number) => (c.endedAt ?? now) - c.spawnedAt
+
+// ---------------------------------------------------------------- subagent windows, totals, limit
+
+/** `effort ▮▮▯▯`: filled cells of four. */
+export const effortLevel = (effort: string) => ({ low: 1, medium: 2, high: 3, xhigh: 4, max: 4 })[effort] ?? 0
+
+/** A card's context window: the model's real one from the price table; 0 when the model is unknown. */
+export const cardWindow = (c: AgentCard) => windowOf(c.model)
+
+/** Estimated cost as the pane shows it: `$—` for a model that is not priced, `<$0.01` for a trace. */
+export const fmtCost = (c: Pick<AgentCard, 'model' | 'cost'>) =>
+  !priceOf(c.model) ? '$—' : c.cost > 0 && c.cost < 0.005 ? '<$0.01' : fmtUsd(c.cost)
+
+/** Estimated cost to the tenth of a cent, for the monitor: `$—` for a model that is not priced. */
+export const fmtCost3 = (c: Pick<AgentCard, 'model' | 'cost'>) => (priceOf(c.model) ? `$${c.cost.toFixed(3)}` : '$—')
+
+export const IDLE_MS = 60_000
+export const THINKING_IDLE_MS = 120_000
+
+/** What a subagent is doing now, from the phase its hooks last noted. A running card silent too long is IDLE; a tool call may run long, thinking may not. */
+export const cardStatus = (c: AgentCard, now: number, staleMs: number) => {
+  if (c.status === 'done') return { word: 'DONE', glyph: '✓', tone: 'done' } as const
+  if (c.status === 'failed') return { word: 'FAILED', glyph: '❌', tone: 'failed' } as const
+  if (c.status !== 'running') return { word: 'STOPPED', glyph: '⏹', tone: 'stopped' } as const
+  if (!isLive(c, now, staleMs)) return { word: 'IDLE', glyph: '💤', tone: 'idle' } as const
+  if (c.phase === 'thinking' && now - (c.lastAt || c.spawnedAt) < THINKING_IDLE_MS) return { word: 'THINKING', glyph: '🧠', tone: 'thinking' } as const
+  if (c.phase === 'tool' || now - (c.lastAt || c.spawnedAt) < IDLE_MS) return { word: 'ACTIVE', glyph: '🟡', tone: 'active' } as const
+  return { word: 'IDLE', glyph: '💤', tone: 'idle' } as const
+}
+
+/**
+ * The model to force on a spawn, or null to leave it. An explicit `model`, a fork, a type with no
+ * route and a parent that is not Opus are never rerouted.
+ * Only agents built into the engine are routed: an unset model means a user's agent file's own.
+ */
+export const routeModel = (
+  routes: Record<string, string>,
+  s: { subagentType: string; provider: { plugin: string }; model?: string | undefined; parentModel: string; fork?: boolean | undefined },
+): string | null =>
+  s.provider.plugin !== 'engine' || s.model || s.fork || !Object.hasOwn(routes, s.subagentType) || !/opus/i.test(s.parentModel) ? null : (routes[s.subagentType] ?? null)
+
+/** Running = marked running and active within `staleMs`: a crashed agent that never reported stops counting. */
+export const isLive = (c: AgentCard, now: number, staleMs: number) => c.status === 'running' && now - (c.lastAt || c.spawnedAt) < staleMs
+
+export const agentTotals = (cards: AgentCard[], now: number, staleMs: number) => {
+  const priced = cards.filter(c => priceOf(c.model))
+  return {
+    running: cards.filter(c => isLive(c, now, staleMs)).length,
+    total: cards.length,
+    inTok: cards.reduce((n, c) => n + c.inTok + c.cacheRead + c.cacheWrite, 0),
+    out: cards.reduce((n, c) => n + c.out, 0),
+    // Null when no card's model is priced; unpriced models add nothing.
+    cost: priced.length > 0 ? priced.reduce((n, c) => n + c.cost, 0) : null,
+  }
+}
+
+/**
+ * One line saying a subagent's model and tokens, fitted to `room` cells: the full wording, then a
+ * short form, then cut with an ellipsis. The model is never dropped.
+ */
+export const agentInfo = (c: AgentCard, room: number) => {
+  const model = prettyModel(c.model)
+  const skills = c.skills.length > 0 ? ` · ${c.skills.join(' ')}` : ''
+  const full = c.steps > 0 ? `${model} ctx ${kTokens(c.ctx)} out ${kTokens(c.out)}${skills}` : `${model} starting${skills}`
+  const short = c.steps > 0 ? `${model} ${kTokens(c.ctx)}/${kTokens(c.out)}${skills}` : `${model}${skills}`
+  return shorten(full.length <= room ? full : short, room)
+}
+
+/**
+ * Limit on concurrent subagents. `admit` decides under a queue: a parallel launch's calls are decided
+ * one after another, each seeing the reservations of those before it, so the one past the limit is
+ * refused however many arrive at once. A reservation lasts until `release` (the spawn recorded its
+ * card, or the call ended), and lapses after RESERVATION_MS so a hung call cannot hold a slot.
+ */
+export const RESERVATION_MS = 10 * 60_000
+export const makeSpawnGate = () => {
+  const reserved = new Map<string, number>()
+  let queue: Promise<unknown> = Promise.resolve()
+  return {
+    admit(id: string, limit: number, load: () => Promise<{ running: number; now: number }>): Promise<boolean> {
+      const run = queue.then(async () => {
+        const { running, now } = await load()
+        for (const [k, at] of reserved) if (now - at > RESERVATION_MS) reserved.delete(k)
+        if (limit > 0 && running + reserved.size >= limit) return false
+        reserved.set(id, now)
+        return true
+      })
+      queue = run.catch(() => undefined)
+      return run
+    },
+    release: (id: string) => void reserved.delete(id),
+    pending: () => reserved.size,
+  }
+}
+
+export const spawnDenied = (limit: number) => `${limit} subagents already running; wait for one to finish before starting another.`
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: hooks/elapsed.tsx
+// A running agent's clock, ticking on the surface's frame clock so the pane need not redraw.
+// `since` and `now` come from the hooks module's $.clock; between redraws it adds its own ticks.
+import type { ClientModule } from 'claude-code'
+
+type Props = { since: number; now: number; endAt: number | null; color: string }
+type Ref = { base: number; ticks: number; lastNow: number; isRunning: boolean }
+type State = { ref: Ref }
+
+const fmt = (ms: number) => {
+  const s = Math.max(0, Math.floor(ms / 1000))
+  const m = Math.floor(s / 60)
+  return m < 60 ? `${m}:${String(s % 60).padStart(2, '0')}` : `${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}`
+}
+
+const Elapsed: ClientModule<Props, State> = (props, surface) => {
+  const { Text } = surface.elements
+  const ref = surface.state?.ref ?? { base: 0, ticks: 0, lastNow: -1, isRunning: true }
+  if (props.now !== ref.lastNow) {
+    // A fresh reading from the hooks module: restart the local count from it.
+    ref.lastNow = props.now
+    ref.base = (props.endAt ?? props.now) - props.since
+    ref.ticks = 0
+  }
+  ref.isRunning = props.endAt === null
+  if (surface.state === undefined) {
+    surface.setState({ ref })
+    surface.every(1000, () => {
+      if (ref.isRunning) {
+        ref.ticks += 1
+        surface.setState({ ref })
+      }
+    })
+  }
+  return <Text color={props.color}>{fmt(ref.base + ref.ticks * 1000)}</Text>
+}
+
+export default Elapsed
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: hooks/hooks.json
+{ "modules": ["./register.tsx"] }
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: hooks/pricing.ts
+// ONE small table: official Claude API prices (USD per million tokens) and context windows.
+// Source: https://platform.claude.com/docs/en/about-claude/pricing (fetched 2026-10-30);
+// context windows: the claude-api model table (cached 2026-10-06), whose ids and windows match the models overview page.
+// Everything computed from it is an ESTIMATE: cache writes are priced at the 5-minute rate (the usage
+// event does not say which TTL), and a model id not listed here is not priced at all (`$—`), never guessed.
+
+export type Price = {
+  /** Base input, 5-minute cache write, cache read, output: USD per million tokens. */
+  in: number
+  write: number
+  read: number
+  out: number
+  /** Context window in tokens. */
+  window: number
+  /** Haiku 5.5 only: a request whose whole prompt is over `above` tokens is billed at `rates` instead. */
+  over?: { above: number; in: number; write: number; read: number; out: number }
+}
+
+const P = (i: number, w: number, r: number, o: number, window: number, over?: Price['over']): Price => ({ in: i, write: w, read: r, out: o, window, ...(over ? { over } : {}) })
+
+export const PRICING_SOURCE = 'https://platform.claude.com/docs/en/about-claude/pricing'
+export const PRICING_DATE = '2026-10-30'
+
+export const PRICES: Record<string, Price> = {
+  'claude-opus-5-5': P(4, 5, 0.2, 20, 1_000_000),
+  'claude-opus-5': P(5, 6.25, 0.5, 25, 1_000_000),
+  'claude-opus-4-8': P(5, 6.25, 0.5, 25, 1_000_000),
+  'claude-opus-4-7': P(5, 6.25, 0.5, 25, 1_000_000),
+  'claude-opus-4-6': P(5, 6.25, 0.5, 25, 1_000_000),
+  'claude-opus-4-5': P(5, 6.25, 0.5, 25, 200_000),
+  'claude-opus-4-1': P(15, 18.75, 1.5, 75, 200_000),
+  'claude-opus-4': P(15, 18.75, 1.5, 75, 200_000),
+  'claude-sonnet-5-5': P(2, 2.5, 0.1, 10, 1_000_000),
+  'claude-sonnet-5': P(2, 2.5, 0.2, 10, 1_000_000),
+  'claude-sonnet-4-6': P(3, 3.75, 0.3, 15, 1_000_000),
+  'claude-sonnet-4-5': P(3, 3.75, 0.3, 15, 200_000),
+  'claude-sonnet-4': P(3, 3.75, 0.3, 15, 200_000),
+  'claude-haiku-5-5': P(0.1, 0.125, 0.01, 0.5, 1_000_000, { above: 100_000, in: 0.5, write: 0.625, read: 0.05, out: 2.5 }),
+  'claude-haiku-4-5': P(1, 1.25, 0.1, 5, 200_000),
+  'claude-3-5-haiku': P(0.8, 1, 0.08, 4, 200_000),
+}
+
+/** `us.anthropic.claude-sonnet-4-5-20250929-v1:0`, `claude-opus-5-5[1m]` → `claude-sonnet-4-5`, `claude-opus-5-5`; anything else passes through. */
+export const baseModelId = (id: string) =>
+  id
+    .toLowerCase()
+    .replace(/^.*?(?=claude-)/, '')
+    .replace(/\[.*\]$/, '')
+    .replace(/-v\d+(:\d+)?$/, '')
+    .replace(/-\d{8}$/, '')
+
+/** The price row of a model id, or null when the model is not a listed Claude model. */
+export const priceOf = (id: string): Price | null => PRICES[baseModelId(id)] ?? null
+
+export type StepTokens = { input?: number; cacheRead?: number; cacheWrite?: number; output?: number }
+
+/** USD for one request, or null when the model is not priced. */
+export const costOf = (id: string, t: StepTokens): number | null => {
+  const p = priceOf(id)
+  if (!p) return null
+  const prompt = (t.input ?? 0) + (t.cacheRead ?? 0) + (t.cacheWrite ?? 0)
+  const r = p.over && prompt > p.over.above ? p.over : p
+  return ((t.input ?? 0) * r.in + (t.cacheWrite ?? 0) * r.write + (t.cacheRead ?? 0) * r.read + (t.output ?? 0) * r.out) / 1_000_000
+}
+
+/** The model's context window: the table's; 0 when the model is not listed. */
+export const windowOf = (id: string): number => priceOf(id)?.window ?? 0
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: hooks/rail.tsx
+// A connector drawn on the surface's own frame clock: packets travel along it while `active`,
+// and it rests as a plain dim line otherwise. Only this region redraws; the pane does not.
+import type { ClientModule, RenderChildren } from 'claude-code'
+
+type Props = {
+  active: boolean
+  width: number
+  color: string
+  dim: string
+  /** Cells where a branch drops (┬); the rest of the line is ─. */
+  marks: number[]
+  /** Draw ┴ instead of ┬ at the marks: a merge into what is below. */
+  isMerge: boolean
+}
+
+type Ref = { phase: number; active: boolean }
+type State = { ref: Ref }
+
+const STEP_MS = 110
+/** Dashes drawn past the line's end and clipped by its box, so the right end is the box's edge. */
+const SPARE = 4
+
+const Rail: ClientModule<Props, State> = (props, surface) => {
+  const { Box, Text } = surface.elements
+  const ref = surface.state?.ref ?? { phase: 0, active: props.active }
+  ref.active = props.active
+  if (surface.state === undefined) {
+    surface.setState({ ref })
+    surface.every(STEP_MS, () => {
+      if (ref.active) {
+        ref.phase += 1
+        surface.setState({ ref })
+      }
+    })
+  }
+
+  const width = Math.max(1, surface.columns || props.width)
+  const cells = Array.from({ length: width + SPARE }, () => '─')
+  for (const m of props.marks) if (m >= 0 && m < width) cells[m] = props.isMerge ? '┴' : '┬'
+
+  // A graphical surface draws text in a proportional face, where ─ ● • and bold differ in width, so as
+  // the packets moved the line's length changed and its right end jittered. Drawn in the surface's
+  // monospaced face (whose advance is what a cell is there) each glyph is one cell, and the line sits in
+  // a box of its width that clips the spare dashes: its right end is that edge, every frame.
+  const line = (children: RenderChildren) => (
+    <Box width={width} overflow="hidden">
+      <Box flexShrink={0}>{children}</Box>
+    </Box>
+  )
+
+  if (!props.active) {
+    return line(
+      <Text color={props.dim} mono>
+        {cells.join('')}
+      </Text>,
+    )
+  }
+
+  // Two packets per 24 cells, a bright head and a trailing dot, moving left to right.
+  const lit = new Map<number, string>()
+  for (let base = 0; base < width + 24; base += 24) {
+    const head = (base + ref.phase) % (width + 24)
+    if (head < width) lit.set(head, '●')
+    if (head - 1 >= 0 && head - 1 < width) lit.set(head - 1, '•')
+  }
+  // Runs, not cells: consecutive cells of one kind share a Text, a handful of nodes per frame.
+  const runs: { text: string; isLit: boolean }[] = []
+  cells.forEach((ch, i) => {
+    const isLit = lit.has(i)
+    const last = runs[runs.length - 1]
+    const glyph = lit.get(i) ?? ch
+    if (last && last.isLit === isLit) last.text += glyph
+    else runs.push({ text: glyph, isLit })
+  })
+  return line(
+    runs.map(r => (
+      <Text color={r.isLit ? props.color : props.dim} bold={r.isLit} mono>
+        {r.text}
+      </Text>
+    )),
+  )
+}
+
+export default Rail
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: hooks/register.tsx
+import { atom, read, update } from 'claude-code'
+import type { EngineInterface, Register, RenderChildren, Timer } from 'claude-code'
+
+import type { AgentCard, Architect, Bucket, Check, Gate, Layout, LogLine, Loop, Main, Roster, Turn, Usage, View } from '../types'
+import {
+  DEFAULT_ARCHITECT,
+  addCard,
+  addSkill,
+  agentInfo,
+  agentTotals,
+  cardStatus,
+  cardWindow,
+  effortLevel,
+  fmtCost,
+  fmtCost3,
+  gradientCell,
+  isLive,
+  isSameMeasure,
+  routeModel,
+  VERSION,
+  makeSpawnGate,
+  spawnDenied,
+  resumeCard,
+  DEFAULT_GATE,
+  DEFAULT_MAIN,
+  DEFAULT_ROSTER,
+  DEFAULT_TURN,
+  DEFAULT_USAGE,
+  DEFAULT_VIEW,
+  EDIT_TOOLS,
+  SCHEMA_VERSION,
+  afterCall,
+  applyStep,
+  bucketOf,
+  cellWidth,
+  piecesThatFit,
+  cardTitle,
+  afterCompactRead,
+  claimCompactRead,
+  contextFill,
+  faultKey,
+  forgetCompactRead,
+  titleLines,
+  consultTimeline,
+  describeInput,
+  endConsult,
+  fitLegend,
+  fmtClock,
+  fmtDuration,
+  fmtTimer,
+  fmtUsd,
+  plural,
+  gateSummary,
+  gauge,
+  isAdvising,
+  isLoopActive,
+  kTokens,
+  lanes,
+  limitLabel,
+  limitOf,
+  fmtResetIn,
+  fmtSpeed,
+  listOf,
+  logRows,
+  marksIn,
+  momentOf,
+  normalize,
+  normalizeCard,
+  normalizeGate,
+  normalizeLog,
+  noteTool,
+  PALETTES,
+  SVG_COLORS,
+  parseConfig,
+  prettyModel,
+  promptLine,
+  handbackOf,
+  adviceLine,
+  receiptOf,
+  recordCheck,
+  settleCheck,
+  shorten,
+  startConsult,
+  stepSpeed,
+  stepLoop,
+} from './core'
+import type { Config, Panel } from './core'
+
+const PANE = 'flightdeck'
+const TITLE = 'Flightdeck'
+
+
+// ---------------------------------------------------------------- state
+
+const meta = atom({ plugin: 'flightdeck', key: 'meta' } as const, { schemaVersion: SCHEMA_VERSION })
+const main = atom({ plugin: 'flightdeck', key: 'main' } as const, DEFAULT_MAIN)
+const usage = atom({ plugin: 'flightdeck', key: 'usage' } as const, DEFAULT_USAGE)
+const architect = atom({ plugin: 'flightdeck', key: 'architect' } as const, DEFAULT_ARCHITECT)
+const gate = atom({ plugin: 'flightdeck', key: 'gate' } as const, DEFAULT_GATE)
+const agents = atom({ plugin: 'flightdeck', key: 'agents' } as const, [])
+const loops = atom({ plugin: 'flightdeck', key: 'loops' } as const, [])
+const log = atom({ plugin: 'flightdeck', key: 'log' } as const, [])
+const turn = atom({ plugin: 'flightdeck', key: 'turn' } as const, DEFAULT_TURN)
+const receipt = atom({ plugin: 'flightdeck', key: 'receipt' } as const, null)
+const view = atom({ plugin: 'flightdeck', key: 'view' } as const, DEFAULT_VIEW)
+const roster = atom({ plugin: 'flightdeck', key: 'roster' } as const, DEFAULT_ROSTER)
+
+type ServerBlock = { type: string; id?: string; name?: string; tool_use_id?: string }
+
+// Every read goes through these, so a value saved under an older shape still reads.
+async function getMain($: EngineInterface): Promise<Main> {
+  return normalize(DEFAULT_MAIN, await read($, main))
+}
+async function getUsage($: EngineInterface): Promise<Usage> {
+  return normalize(DEFAULT_USAGE, await read($, usage))
+}
+async function getArchitect($: EngineInterface): Promise<Architect> {
+  const a = normalize(DEFAULT_ARCHITECT, await read($, architect))
+  return { ...a, consults: listOf(a.consults), ids: listOf(a.ids), seen: listOf(a.seen) }
+}
+async function getGate($: EngineInterface): Promise<Gate> {
+  return normalizeGate(await read($, gate))
+}
+async function getCards($: EngineInterface): Promise<AgentCard[]> {
+  return listOf<unknown>(await read($, agents)).map(normalizeCard)
+}
+async function getLoops($: EngineInterface): Promise<Loop[]> {
+  return listOf<Loop>(await read($, loops))
+}
+async function getLog($: EngineInterface): Promise<LogLine[]> {
+  return normalizeLog(await read($, log))
+}
+async function getTurn($: EngineInterface): Promise<Turn> {
+  return normalize(DEFAULT_TURN, await read($, turn))
+}
+async function getView($: EngineInterface): Promise<View> {
+  return normalize(DEFAULT_VIEW, await read($, view))
+}
+async function getRoster($: EngineInterface): Promise<Roster> {
+  const r = normalize(DEFAULT_ROSTER, await read($, roster))
+  return { architectTypes: listOf(r.architectTypes) }
+}
+
+/** A stored shape older than this build's: drop what cannot be read, keep the rest. */
+async function migrate($: EngineInterface) {
+  const m = await read($, meta)
+  if ((m?.schemaVersion ?? 0) >= SCHEMA_VERSION) return
+  await update($, log, list => normalizeLog(list))
+  await update($, agents, list => listOf<unknown>(list).map(normalizeCard))
+  await update($, gate, g => normalizeGate(g))
+  await update($, meta, () => ({ schemaVersion: SCHEMA_VERSION }))
+}
+
+async function say($: EngineInterface, who: string, text: string, kind: LogLine['kind'] = 'info', agentId: string | null = null) {
+  const line: LogLine = { at: await $.clock.now(), who, text, kind, agentId }
+  await update($, log, list => [...normalizeLog(list), line].slice(-60))
+}
+
+async function refreshStatus($: EngineInterface, cfg: Config) {
+  if (!cfg.statusLine) return $.ui.status(undefined)
+  const [u, a, g, cards] = await Promise.all([getUsage($), getArchitect($), getGate($), getCards($)])
+  const now = await $.clock.now()
+  const running = cards.filter(c => isLive(c, now, cfg.agentStaleMs)).length
+  const s = gateSummary(g)
+  const ctxFill = contextFill(u)
+  const parts = [
+    ctxFill.pct !== null ? `ctx ${Math.round(ctxFill.pct)}%` : null,
+    cards.length > 0 ? `agents ${running}/${cards.length}` : null,
+    a.consults.length > 0 || a.ids.length > 0 ? `${cfg.architectLabel.toLowerCase()} ${isAdvising(a) ? 'advising' : a.consults.length}` : null,
+    s.deny > 0 ? `denied ${s.deny}` : null,
+  ]
+  // Only fields with something to say; with none, no status entry at all.
+  const shown = parts.filter(Boolean)
+  $.ui.status(shown.length > 0 ? shown.join(' · ') : undefined)
+}
+
+async function whoIs($: EngineInterface, agentId: string | undefined) {
+  if (!agentId) return 'main'
+  const card = (await getCards($)).find(c => c.id === agentId)
+  return card ? shorten(cardTitle(card), 14) : 'agent'
+}
+
+async function consultStarted($: EngineInterface, cfg: Config, id: string, via: string) {
+  const t = await getTurn($)
+  const moment = momentOf(t)
+  const at = await $.clock.now()
+  await update($, architect, a => startConsult(normalize(DEFAULT_ARCHITECT, a), { id, at, moment, via }))
+  if (moment === 'before done') await update($, turn, x => ({ ...normalize(DEFAULT_TURN, x), isReviewing: true }))
+  await say($, cfg.architectLabel.toLowerCase(), cfg.moments ? `${moment} · ${via}` : `consulted · ${via}`, 'consult')
+  await refreshStatus($, cfg)
+}
+
+async function consultEnded($: EngineInterface, cfg: Config, advice: string | null, id?: string) {
+  const at = await $.clock.now()
+  const first = advice?.split('\n').find(l => l.trim()) ?? null
+  const text = first ? shorten(first.replace(/^[#>*\s-]+/, ''), 160) : null
+  await update($, architect, a => endConsult(normalize(DEFAULT_ARCHITECT, a), at, text, id))
+  await update($, turn, t => ({ ...normalize(DEFAULT_TURN, t), isReviewing: false }))
+  await say($, cfg.architectLabel.toLowerCase(), text ? `advice: ${shorten(text, 60)}` : 'advice returned', 'consult')
+  await refreshStatus($, cfg)
+}
+
+async function noteAdvice($: EngineInterface, cfg: Config, advice: string) {
+  await update($, architect, x => ({ ...normalize(DEFAULT_ARCHITECT, x), lastAdvice: advice }))
+  await say($, cfg.architectLabel.toLowerCase(), `advice: ${shorten(advice, 60)}`, 'consult')
+}
+
+async function isArchitectType($: EngineInterface, cfg: Config, type: string) {
+  return cfg.architect.test(type) || (await getRoster($)).architectTypes.includes(type)
+}
+
+async function openPane($: EngineInterface, cfg: Config) {
+  // columns apply when docked beside the transcript, rows when seated inline above the prompt.
+  const layout = (await getView($)).layout ?? cfg.layout
+  return $.ui.open({ id: PANE, title: TITLE, columns: cfg.paneColumns, rows: layout === 'monitor' ? 16 : 8 })
+}
+
+async function resetAll($: EngineInterface) {
+  await update($, main, m => ({ ...DEFAULT_MAIN, model: normalize(DEFAULT_MAIN, m).model, mode: normalize(DEFAULT_MAIN, m).mode }))
+  await update($, architect, () => DEFAULT_ARCHITECT)
+  await update($, gate, () => DEFAULT_GATE)
+  await update($, agents, () => [])
+  await update($, loops, () => [])
+  await update($, log, () => [])
+  await update($, turn, () => DEFAULT_TURN)
+  await update($, receipt, () => null)
+  await update($, view, () => DEFAULT_VIEW)
+  // The context gauge waits for the next measurement rather than showing the pre-clear fill.
+  await update($, usage, x => ({ ...normalize(DEFAULT_USAGE, x), pct: null, tokens: null }))
+}
+
+/**
+ * Stores the compaction window for the model window `window`. A `summary` breakdown estimates locally
+ * and sends no request; until the host gives one, the gauge stays on the model's window (afterCompactRead).
+ */
+async function readCompactWindow($: EngineInterface, window: number) {
+  const r = await $.session.usage({ breakdown: 'summary' }).catch(() => null)
+  await update($, usage, x => afterCompactRead(normalize(DEFAULT_USAGE, x), window, r?.context.breakdown))
+}
+
+/** The session's cost read fresh, not from the last measurement: the receipt subtracts two of these. */
+async function costNow($: EngineInterface): Promise<number | null> {
+  const u = await $.session.usage().catch(() => null)
+  return u?.cost?.usd ?? null
+}
+
+async function noteMode($: EngineInterface, mode: string | undefined) {
+  if (mode) await update($, main, m => (normalize(DEFAULT_MAIN, m).mode === mode ? normalize(DEFAULT_MAIN, m) : { ...normalize(DEFAULT_MAIN, m), mode }))
+}
+
+// ---------------------------------------------------------------- hooks
+
+export const register: Register = (on, options) => {
+  const cfg = parseConfig(options)
+  const C = PALETTES[cfg.palette]
+  // tool.check carries no loop id; the tool.call around it does, keyed by the call's id.
+  const callLoop = new Map<string, string | null>()
+  // Redraws once in 30 s while a card is live, so a silent card turns IDLE without any event.
+  let tick: Timer | undefined
+
+  on('session.start', async ($, e, next) => {
+    await $.command.register({
+      name: 'flightdeck',
+      description: 'Flightdeck, the live agent dashboard: open, close, reset, or set the layout',
+      argumentHint: '[open|close|reset|layout monitor|auto|compact|wide|mini]',
+    })
+    await migrate($)
+    // A host without usage (headless, an SDK host, a session not yet bound) just starts without it.
+    const u = await $.session.usage().catch(() => null)
+    // A resumed session has a fill to draw already: its compaction window is read now, not at its first
+    // measurement. Any other start forgets the last reading (the setting may have changed) for that one to read.
+    const resumedWindow = u && u.context.tokens !== undefined && u.context.window > 0 ? u.context.window : 0
+    if (u) {
+      await update($, usage, x => ({
+        ...normalize(DEFAULT_USAGE, x),
+        pct: u.context.percent ?? null,
+        tokens: u.context.tokens ?? null,
+        window: u.context.window,
+        compactFor: resumedWindow,
+        compactMisses: 0,
+        costUsd: u.cost?.usd ?? null,
+        limits: u.rateLimits.map(limitOf),
+      }))
+    }
+    const tag = (await $.session.id().catch(() => '')).slice(0, 6).toUpperCase()
+    const startedAt = u?.startedAt ?? (await $.clock.now())
+    await update($, usage, x => ({ ...normalize(DEFAULT_USAGE, x), startedAt, tag }))
+    if (cfg.openOnStart) void openPane($, cfg).catch(() => undefined)
+    await refreshStatus($, cfg)
+    const done = await next(e)
+    if (resumedWindow > 0) {
+      await readCompactWindow($, resumedWindow)
+      await refreshStatus($, cfg)
+    }
+    return done
+  })
+
+  on('session.end', async ($, e, next) => {
+    if (e.reason === 'clear') {
+      await resetAll($)
+      await refreshStatus($, cfg)
+    }
+    return next(e)
+  })
+
+  on('command.run', { command: 'flightdeck' }, async ($, e) => {
+    const [verb = 'open', arg = ''] = e.args.trim().split(/\s+/)
+    if (verb === 'close') {
+      await $.ui.close({ id: PANE })
+      return { text: 'Flightdeck closed.' }
+    }
+    if (verb === 'reset') {
+      await resetAll($)
+      await refreshStatus($, cfg)
+      return { text: 'Flightdeck reset.' }
+    }
+    if (verb === 'layout') {
+      const layout: Layout | null = arg === 'compact' || arg === 'wide' || arg === 'auto' || arg === 'mini' || arg === 'monitor' ? arg : null
+      if (!layout) return { text: 'Usage: /flightdeck layout monitor|auto|compact|wide|mini' }
+      await update($, view, v => ({ ...normalize(DEFAULT_VIEW, v), layout }))
+      const opened = await openPane($, cfg)
+      return { text: opened.isPlaced ? `Flightdeck layout: ${layout}.` : `Layout set to ${layout}; the pane is not shown yet: ${opened.reason}` }
+    }
+    const opened = await openPane($, cfg)
+    if (!opened.isPlaced) return { text: `Flightdeck is not shown yet: ${opened.reason}` }
+    return { text: 'Flightdeck opened. Focus it with ctrl+x tab; 1-6 expand cards, f/s/o open the gate rows.' }
+  })
+
+  on('classic.UserPromptSubmit', async ($, e, next) => {
+    await noteMode($, e.permission_mode)
+    return next(e)
+  })
+
+  on('agent.offer', async ($, e, next) => {
+    const offered = await next(e)
+    if (cfg.architect.test(e.agent) || (cfg.matchDescriptions && cfg.architect.test(e.description))) {
+      await update($, roster, r => {
+        const x = normalize(DEFAULT_ROSTER, r)
+        return x.architectTypes.includes(e.agent) ? x : { architectTypes: [...listOf<string>(x.architectTypes), e.agent].slice(-20) }
+      })
+    }
+    return offered
+  })
+
+  on('turn.start', async ($, e, next) => {
+    // A subagent's turn (its spawn, or a resume by SendMessage) is its card's, not the main turn's.
+    if (e.agentId !== undefined) return next(e)
+    const [now, cost] = await Promise.all([$.clock.now(), costNow($)])
+    await update($, turn, () => ({ ...DEFAULT_TURN, startedAt: now, costAtStart: cost }))
+    await update($, main, m => ({ ...normalize(DEFAULT_MAIN, m), isRunning: true }))
+    // A background architect's report reaches the main loop as the text opening this turn. The
+    // SubagentHandback tool call (in tool.call) normally carries it first; this is the fallback.
+    const back = e.text ? handbackOf(e.text) : null
+    const a = back ? await getArchitect($) : null
+    if (back && a && a.ids.includes(back.from)) {
+      const advice = adviceLine(back.body)
+      if (advice && advice !== a.lastAdvice) await noteAdvice($, cfg, advice)
+    } else if (e.text) {
+      const p = promptLine(e.text)
+      await say($, p.who, p.text)
+    }
+    return next(e)
+  })
+
+  on('turn.step', async function* ($, e, next) {
+    // The main loop's model is known when its request starts; a long first request shouldn't read "—".
+    if (!e.agentId) {
+      let isNewModel = false
+      await update($, main, m => {
+        const x = normalize(DEFAULT_MAIN, m)
+        isNewModel = x.model !== '' && x.model !== e.model
+        return { ...x, model: e.model, effort: String(e.effort ?? x.effort), steps: x.steps + 1 }
+      })
+      if (isNewModel) await update($, usage, x => forgetCompactRead(normalize(DEFAULT_USAGE, x)))
+      // Time the response as it passes: its first piece that is neither the engine's envelope nor the
+      // stop. One clock read in the stream and nothing stored until it has ended.
+      const sentAt = await $.clock.now()
+      let firstAt: number | null = null
+      const s = next(e)
+      for await (const c of s) {
+        if (firstAt === null && c.kind !== 'engine' && c.kind !== 'stop') firstAt = await $.clock.now()
+        yield c
+      }
+      const result = await s.result
+      const speed = result.usage ? stepSpeed(sentAt, firstAt) : null
+      if (speed) await update($, main, m => ({ ...normalize(DEFAULT_MAIN, m), speed }))
+      return result
+    }
+    const id = e.agentId
+    // A step from an agent whose card finished means it was resumed (SendMessage): it runs again.
+    const before = (await getCards($)).find(c => c.id === id)
+    if (before && before.status !== 'running') {
+      // Flipped in the write: a resume its agent.spawn already logged is not logged again.
+      let isResumed = false
+      await update($, agents, list =>
+        listOf<unknown>(list)
+          .map(normalizeCard)
+          .map(c => {
+            if (c.id !== id || c.status === 'running') return c
+            isResumed = true
+            return resumeCard(c)
+          }),
+      )
+      if (isResumed) {
+        await say($, await whoIs($, id), 'resumed', 'info', id)
+        await refreshStatus($, cfg)
+      }
+    }
+    if (before && before.phase !== 'thinking') {
+      await update($, agents, list => listOf<unknown>(list).map(normalizeCard).map(c => (c.id === id ? { ...c, phase: 'thinking' as const } : c)))
+    }
+    const result = yield* next(e)
+    const [cards, a] = await Promise.all([getCards($), getArchitect($)])
+    if (cards.some(c => c.id === id)) {
+      const step = { model: e.model, usage: result.usage, stopReason: result.stopReason, effort: e.effort, at: await $.clock.now() }
+      await update($, agents, list => listOf<unknown>(list).map(normalizeCard).map(c => (c.id === id ? applyStep(c, step) : c)))
+      if (result.stopReason === 'max_tokens') await say($, await whoIs($, id), 'hit max_tokens', 'error', id)
+    } else if (!a.ids.includes(id)) {
+      const now = await $.clock.now()
+      await update($, loops, l => stepLoop(listOf<Loop>(l), id, now))
+    }
+    return result
+  })
+
+  on('session.measure', async ($, e, next) => {
+    // The compaction window is read once per model window, not on every measurement (a breakdown
+    // estimates every category each time): claimed here, in the same write, so no two reads overlap.
+    const m = {
+      pct: e.context.percent ?? null,
+      tokens: e.context.tokens ?? null,
+      window: e.context.window,
+      costUsd: e.cost?.usd ?? null,
+      limits: e.rateLimits.map(limitOf),
+    }
+    let isStale = false
+    // A measurement that changes nothing writes nothing: every write redraws the panes that read usage.
+    const stored = await getUsage($)
+    if (!isSameMeasure(stored, m) || claimCompactRead(stored, m.window).isClaimed) {
+      await update($, usage, x => {
+        const claim = claimCompactRead(normalize(DEFAULT_USAGE, x), m.window)
+        isStale = claim.isClaimed
+        return { ...claim.usage, ...m }
+      })
+    }
+    if (e.changed.includes('context')) await refreshStatus($, cfg)
+    const done = await next(e)
+    if (isStale) {
+      await readCompactWindow($, e.context.window)
+      await refreshStatus($, cfg)
+    }
+    return done
+  })
+
+  on('session.compact', async ($, e, next) => {
+    const done = await next(e)
+    if (!e.agentId && e.trigger !== 'precompute') {
+      const now = await $.clock.now()
+      await update($, usage, x => {
+        const u = normalize(DEFAULT_USAGE, x)
+        return { ...u, compactions: u.compactions + 1, lastCompactAt: now }
+      })
+      await say($, 'main', `context compacted (${e.trigger})`)
+    }
+    return done
+  })
+
+  on('tool.check', async ($, e, next) => {
+    const verdict = await next(e)
+    if (e.tool_use_id) {
+      const check: Check = {
+        id: e.tool_use_id,
+        tool: e.tool,
+        bucket: bucketOf(e.tool),
+        verdict: verdict.decision === 'allow' ? 'rule' : verdict.decision,
+        inSubagent: Boolean(callLoop.get(e.tool_use_id)),
+        detail: shorten(describeInput(e.tool, e.input), 90),
+        at: await $.clock.now(),
+      }
+      await update($, gate, g => recordCheck(normalizeGate(g), check))
+      // The status line updates when the call settles; only a refusal ends here.
+      if (verdict.decision === 'deny') {
+        await say($, 'gate', `denied by rule · ${check.detail}`, 'error')
+        await refreshStatus($, cfg)
+      }
+    }
+    return verdict
+  })
+
+  on('tool.call', async ($, e, next) => {
+    callLoop.set(e.tool_use_id, e.agentId ?? null)
+    const text = shorten(describeInput(e.tool, e), 64)
+    if (e.agentId && e.tool === 'Skill') {
+      const id = e.agentId
+      const skill = e.skill
+      await update($, agents, list => listOf<unknown>(list).map(normalizeCard).map(c => (c.id === id ? addSkill(c, skill) : c)))
+    }
+    if (e.agentId && e.tool !== 'Agent' && String(e.tool) !== 'SubagentHandback') {
+      const id = e.agentId
+      await update($, agents, list => listOf<unknown>(list).map(normalizeCard).map(c => (c.id === id ? { ...c, phase: 'tool' as const, doing: text } : c)))
+    }
+    const ran = await next(e).finally(() => callLoop.delete(e.tool_use_id))
+    const didRun = ran.deny === undefined
+    // Settle this call's pending ask, if it had one; skip the write (and the redraw) otherwise.
+    const g0 = await getGate($)
+    const isSettled = settleCheck(g0, e.tool_use_id, didRun) !== g0
+    if (isSettled) await update($, gate, g => settleCheck(normalizeGate(g), e.tool_use_id, didRun))
+    // A background agent hands its report back through this tool; an architect's report is its advice.
+    if (String(e.tool) === 'SubagentHandback') {
+      const message = (e as unknown as { message?: unknown }).message
+      const a = e.agentId ? await getArchitect($) : null
+      if (a && e.agentId && a.ids.includes(e.agentId) && typeof message === 'string') {
+        const advice = adviceLine(message)
+        if (advice && advice !== a.lastAdvice) await noteAdvice($, cfg, advice)
+      }
+      return ran
+    }
+    if (e.tool === 'Agent') {
+      if (isSettled) await refreshStatus($, cfg)
+      return ran
+    }
+    const hasFailed = didRun && ran.isError === true
+    const isEdit = !hasFailed && didRun && EDIT_TOOLS.has(e.tool)
+    const t0 = await getTurn($)
+    if (isEdit || hasFailed || (!e.agentId && t0.errorStreak > 0)) {
+      await update($, turn, t => afterCall(normalize(DEFAULT_TURN, t), { inSubagent: Boolean(e.agentId), hasFailed, isEdit }))
+    }
+    if (e.agentId) {
+      const id = e.agentId
+      const seenAt = await $.clock.now()
+      await update($, agents, list =>
+        listOf<unknown>(list)
+          .map(normalizeCard)
+          .map(c => (c.id === id ? { ...noteTool(c, { tool: e.tool, text, isError: hasFailed || ran.deny !== undefined }), lastAt: seenAt } : c)),
+      )
+    }
+    // The log keeps what is worth a glance: refusals, errors and edits; the rest is on the cards.
+    if (ran.deny !== undefined) await say($, await whoIs($, e.agentId), `${text}  denied`, 'error', e.agentId ?? null)
+    else if (hasFailed) await say($, await whoIs($, e.agentId), `${text}  ✗`, 'error', e.agentId ?? null)
+    else if (isEdit) await say($, await whoIs($, e.agentId), text, 'info', e.agentId ?? null)
+    if (isSettled || !didRun) await refreshStatus($, cfg)
+    return ran
+  })
+
+  // A server-side review tool never reaches tool.call: it shows only in the assistant's rows.
+  on('session.append', async ($, e, next) => {
+    if (!e.agentId && e.message.type === 'assistant') {
+      const a = await getArchitect($)
+      // Consults this row opened: their result may be in the same row, after the stale read above.
+      const opened = new Set<string>()
+      for (const block of e.message.content as unknown as readonly ServerBlock[]) {
+        if (block.type === 'server_tool_use' && block.name && block.id && cfg.architect.test(block.name)) {
+          if (a.seen.includes(block.id)) continue
+          const id = block.id
+          await update($, architect, x => {
+            const y = normalize(DEFAULT_ARCHITECT, x)
+            return { ...y, seen: [...listOf<string>(y.seen), id].slice(-60) }
+          })
+          opened.add(id)
+          await consultStarted($, cfg, id, `${block.name} tool`)
+        } else if (block.type.endsWith('_tool_result') && block.tool_use_id) {
+          const id = block.tool_use_id
+          const isOpen = opened.has(id) || (await getArchitect($)).consults.some(c => c.id === id && c.endAt === null)
+          if (isOpen) await consultEnded($, cfg, null, id)
+        }
+      }
+    }
+    return next(e)
+  })
+
+  // Hard limit on concurrent subagents: the Agent tool's call is refused while `maxAgents` run. Decided
+  // one call at a time (makeSpawnGate), so a parallel launch of five still gets its fifth refused.
+  const spawnGate = makeSpawnGate()
+  on('tool.call', { tool: 'Agent' }, async ($, e, next) => {
+    if (cfg.maxAgents > 0) {
+      const isAdmitted = await spawnGate
+        .admit(e.tool_use_id, cfg.maxAgents, async () => {
+          const now = await $.clock.now()
+          return { running: agentTotals(await getCards($), now, cfg.agentStaleMs).running, now }
+        })
+        // A state that cannot be read must never stop the work.
+        .catch(() => true)
+      if (!isAdmitted) {
+        await say($, 'gate', `subagent refused · ${cfg.maxAgents} already running`, 'error')
+        return { deny: spawnDenied(cfg.maxAgents) }
+      }
+    }
+    return next(e).finally(() => spawnGate.release(e.tool_use_id))
+  })
+
+  on('agent.spawn', async ($, e, next) => {
+    const routed = e.resume ? null : routeModel(cfg.agentRoutes, e)
+    if (routed) await say($, 'router', `routed ${e.subagentType} → ${routed}`)
+    const started = await next(routed ? { ...e, model: routed } : e)
+    tick?.cancel()
+    tick = $.clock.every(30_000, () => {
+      void Promise.all([getCards($), $.clock.now()])
+        .then(([cards, now]) => {
+          if (cards.some(c => isLive(c, now, cfg.agentStaleMs))) $.ui.invalidate('ui.render')
+          else {
+            $.ui.invalidate('ui.render')
+            tick?.cancel()
+            tick = undefined
+          }
+        })
+        .catch(() => undefined)
+    })
+    if (!e.parentAgentId) await noteMode($, e.permissionMode)
+    if (started.deny !== undefined || !started.agentId) return started
+    const id = started.agentId
+    if (await isArchitectType($, cfg, e.subagentType)) {
+      await update($, architect, a => {
+        const x = normalize(DEFAULT_ARCHITECT, a)
+        return { ...x, ids: [...listOf<string>(x.ids), id].slice(-40) }
+      })
+      await update($, loops, l => listOf<Loop>(l).filter(x => x.id !== id))
+      await consultStarted($, cfg, id, e.subagentType.split(':').pop() ?? 'agent')
+    }
+    // Every subagent, an architect consult included, gets a card of its own.
+    const spawnedAt = await $.clock.now()
+    const card: AgentCard = {
+      ...normalizeCard({}),
+      id,
+      type: e.name ?? e.subagentType,
+      model: started.model,
+      description: e.description,
+      spawnedAt,
+      lastAt: spawnedAt,
+    }
+    // Decided in the write: a resume whose first step already put its card back to running is not logged again.
+    let isNew = true
+    let isResumed = false
+    await update($, agents, list => {
+      const cards = listOf<unknown>(list).map(normalizeCard)
+      const known = cards.find(c => c.id === id)
+      isNew = known === undefined
+      isResumed = known !== undefined && known.status !== 'running'
+      return addCard(cards, card)
+    })
+    await update($, loops, l => listOf<Loop>(l).filter(x => x.id !== id))
+    if (isNew || isResumed) await say($, shorten(cardTitle(card), 12), isNew ? `spawned · ${card.type}` : 'resumed', 'info', id)
+    // The card now counts as running; the reservation that held its slot is no longer needed.
+    spawnGate.release(e.tool_use_id)
+    await refreshStatus($, cfg)
+    return started
+  })
+
+  on('turn.complete', async ($, e, next) => {
+    const done = await next(e)
+    const id = e.agentId
+    const now = await $.clock.now()
+    if (!id) {
+      const [t, cards, cost] = await Promise.all([getTurn($), getCards($), costNow($)])
+      const r = receiptOf(t, {
+        durationMs: e.durationMs,
+        agentsSince: cards.filter(c => c.spawnedAt >= t.startedAt).length,
+        costNow: cost,
+        reason: e.reason,
+      })
+      await update($, receipt, () => r)
+      await update($, main, m => ({ ...normalize(DEFAULT_MAIN, m), isRunning: false }))
+      await refreshStatus($, cfg)
+      return done
+    }
+    if ((await getArchitect($)).ids.includes(id)) await consultEnded($, cfg, e.answer, id)
+    const cards = await getCards($)
+    if (cards.some(c => c.id === id)) {
+      const status = e.reason === 'answer' ? 'done' : e.reason === 'aborted' ? 'stopped' : 'failed'
+      await update($, agents, list =>
+        listOf<unknown>(list)
+          .map(normalizeCard)
+          .map(c => (c.id === id ? { ...c, status, endedAt: now, answer: shorten(e.answer, 400), phase: null } : c)),
+      )
+      // This run's own length: a resumed agent's card clock also spans the idle time between runs.
+      const took = fmtDuration(e.durationMs)
+      await say($, await whoIs($, id), status === 'done' ? `done · ${took}` : status, status === 'done' ? 'done' : 'error', id)
+    } else if (!(await getArchitect($)).ids.includes(id)) {
+      await update($, loops, l => listOf<Loop>(l).map(x => (x.id === id ? { ...x, isDone: true, lastAt: now } : x)))
+    }
+    await refreshStatus($, cfg)
+    return done
+  })
+
+  // ---------------------------------------------------------------- drawing
+
+  // After a surface module faults on a surface, this load draws it there as plain text; the other
+  // module, and other surfaces, keep theirs. Keyed by faultKey: `desktop:rail.tsx`.
+  const faulted = new Set<string>()
+  on('ui.fault', async ($, e, next) => {
+    const key = faultKey(e.surface, e.module)
+    if (e.requestId === PANE && !faulted.has(key)) {
+      faulted.add(key)
+      $.ui.log(`flightdeck: ${e.module} faulted on ${e.surface} (${e.phase}: ${e.reason}); drawing it without animation`)
+      $.ui.invalidate('ui.render')
+    }
+    return next(e)
+  })
+
+  on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
+    const els = $.ui.resolve(e)
+    const { Box, Text, Button } = els
+    const hasClient = 'Client' in els
+    const hasRail = hasClient && !faulted.has(faultKey(e.surface, 'rail.tsx'))
+    const hasClock = hasClient && !faulted.has(faultKey(e.surface, 'elapsed.tsx'))
+    const [v, now] = await Promise.all([getView($), $.clock.now()])
+    // The body's own width, down to the narrowest dock Claude Code seats (24): a wider drawing is cut off at the frame.
+    const W = Math.max(24, e.props.bodyColumns)
+    const layout = v.layout ?? cfg.layout
+
+    // A start time of 0 is unknown (state saved before it was recorded): no clock, not decades. A finished
+    // item draws its last reading as plain text, so it holds no timer.
+    const clock = (key: string, since: number, endAt: number | null, color: string) =>
+      since <= 0 ? (
+        <Text color={color}>—</Text>
+      ) : hasClock && endAt === null ? (
+        <els.Client key={key} module="./elapsed.tsx" props={{ since, now, endAt, color }} />
+      ) : (
+        <Text color={color}>{fmtTimer((endAt ?? now) - since)}</Text>
+      )
+
+    const expandOnPress = (id: string) => () =>
+      update($, view, x => ({ ...normalize(DEFAULT_VIEW, x), expanded: normalize(DEFAULT_VIEW, x).expanded === id ? null : id }))
+
+    const expandedPanel = (cards: AgentCard[], w: number) => {
+      const card = cards.find(c => c.id === v.expanded)
+      return card ? (
+        <Box flexDirection="column" borderStyle="single" borderColor={C.agent} paddingX={1} width={w}>
+          <Text bold wrap="wrap">
+            {card.description || card.type}
+          </Text>
+          <Text dimColor wrap="truncate">{`${card.type} · ${prettyModel(card.model)} · ${card.status} · ${card.steps} steps`}</Text>
+          <Text dimColor wrap="truncate">{`skills ${card.skills.join(' ') || '—'}`}</Text>
+          {card.tools.length === 0 ? <Text color={C.faint}>no tool calls yet</Text> : null}
+          {card.tools.map(n => (
+            <Text color={n.isError ? C.warn : C.text} wrap="truncate">
+              {`${n.isError ? '✗' : '·'} ${n.text}`}
+            </Text>
+          ))}
+          {card.answer ? (
+            <Text dimColor wrap="wrap">
+              {`» ${shorten(card.answer, 240)}`}
+            </Text>
+          ) : null}
+        </Box>
+      ) : null
+    }
+
+    // ---- monitor: reads only the atoms it draws (view above, main, usage, agents), so a gate, architect,
+    // turn or log write does not redraw it. No rails.
+    if (layout === 'monitor') {
+      const [m, u, cards] = await Promise.all([getMain($), getUsage($), getCards($)])
+      const inner = W - 4
+      const nn = (c: AgentCard) => String(cards.indexOf(c) + 1).padStart(2, '0')
+      const running = cards.filter(c => c.status === 'running')
+      const ordered = [...running, ...cards.filter(c => c.status !== 'running').reverse()]
+      const shown = ordered.slice(0, cfg.maxCards)
+      const tones = { thinking: '#f9a8d4', active: C.active, idle: C.agent, done: C.done, failed: C.warn, stopped: C.dim }
+      // Emoji take two cells; the rest of the header is one each.
+      const cells = (t: string) => [...t].reduce((n, ch) => n + ((ch.codePointAt(0) ?? 0) > 0xffff ? 2 : 1), 0)
+
+      // Header parts dropped from the end as the width narrows: version, then session, then time. The cost stays.
+      const costText = `COST: ${u.costUsd !== null ? fmtUsd(u.costUsd) : '$—'}`
+      const headAt = (level: number) => {
+        const left: { w: number; node: RenderChildren }[] = [
+          { w: 15, node: <Text color={C.main} bold>[ CLAUDE CODE ]</Text> },
+          { w: cells('🚀 SUBAGENT MONITOR'), node: <Text bold>🚀 SUBAGENT MONITOR</Text> },
+        ]
+        if (level >= 3) left.push({ w: VERSION.length + 3, node: <Text dimColor>{`(v${VERSION})`}</Text> })
+        if (level >= 1) left.push({ w: 2, node: <Text color={C.faint}>──</Text> })
+        if (level >= 2 && u.tag) {
+          left.push({ w: 10 + u.tag.length, node: <Text>{`SESSION: #${u.tag}`}</Text> })
+          left.push({ w: 1, node: <Text color={C.faint}>|</Text> })
+        }
+        if (level >= 1) {
+          left.push({ w: 5, node: <Text>TIME:</Text> })
+          left.push({ w: 6, node: clock('monitor-clock', u.startedAt, m.isRunning ? null : now, C.text) })
+          left.push({ w: 1, node: <Text color={C.faint}>|</Text> })
+        }
+        return left
+      }
+      const level = [3, 2, 1, 0].find(l => headAt(l).reduce((n, p) => n + p.w + 1, 0) + cells(costText) <= W) ?? 0
+      const head = (
+        <Box width={W} justifyContent="space-between" columnGap={1}>
+          <Box overflow="hidden" columnGap={1}>
+            {headAt(level).map(p => p.node)}
+          </Box>
+          <Box flexShrink={0}>
+            <Text color={C.text} bold>
+              {costText}
+            </Text>
+          </Box>
+        </Box>
+      )
+
+      // One gradient bar per limit, at most three.
+      const bar = (l: Usage['limits'][number]) => {
+        const pct = Math.max(0, Math.min(100, Math.round(l.pct)))
+        const reset = fmtResetIn(l.resetsAt, now)
+        const base = [shorten(limitLabel(l.kind), inner >= 30 ? 8 : 4), `${pct}%`]
+        const withReset = reset ? [...base, `↻${reset}`] : base
+        const labelW = (p: string[]) => p.reduce((n, t) => n + cellWidth(t) + 1, 0)
+        const parts = inner - labelW(withReset) >= 8 ? withReset : base
+        const barW = Math.max(4, inner - labelW(parts))
+        const full = Math.round((pct / 100) * barW)
+        return (
+          <Box width={inner} columnGap={1}>
+            <Box flexShrink={0}>
+              {Array.from({ length: full }, (_, i) => (
+                <Text color={gradientCell(i, barW)}>█</Text>
+              ))}
+              <Text color={C.faint}>{'░'.repeat(barW - full)}</Text>
+            </Box>
+            {parts.map((t, i) => (
+              <Text {...(i === 1 ? (pct >= 90 ? { color: C.warn } : { color: C.text }) : { dimColor: true })}>{t}</Text>
+            ))}
+          </Box>
+        )
+      }
+      const usageBox = (
+        <Box flexDirection="column" borderStyle="round" borderColor={C.faint} paddingX={1} width={W}>
+          <Text color={C.dim} bold wrap="truncate">
+            SUBSCRIPTION USAGE
+          </Text>
+          {u.limits.length === 0 ? (
+            <Text dimColor wrap="truncate">
+              no plan limits reported (API session)
+            </Text>
+          ) : (
+            u.limits.slice(0, 3).map(bar)
+          )}
+        </Box>
+      )
+
+      const row = (label: string, value: string, isDim: boolean) => (
+        <Box width={inner} overflow="hidden">
+          <Box width={8} flexShrink={0}>
+            <Text dimColor>{label}</Text>
+          </Box>
+          <Text dimColor={isDim} wrap="truncate">{value}</Text>
+        </Box>
+      )
+      const num = (n: number) => n.toLocaleString('en-US')
+      const card = (c: AgentCard, i: number) => {
+        const st = cardStatus(c, now, cfg.agentStaleMs)
+        const isMax = c.lastStop === 'max_tokens'
+        const win = cardWindow(c)
+        const ctx = win > 0 && c.ctx > 0 ? `${Math.round((c.ctx * 100) / win)}%` : '—'
+        const inT = c.inTok + c.cacheRead + c.cacheWrite
+        const tokens =
+          W >= 60
+            ? `📥 In: ${num(inT)}${c.cacheRead > 0 ? ` (Cached: ${kTokens(c.cacheRead)})` : ''} | 📤 Out: ${num(c.out)} (${num(inT + c.out)} total)`
+            : `In ${kTokens(inT)} · Out ${kTokens(c.out)}`
+        const title = c.type.split(':').pop() ?? c.type
+        const isDim = c.status === 'done'
+        return (
+          <Box flexDirection="column">
+            {i > 0 ? <Text color={C.faint}>{'─'.repeat(inner)}</Text> : null}
+            <Box width={inner} justifyContent="space-between">
+              <Box overflow="hidden" columnGap={1}>
+                <Button
+                  key={`card-${c.id}`}
+                  plain
+                  dimColor={isDim}
+                  {...(i < 6 ? { hotkey: String(i + 1) } : {})}
+                  label={inner >= 34 ? `SUBAGENT_${nn(c)}` : `#${nn(c)}`}
+                  onPress={expandOnPress(c.id)}
+                />
+                <Text color={isMax ? C.warn : tones[st.tone]} wrap="truncate">
+                  {`${st.glyph}${inner >= 30 ? ` ${st.word}` : ''}${isMax ? ' ⚠' : ''}`}
+                </Text>
+                {inner >= 50 ? (
+                  <Text dimColor wrap="truncate">
+                    {`"${title}"`}
+                  </Text>
+                ) : null}
+              </Box>
+              <Box flexShrink={0} marginLeft={1}>
+                <Text dimColor={isDim}>{inner >= 34 ? `COST: ${fmtCost3(c)}` : fmtCost3(c)}</Text>
+              </Box>
+            </Box>
+            {row('Model:', c.steps > 0 ? `${prettyModel(c.model)} · effort ${c.effort || '—'} · ctx ${ctx}` : `${prettyModel(c.model)} · starting`, isDim)}
+            {row('Task:', c.description ? `'${c.description}'` : '—', isDim)}
+            {row('Skills:', c.skills.join(' ') || '—', isDim)}
+            {row('Tokens:', tokens, isDim)}
+          </Box>
+        )
+      }
+
+      return (
+        <Box flexDirection="column" width={W}>
+          {head}
+          {usageBox}
+          {cards.length === 0 ? (
+            <Text color={C.faint}>no subagents yet</Text>
+          ) : (
+            <Box flexDirection="column" borderStyle="single" borderColor={C.agent} paddingX={1} width={W}>
+              {shown.map(card)}
+            </Box>
+          )}
+          {ordered.length > shown.length ? <Text color={C.faint}>{`+${ordered.length - shown.length} more`}</Text> : null}
+          {expandedPanel(cards, W)}
+          {running.length === 0 ? (
+            <Text color={C.faint}>no subagents running</Text>
+          ) : (
+            running.slice(0, 4).map(c => (
+              <Box width={W} columnGap={1} overflow="hidden">
+                <Box flexShrink={0}>
+                  <Text color={C.active}>{`[SUBAGENT_${nn(c)}]`}</Text>
+                </Box>
+                <Text dimColor wrap="truncate">
+                  {c.doing || '—'}
+                </Text>
+              </Box>
+            ))
+          )}
+          <Text dimColor wrap="truncate">
+            {`flightdeck [${m.isRunning ? 'working…' : 'listening…'}]  ${cards.length > 0 ? `${shown.length > 1 ? `1-${Math.min(6, shown.length)}` : '1'} expand · ` : ''}/flightdeck layout compact`}
+          </Text>
+        </Box>
+      )
+    }
+
+    const [m, u, a, g, cards, lp, lines, t, r] = await Promise.all([
+      getMain($),
+      getUsage($),
+      getArchitect($),
+      getGate($),
+      getCards($),
+      getLoops($),
+      getLog($),
+      getTurn($),
+      read($, receipt),
+    ])
+    const isWide = layout === 'wide' || (layout === 'auto' && W >= 110)
+    const colW = isWide ? Math.floor((W - 2) / 2) : W
+    const modelName = prettyModel(m.model)
+    const viewed = e.props.view?.agentId ?? null
+    const advising = isAdvising(a)
+    const showArchitect = a.consults.length > 0 || a.ids.length > 0
+    const motion = cfg.motion && hasRail
+    // A panel with nothing to show yet takes no room: most sessions never spawn an agent.
+    const isEmpty: Record<Panel, boolean> = {
+      main: false,
+      architect: !showArchitect,
+      gate: g.recent.length === 0 && gateSummary(g).total === 0,
+      agents: cards.length === 0,
+      loops: lp.length === 0,
+      receipt: !m.isRunning && !r,
+      log: false,
+    }
+    const panels = cfg.panels.filter(p => !isEmpty[p])
+    const decider = m.mode === 'auto' ? 'classifier' : 'you'
+
+    // A connector between panels: animated while its flow is live, a dim line otherwise.
+    const rail = (key: string, active: boolean, color: string, width: number, marks: number[] = [], isMerge = false) =>
+      motion && active ? (
+        <els.Client
+          key={key}
+          module="./rail.tsx"
+          width={width}
+          height={1}
+          props={{ active, width, color, dim: C.faint, marks, isMerge }}
+        />
+      ) : (
+        <Text color={C.faint} mono>
+          {'─'.repeat(Math.max(1, width))}
+        </Text>
+      )
+
+    const isTerminal = e.surface === 'terminal'
+    // A row of marks (gate checks, loop dots), sized by `marksIn`. Should a surface draw them wider
+    // still, the row is cut at its box rather than running past it.
+    const markRow = (marks: RenderChildren, lead = 0) => (
+      <Box overflow="hidden" {...(lead ? { marginLeft: lead } : {})}>
+        <Text wrap="truncate-start">{marks}</Text>
+      </Box>
+    )
+    // A terminal's border row stands apart from the text above it; a graphical surface draws the
+    // border flush against it, so the legend keeps one row of air there.
+    const legendGap = isTerminal ? 0 : 1
+
+    // A line of coloured pieces, drawn as a row of boxes the way the log draws its lines. A Text nesting
+    // coloured Texts truncates as one line in a terminal, but the desktop app wraps each nested piece on its
+    // own, lays truncating ones out as blocks of their own, and collapses runs of spaces. So pieces sit `gap`
+    // cells apart (a piece's `lead` adds more), each keeps its width, and pieces that don't fit in `room` are
+    // left out from the end; or a piece marked `fill` (one span) truncates to what the others leave.
+    type Span = { text: string; color?: string; dim?: boolean; bold?: boolean }
+    type Piece = { spans: Span[]; lead?: number; fill?: boolean }
+    const styleOf = (s: Span) => ({ ...(s.color ? { color: s.color } : {}), ...(s.dim ? { dimColor: true } : {}), ...(s.bold ? { bold: true } : {}) })
+    const widthOf = (p: Piece) => p.spans.reduce((n, s) => n + cellWidth(s.text), 0)
+    const line = (pieces: (Piece | null)[], room: number, gap = 1, justify?: 'center') => {
+      const all = pieces.filter((p): p is Piece => p !== null)
+      const shown = all.some(p => p.fill) ? all : all.slice(0, piecesThatFit(all.map(p => ({ width: widthOf(p), lead: p.lead })), room, gap))
+      return (
+        <Box width={room} columnGap={gap} overflow="hidden" {...(justify ? { justifyContent: justify } : {})}>
+          {shown.map(p => {
+            const lead = p.lead ? { marginLeft: p.lead } : {}
+            if (p.fill && p.spans[0]) {
+              return (
+                <Text {...styleOf(p.spans[0])} wrap="truncate">
+                  {p.spans[0].text}
+                </Text>
+              )
+            }
+            return (
+              <Box flexShrink={0} {...lead}>
+                {p.spans.length === 1 && p.spans[0] ? <Text {...styleOf(p.spans[0])}>{p.spans[0].text}</Text> : <Text>{p.spans.map(s => <Text {...styleOf(s)}>{s.text}</Text>)}</Text>}
+              </Box>
+            )
+          })}
+        </Box>
+      )
+    }
+
+    // ---- main
+    const effortN = { low: 1, medium: 2, high: 3, xhigh: 4, max: 4 }[m.effort] ?? 0
+    const ctxFill = contextFill(u)
+    const ctxGauge = ctxFill.pct !== null ? gauge(ctxFill.pct, 10) : null
+    const mainPanel = (w: number) => (
+      <Box flexDirection="column" borderStyle="round" borderColor={C.main} paddingX={1} width={w}>
+        <Box justifyContent="space-between">
+          <Text color={C.main} bold wrap="truncate">
+            {modelName} · main
+          </Text>
+          <Box flexShrink={0}>
+            <Text color={m.isRunning ? C.main : C.dim}>{m.isRunning ? '● working' : '○ idle'}</Text>
+          </Box>
+        </Box>
+        {line(
+          [
+            {
+              spans: [
+                { text: 'effort ', dim: true },
+                { text: `${'▮'.repeat(effortN) + '▯'.repeat(4 - effortN)} `, color: C.main },
+                { text: m.effort || '—', color: C.main, bold: true },
+              ],
+            },
+            m.mode ? { spans: [{ text: `mode ${m.mode}`, dim: true }] } : null,
+            { spans: [{ text: `${m.steps} req`, dim: true }] },
+          ],
+          w - 4,
+          3,
+        )}
+        {ctxGauge
+          ? line(
+              [
+                {
+                  spans: [
+                    { text: 'ctx ', dim: true },
+                    { text: ctxGauge.on, color: ctxFill.pct !== null && ctxFill.pct >= 80 ? C.warn : C.main },
+                    { text: ctxGauge.off, color: C.faint },
+                    { text: ` ${Math.round(ctxFill.pct ?? 0)}%`, bold: true },
+                  ],
+                },
+                u.tokens !== null ? { spans: [{ text: `${kTokens(u.tokens)}/${kTokens(ctxFill.window)}`, dim: true }] } : null,
+                u.compactions > 0 ? { spans: [{ text: `⟲${u.compactions}`, color: C.amber }], lead: 1 } : null,
+              ],
+              w - 4,
+            )
+          : null}
+        {u.costUsd !== null || u.limits.length > 0
+          ? line(
+              [
+                u.costUsd !== null ? { spans: [{ text: fmtUsd(u.costUsd), color: C.text }] } : null,
+                ...u.limits.slice(0, 2).map((l, i): Piece => {
+                  const lg = gauge(l.pct, 5)
+                  // The time to each reset where the line has room for it: both windows fit from 56 columns,
+                  // so a wide pane's half column (59 at 120) has them; a window that doesn't fit is left out.
+                  const resetIn = w >= 56 ? fmtResetIn(l.resetsAt, now) : ''
+                  return {
+                    lead: i > 0 ? 1 : u.costUsd !== null ? 2 : 0,
+                    spans: [
+                      { text: `${limitLabel(l.kind)} `, dim: true },
+                      { text: lg.on, color: l.pct >= 80 ? C.warn : C.main },
+                      { text: lg.off, color: C.faint },
+                      { text: ` ${Math.round(l.pct)}%${resetIn ? ` ↻${resetIn}` : ''}`, dim: true },
+                    ],
+                  }
+                }),
+              ],
+              w - 4,
+            )
+          : null}
+        {m.speed ? <Text dimColor wrap="truncate">{`last req  ${fmtSpeed(m.speed)}`}</Text> : null}
+      </Box>
+    )
+
+    // ---- architect
+    const lastConsult = a.consults[a.consults.length - 1]
+    const architectPanel = (w: number) => {
+      // Both ends are anchors (the first consult, now): should it run past its box, it asks to lose the middle.
+      const tl = consultTimeline(a, now, Math.max(8, w - 4))
+      return (
+        <Box flexDirection="column" borderStyle="round" borderColor={C.arch} paddingX={1} width={w}>
+          <Box justifyContent="space-between">
+            <Text color={C.arch} bold wrap="truncate">
+              {cfg.architectLabel} · {advising ? 'advising' : 'on call'}
+            </Text>
+            <Box flexShrink={0}>
+              <Text>
+                <Text dimColor>consults </Text>
+                <Text color={C.arch} bold>
+                  {a.consults.length}
+                </Text>
+              </Text>
+            </Box>
+          </Box>
+          <Text color={C.arch} wrap="truncate-middle">
+            {tl}
+          </Text>
+          {lastConsult ? (
+            <Text dimColor wrap="truncate">
+              {advising
+                ? `consulting since ${fmtClock(lastConsult.at)}`
+                : `last ${fmtDuration(now - (lastConsult.endAt ?? lastConsult.at))} ago · took ${fmtDuration((lastConsult.endAt ?? now) - lastConsult.at)}`}
+            </Text>
+          ) : (
+            <Text dimColor>not consulted yet</Text>
+          )}
+          {cfg.moments ? (
+            <Box flexWrap="wrap" columnGap={2}>
+              {(['before a plan', 'error repeats', 'before done'] as const).map(mo => {
+                const isOn = lastConsult?.moment === mo
+                return (
+                  <Text color={isOn ? C.arch : C.dim} bold={isOn}>
+                    {isOn ? '◆' : '◇'} {mo}
+                  </Text>
+                )
+              })}
+              <Text color={C.faint}>(inferred)</Text>
+            </Box>
+          ) : null}
+          {a.lastAdvice ? (
+            <Text color={C.arch} wrap="truncate">
+              » {a.lastAdvice}
+            </Text>
+          ) : null}
+        </Box>
+      )
+    }
+
+    // ---- gate
+    const s = gateSummary(g)
+    const verdictColor = (c: Check) =>
+      c.verdict === 'rule' ? C.gate : c.verdict === 'cleared' ? C.cleared : c.verdict === 'ask' ? C.amber : C.warn
+    const checkMark = (c: Check) => (
+      <Text color={verdictColor(c)} dimColor={c.inSubagent}>
+        {c.verdict === 'deny' ? '✗' : '■'}
+      </Text>
+    )
+    const gatePanel = (w: number) => {
+      const strip = g.recent.slice(-Math.max(8, marksIn(w - 4, isTerminal)))
+      const open = v.gateOpen
+      // The totals in words where they all fit, in numbers alone where they don't: the colours say which is which.
+      const totalsOf = (isShort: boolean): Piece[] => [
+        { spans: [{ text: '■', color: C.gate }, { text: isShort ? ` ${s.rule}` : ` ${s.rule} allowed`, dim: true }] },
+        { spans: [{ text: '■', color: C.cleared }, { text: isShort ? ` ${s.cleared}` : ` ${s.cleared} ${decider}`, dim: true }] },
+        ...(s.ask > 0 ? [{ spans: [{ text: isShort ? `■ ${s.ask}` : `■ ${s.ask} pending`, color: C.amber }] }] : []),
+        { spans: [{ text: isShort ? `✗ ${s.deny}` : `✗ ${s.deny} denied`, color: s.deny > 0 ? C.warn : C.dim }] },
+      ]
+      const words = totalsOf(false)
+      const isShort = piecesThatFit(words.map(p => ({ width: widthOf(p) })), w - 4, 2) < words.length
+      const totals = isShort ? totalsOf(true) : words
+      return (
+        <Box flexDirection="column" borderStyle="round" borderColor={C.gate} paddingX={1} width={w}>
+          <Box justifyContent="space-between">
+            <Text color={C.gate} bold wrap="truncate">
+              {cfg.gateLabel} · permissions
+            </Text>
+            <Box flexShrink={0}>
+              <Text dimColor>{`${s.total} checks`}</Text>
+            </Box>
+          </Box>
+          {strip.length === 0 ? <Text color={C.faint}>no checks yet</Text> : markRow(strip.map(checkMark))}
+          {line([...totals, !isShort && w >= 80 && g.recent.some(c => c.inSubagent) ? { spans: [{ text: 'dim: in subagents', color: C.faint }] } : null], w - 4, 2)}
+          {/* Below about 44 columns the three rows' buttons take two lines rather than run past the box. */}
+          <Box columnGap={2} flexWrap="wrap">
+            {(['file', 'shell', 'other'] as const).map((b: Bucket) => {
+              const tl = g.totals[b]
+              const n = tl.rule + tl.ask + tl.cleared + tl.deny
+              return (
+                <Button
+                  key={`gate-${b}`}
+                  plain
+                  hotkey={b[0]}
+                  label={`${b} ${n}${open === b ? ' ▾' : ''}`}
+                  dimColor={n === 0}
+                  onPress={() => update($, view, x => ({ ...normalize(DEFAULT_VIEW, x), gateOpen: normalize(DEFAULT_VIEW, x).gateOpen === b ? null : b }))}
+                />
+              )
+            })}
+          </Box>
+          {open
+            ? g.recent
+                .filter(c => c.bucket === open)
+                .slice(-5)
+                .map(c => (
+                  // The verdict sits in a box of its own width, not padded with spaces, which a graphical surface collapses.
+                  <Box width={w - 4} columnGap={1} overflow="hidden">
+                    <Box width={12} flexShrink={0}>
+                      <Text>
+                        <Text color={verdictColor(c)}>{c.verdict === 'deny' ? '✗ ' : '■ '}</Text>
+                        <Text color={C.dim}>{c.verdict === 'rule' ? 'allowed' : c.verdict === 'cleared' ? decider : c.verdict === 'ask' ? 'pending' : 'denied'}</Text>
+                      </Text>
+                    </Box>
+                    <Text dimColor={c.inSubagent} wrap="truncate">
+                      {shorten(c.detail, Math.max(10, w - 18))}
+                    </Text>
+                  </Box>
+                ))
+            : null}
+        </Box>
+      )
+    }
+
+    // ---- agents: cards up to the limit, swimlanes beyond it
+    const statusColor = (c: AgentCard) => (c.status === 'failed' ? C.warn : c.status === 'done' ? C.done : c.status === 'running' ? C.active : C.agent)
+    const glyph = (c: AgentCard) => (c.status === 'running' ? '◐' : c.status === 'done' ? '✓' : c.status === 'failed' ? '✗' : '■')
+    const totals = agentTotals(cards, now, cfg.agentStaleMs)
+    const limitText = cfg.maxAgents > 0 ? String(cfg.maxAgents) : '∞'
+    const costText = totals.cost === null ? '$—' : fmtUsd(totals.cost)
+    const agentsPanel = (w: number) => {
+      const useLanes = cards.length > cfg.maxCards
+      const isNarrow = w < 40
+      const header = (
+        <Box flexDirection="column" width={w}>
+          <Box justifyContent="space-between" width={w}>
+            <Text bold wrap="truncate">
+              {isNarrow ? `agents · ${totals.running}/${limitText}` : `agents · ${totals.running}/${limitText} running · ${totals.total} total`}
+            </Text>
+            {cards.length > 0 ? (
+              <Box flexShrink={0}>
+                <Text color={C.faint}>{`1-${Math.min(cards.length, useLanes ? 6 : cfg.maxCards)}${isNarrow ? '' : ' expand'}`}</Text>
+              </Box>
+            ) : null}
+          </Box>
+          {cards.length > 0 ? (
+            <Text dimColor wrap="truncate">
+              {`in ${kTokens(totals.inTok)} · out ${kTokens(totals.out)} · est ${costText}`}
+            </Text>
+          ) : null}
+        </Box>
+      )
+      if (cards.length === 0) {
+        return (
+          <Box flexDirection="column" width={w}>
+            {header}
+            <Text color={C.faint}>no subagents yet</Text>
+          </Box>
+        )
+      }
+      if (useLanes) {
+        const shown = cards.slice(-6)
+        // A lane is its glyph, a label, the bar and a clock, then the model and tokens: on the same row from 80
+        // columns, on a row of their own under it below that. Below 34 columns the label narrows, below 36 the bar.
+        const isOneRow = w >= 80 && !shown.some(c => c.skills.length > 0)
+        const infoW = isOneRow ? 26 : 0
+        const extra = isOneRow ? infoW + 1 : 0
+        const labelW = Math.min(17, Math.max(7, w - 17 - extra))
+        const barW = Math.max(4, w - 11 - labelW - extra)
+        const geo = lanes(shown, now, barW)
+        return (
+          <Box flexDirection="column" width={w}>
+            {header}
+            {cards.length > shown.length ? <Text color={C.faint}>{`+${cards.length - shown.length} earlier`}</Text> : null}
+            {shown.map((c, i) => {
+              const gm = geo[i]
+              const isViewed = viewed === c.id
+              return (
+                <Box flexDirection="column">
+                  <Box columnGap={1}>
+                    <Text color={statusColor(c)} bold={isViewed}>
+                      {isViewed ? '▶' : glyph(c)}
+                    </Text>
+                    <Box width={labelW} flexShrink={0}>
+                      <Button key={`card-${c.id}`} plain hotkey={String(i + 1)} label={shorten(cardTitle(c), labelW - 3)} onPress={expandOnPress(c.id)} />
+                    </Box>
+                    <Box flexShrink={0}>
+                      <Text>
+                        <Text color={C.faint}>{'·'.repeat(gm?.before ?? 0)}</Text>
+                        <Text color={statusColor(c)}>{'━'.repeat(gm?.bar ?? 1)}</Text>
+                        <Text color={C.faint}>{'·'.repeat(gm?.after ?? 0)}</Text>
+                      </Text>
+                    </Box>
+                    {clock(`lane-clock-${c.id}`, c.spawnedAt, c.endedAt, C.dim)}
+                    {isOneRow ? (
+                      <Box width={infoW} flexShrink={0}>
+                        <Text dimColor wrap="truncate">
+                          {agentInfo(c, infoW)}
+                        </Text>
+                      </Box>
+                    ) : null}
+                  </Box>
+                  {isOneRow ? null : (
+                    <Box marginLeft={2} width={w - 2}>
+                      <Text dimColor wrap="truncate">
+                        {agentInfo(c, w - 2)}
+                      </Text>
+                    </Box>
+                  )}
+                </Box>
+              )
+            })}
+          </Box>
+        )
+      }
+      // One window per subagent, four lines: model · task and status; effort and context; estimated cost and tokens; skills.
+      const shown = cards.slice(-cfg.maxCards)
+      return (
+        <Box flexDirection="column" width={w}>
+          {header}
+          {shown.map((c, i) => {
+            const isViewed = viewed === c.id
+            const inner = w - 4
+            const isDim = c.status === 'done'
+            const tint = isDim ? C.done : C.agent
+            const win = cardWindow(c)
+            const pct = win > 0 && c.ctx > 0 ? (c.ctx * 100) / win : null
+            const cg = gauge(pct ?? 0, 4)
+            const stop = c.lastStop === 'max_tokens' ? 'max_tokens' : c.status
+            const status = inner >= 30 ? `${glyph(c)} ${stop}` : glyph(c)
+            const titleW = inner - cellWidth(status) - 1
+            const ctxNums = c.steps > 0 ? `${kTokens(c.ctx)}/${win > 0 ? kTokens(win) : '—'}` : '—'
+            const eN = effortLevel(c.effort)
+            const effort: Piece = {
+              spans: [
+                { text: 'effort ', dim: true },
+                { text: `${'▮'.repeat(eN) + '▯'.repeat(4 - eN)} `, color: tint },
+                { text: c.effort || '—', color: tint, bold: true },
+              ],
+            }
+            const ctxFull: Piece = {
+              spans: [
+                { text: 'ctx ', dim: true },
+                { text: cg.on, color: (pct ?? 0) >= 80 ? C.warn : tint },
+                { text: cg.off, color: C.faint },
+                { text: ` ${pct === null ? '—' : `${Math.round(pct)}%`} `, bold: true, dim: isDim },
+                { text: ctxNums, dim: true },
+              ],
+            }
+            const ctxShort: Piece = { spans: [{ text: 'ctx ', dim: true }, { text: `${pct === null ? '—' : `${Math.round(pct)}%`} `, bold: true, dim: isDim }, { text: ctxNums, dim: true }] }
+            const wideEnough = widthOf(effort) + 2 + widthOf(ctxFull) <= inner
+            return (
+              <Box
+                flexDirection="column"
+                borderStyle={isViewed ? 'double' : 'round'}
+                borderColor={c.lastStop === 'max_tokens' ? C.warn : C.agent}
+                borderDimColor={c.status !== 'running' && !isViewed}
+                width={w}
+                paddingX={1}
+              >
+                <Box justifyContent="space-between" width={inner}>
+                  <Button
+                    key={`card-${c.id}`}
+                    plain
+                    dimColor={isDim}
+                    hotkey={String(i + 1)}
+                    label={shorten(`${prettyModel(c.model)} · ${cardTitle(c)}`, titleW - 3)}
+                    onPress={expandOnPress(c.id)}
+                  />
+                  <Box flexShrink={0}>
+                    <Text color={c.lastStop === 'max_tokens' ? C.warn : statusColor(c)}>{status}</Text>
+                  </Box>
+                </Box>
+                {/* Wide enough: effort then context. Narrow: the context alone, then the effort if it still fits. */}
+                {line(wideEnough ? [effort, ctxFull] : [ctxShort, effort], inner, 2)}
+                <Text dimColor wrap="truncate">
+                  {`est ${fmtCost(c)} · in ${kTokens(c.inTok + c.cacheRead + c.cacheWrite)} · out ${kTokens(c.out)}`}
+                </Text>
+                <Text dimColor wrap="truncate">{`skills ${c.skills.join(' ') || '—'}`}</Text>
+              </Box>
+            )
+          })}
+        </Box>
+      )
+    }
+
+    const expandedCard = cards.find(c => c.id === v.expanded)
+
+    // ---- other loops (workflow agents, forks): ids that match no card
+    const loopsPanel = (w: number) => {
+      if (lp.length === 0) return null
+      const active = lp.filter(l => isLoopActive(l, now)).length
+      const dots = lp.slice(-Math.max(4, marksIn(w - 38, isTerminal)))
+      const isNarrow = w < 40
+      return (
+        <Box width={w} columnGap={1}>
+          <Text bold>{isNarrow ? 'loops' : 'other loops'}</Text>
+          <Text dimColor>{isNarrow ? `${lp.length} · ${active} active` : `${lp.length} seen · ${active} active`}</Text>
+          {markRow(
+            dots.map(l => (
+              <Text color={isLoopActive(l, now) ? C.agent : l.isDone ? C.dim : C.faint}>{isLoopActive(l, now) ? '●' : l.isDone ? '✓' : '○'}</Text>
+            )),
+            1,
+          )}
+        </Box>
+      )
+    }
+
+    // ---- receipt: the turn now, or the last one
+    const receiptPanel = (w: number) => {
+      const isReview = t.isReviewing
+      return (
+        <Box flexDirection="column" borderStyle="round" borderColor={C.main} borderDimColor={!m.isRunning && !isReview} paddingX={1} width={w}>
+          {m.isRunning ? (
+            <Box width={w - 4} columnGap={1} overflow="hidden">
+              <Text color={C.main} wrap="truncate">{`◐ back to ${modelName.toLowerCase()} · turn`}</Text>
+              <Box flexShrink={0}>{clock('turn-clock', t.startedAt, null, C.main)}</Box>
+              {w >= 60 ? <Text dimColor wrap="truncate">{`· ${plural(t.edits, 'edit')} · ${plural(t.errors, 'error')}`}</Text> : null}
+            </Box>
+          ) : r ? (
+            line(
+              [
+                { spans: [{ text: r.reason === 'answer' ? '✓' : '✗', color: r.reason === 'answer' ? C.gate : C.warn }] },
+                {
+                  spans: [{ text: `last turn ${fmtDuration(r.durationMs)} · ${plural(r.agents, 'agent')} · ${plural(r.edits, 'edit')} · ${plural(r.errors, 'error')}` }],
+                  fill: true,
+                },
+                r.costDelta !== null ? { spans: [{ text: `· +${fmtUsd(r.costDelta)}`, color: C.main }] } : null,
+              ],
+              w - 4,
+            )
+          ) : (
+            <Text color={C.faint}>no turn finished yet</Text>
+          )}
+          {isReview ? (
+            <Text color={C.arch} wrap="wrap">
+              {`${cfg.architectLabel.toLowerCase()} reviewing before done (inferred)`}
+            </Text>
+          ) : null}
+        </Box>
+      )
+    }
+
+    // ---- log: whatever rows the other panels leave, 4 to 8
+    // The main box's speed line, the legend's gap and the gap above the log are a row each.
+    const used = 2 + legendGap + 5 + (m.speed ? 1 : 0) + 1 + (showArchitect ? 6 : 0) + 6 + (v.gateOpen ? 5 : 0) + (cards.length > cfg.maxCards ? 4 + 2 * Math.min(6, cards.length) : 2 + 6 * cards.length) + (expandedCard ? 8 : 0) + (lp.length ? 1 : 0) + 3
+    const bodyRows = e.props.scroll?.bodyRows ?? e.viewport?.rows ?? 40
+    const nLog = logRows(bodyRows, used)
+    const shownLines = (viewed ? lines.filter(l => l.agentId === viewed) : lines).slice(-nLog)
+    const colorOf = (l: LogLine) =>
+      l.kind === 'error' ? C.warn : l.kind === 'consult' ? C.arch : l.who === 'main' ? C.main : l.who === 'gate' ? C.gate : l.who === 'you' ? C.text : C.agent
+    // Below 40 columns a line keeps its minute, not its second, and a shorter name.
+    const logPanel = (w: number) => (
+      <Box flexDirection="column" borderStyle="round" borderColor={C.faint} paddingX={1} marginTop={1} width={w}>
+        <Text dimColor wrap="truncate">
+          {viewed ? 'session log · this agent' : 'session log'}
+        </Text>
+        {shownLines.length === 0 ? <Text color={C.faint}>nothing yet</Text> : null}
+        {shownLines.map(l => (
+          <Box>
+            <Box width={w < 40 ? 6 : 9} flexShrink={0}>
+              <Text color={C.faint}>{w < 40 ? fmtClock(l.at).slice(0, 5) : fmtClock(l.at)}</Text>
+            </Box>
+            <Box width={w < 40 ? 9 : 13} flexShrink={0}>
+              <Text color={colorOf(l)} bold wrap="truncate">
+                {l.who}
+              </Text>
+            </Box>
+            <Text color={l.kind === 'error' ? C.warn : C.text} wrap="truncate">
+              {l.text}
+            </Text>
+          </Box>
+        ))}
+      </Box>
+    )
+
+    const draw = (p: Panel, w: number) =>
+      p === 'main'
+        ? mainPanel(w)
+        : p === 'architect'
+          ? architectPanel(w)
+          : p === 'gate'
+            ? gatePanel(w)
+            : p === 'agents'
+              ? agentsPanel(w)
+              : p === 'loops'
+                ? loopsPanel(w)
+                : p === 'receipt'
+                  ? receiptPanel(w)
+                  : logPanel(w)
+
+    // Panels with the flow between them; the agents panel draws its own rails.
+    const column = (ps: Panel[], w: number) => (
+      <Box flexDirection="column" width={w}>
+        {ps.map((p, i) => {
+          const prev = ps[i - 1]
+          const link =
+            i === 0 || p === 'agents' || prev === 'agents' || p === 'log' || p === 'loops' || prev === 'loops'
+              ? null
+              : rail(`link-${p}`, p === 'architect' ? advising : m.isRunning, p === 'architect' ? C.arch : C.main, w)
+          return (
+            <Box flexDirection="column">
+              {link}
+              {draw(p, w)}
+              {p === 'agents' ? expandedPanel(cards, w) : null}
+            </Box>
+          )
+        })}
+      </Box>
+    )
+
+    // Desktop draws the agents' time axis as SVG under the panels.
+    const svgLanes =
+      e.surface !== 'terminal' && cards.length > 0
+        ? (() => {
+            const { Svg } = $.ui.resolve(e)
+            const rowH = 18
+            const pxW = 520
+            const geo = lanes(cards.slice(-10), now, 100)
+            const rects = cards
+              .slice(-10)
+              .map((c, i) => {
+                const gm = geo[i]
+                const x = 150 + ((gm?.before ?? 0) / 100) * (pxW - 220)
+                const wpx = Math.max(3, ((gm?.bar ?? 1) / 100) * (pxW - 220))
+                const fill = c.status === 'running' ? SVG_COLORS.running : c.status === 'done' ? SVG_COLORS.done : c.status === 'failed' ? SVG_COLORS.failed : SVG_COLORS.other
+                const label = `${shorten(cardTitle(c), 9)} · ${prettyModel(c.model)}`.replace(/[<&>]/g, '')
+                const info = `${kTokens(c.ctx)}/${kTokens(c.out)}`
+                return `<text x="4" y="${i * rowH + 13}" font-size="11" fill="${SVG_COLORS.label}">${label}</text><text x="${pxW - 4}" y="${i * rowH + 13}" font-size="11" text-anchor="end" fill="${SVG_COLORS.label}">${info}</text><rect x="${x}" y="${i * rowH + 4}" width="${wpx}" height="10" rx="3" fill="${fill}"/>`
+              })
+              .join('')
+            const svgH = Math.min(10, cards.length) * rowH + 4
+            // No width or height on the element: it takes the markup's own width up to the pane's and
+            // scales down to fit a narrow one, rather than running past it at 520 pixels.
+            return (
+              <Svg
+                source={`<svg xmlns="http://www.w3.org/2000/svg" width="${pxW}" height="${svgH}" viewBox="0 0 ${pxW} ${svgH}">${rects}</svg>`}
+                alt={`${cards.length} agents on a time axis`}
+              />
+            )
+          })()
+        : null
+
+    // Inline above the prompt (the terminal's main screen), the pane is a summary of at most 8 rows.
+    const isMini = layout === 'mini' || (layout === 'auto' && e.props.placement === 'inline')
+    if (isMini) {
+      // A subagent's model and tokens share its row from 70 columns, else take a row under it (so two agents, not three).
+      const isOneRow = W >= 70 && !cards.some(c => c.skills.length > 0)
+      const live = [...cards.filter(c => c.status === 'running'), ...cards.filter(c => c.status !== 'running').reverse()].slice(0, isOneRow ? 3 : 2)
+      const counts = `${s.rule} allowed · ${s.cleared} ${decider}${s.ask > 0 ? ` · ${s.ask} pending` : ''} · ${s.deny} denied`
+      const strip = g.recent.slice(-Math.max(4, marksIn(W - cfg.gateLabel.length - 2 - counts.length, isTerminal)))
+      const mg = ctxFill.pct !== null ? gauge(ctxFill.pct, 6) : null
+      return (
+        <Box flexDirection="column" width={W}>
+          {line(
+            [
+              {
+                spans: [
+                  { text: modelName, color: C.main, bold: true },
+                  { text: m.isRunning ? ' ● working' : ' ○ idle', color: m.isRunning ? C.main : C.dim },
+                ],
+              },
+              mg
+                ? {
+                    spans: [
+                      { text: '· ctx ', dim: true },
+                      { text: mg.on, color: (ctxFill.pct ?? 0) >= 80 ? C.warn : C.main },
+                      { text: mg.off, color: C.faint },
+                      { text: ` ${Math.round(ctxFill.pct ?? 0)}%` },
+                      ...(u.compactions > 0 ? [{ text: ` ⟲${u.compactions}`, color: C.amber }] : []),
+                    ],
+                  }
+                : u.compactions > 0
+                  ? { spans: [{ text: `⟲${u.compactions}`, color: C.amber }] }
+                  : null,
+              u.costUsd !== null ? { spans: [{ text: `· ${fmtUsd(u.costUsd)}`, dim: true }] } : null,
+              showArchitect ? { spans: [{ text: `· ${cfg.architectLabel.toLowerCase()} ${advising ? 'advising' : a.consults.length}`, color: C.arch }] } : null,
+            ],
+            W,
+          )}
+          {strip.length > 0 ? (
+            <Box columnGap={1}>
+              <Text dimColor>{cfg.gateLabel.toLowerCase()}</Text>
+              {markRow(strip.map(checkMark))}
+              <Text color={s.deny > 0 ? C.warn : s.ask > 0 ? C.amber : C.dim} wrap="truncate">
+                {counts}
+              </Text>
+            </Box>
+          ) : null}
+          {live.map(c => (
+            <Box flexDirection="column">
+              <Box columnGap={1}>
+                <Text color={statusColor(c)}>{glyph(c)}</Text>
+                <Box width={isOneRow ? Math.max(6, W - 38) : Math.max(6, W - 12)} flexShrink={0}>
+                  <Text wrap="truncate">{cardTitle(c)}</Text>
+                </Box>
+                {isOneRow ? (
+                  <Box width={26} flexShrink={0}>
+                    <Text dimColor wrap="truncate">
+                      {agentInfo(c, 26)}
+                    </Text>
+                  </Box>
+                ) : null}
+                {clock(`mini-clock-${c.id}`, c.spawnedAt, c.endedAt, C.dim)}
+              </Box>
+              {isOneRow ? null : (
+                <Box marginLeft={2} width={W - 2}>
+                  <Text dimColor wrap="truncate">
+                    {agentInfo(c, W - 2)}
+                  </Text>
+                </Box>
+              )}
+            </Box>
+          ))}
+          {cards.length > 0 ? (
+            <Text dimColor wrap="truncate">
+              {`agents ${totals.running}/${limitText} running · in ${kTokens(totals.inTok)} · out ${kTokens(totals.out)} · est ${costText}`}
+            </Text>
+          ) : null}
+          {cards.length > live.length ? (
+            <Text color={C.faint} wrap="truncate">{`+${cards.length - live.length} more agents · /flightdeck layout compact for all`}</Text>
+          ) : null}
+          {lp.length > 0 ? <Text dimColor wrap="truncate">{`other loops ${lp.length} · ${lp.filter(l => isLoopActive(l, now)).length} active`}</Text> : null}
+          {!m.isRunning && r ? (
+            <Text dimColor wrap="truncate">
+              {`last turn ${fmtDuration(r.durationMs)} · ${plural(r.agents, 'agent')} · ${plural(r.edits, 'edit')} · ${plural(r.errors, 'error')}${r.costDelta !== null ? ` · +${fmtUsd(r.costDelta)}` : ''}`}
+            </Text>
+          ) : null}
+        </Box>
+      )
+    }
+
+    const legend = fitLegend(
+      [
+        { label: 'main', color: C.main },
+        { label: 'agents', color: C.agent },
+        { label: cfg.gateLabel.toLowerCase(), color: C.gate },
+        ...(showArchitect ? [{ label: cfg.architectLabel.toLowerCase(), color: C.arch }] : []),
+      ],
+      W,
+    )
+
+    const body = isWide ? (
+      <Box flexDirection="column">
+        <Box columnGap={2}>
+          {column(panels.filter(p => p === 'main' || p === 'architect' || p === 'gate'), colW)}
+          {column(panels.filter(p => p === 'agents' || p === 'loops' || p === 'receipt'), colW)}
+        </Box>
+        {panels.includes('log') ? logPanel(W) : null}
+      </Box>
+    ) : (
+      column(panels, W)
+    )
+
+    return (
+      <Box flexDirection="column" width={W}>
+        {/* Below 40 columns the frame's own title names the pane, so the header starts at the model. */}
+        {line(
+          [
+            W >= 40 ? { spans: [{ text: 'FLIGHTDECK', bold: true }, { text: ' ·', color: C.dim, bold: true }] } : null,
+            { spans: [{ text: modelName.toUpperCase(), color: C.main, bold: true }, { text: m.isRunning ? ' WORKS' : ' IDLE', bold: true }] },
+            showArchitect
+              ? {
+                  spans: [
+                    { text: '· ', color: C.dim, bold: true },
+                    { text: cfg.architectLabel, color: C.arch, bold: true },
+                    { text: advising ? ' ADVISING' : ' ON CALL', bold: true },
+                  ],
+                }
+              : null,
+          ],
+          W,
+          1,
+          'center',
+        )}
+        <Box key="legend" justifyContent="center" columnGap={2} marginBottom={legendGap}>
+          {legend.map(l => (
+            <Box flexShrink={0}>
+              <Text>
+                <Text color={l.color}>■</Text>
+                <Text dimColor>{` ${l.label}`}</Text>
+              </Text>
+            </Box>
+          ))}
+        </Box>
+        {body}
+        {svgLanes}
+      </Box>
+    )
+  }).catch(($, e, next) => {
+    // Without this a failed draw leaves the engine's empty pane.
+    const { Box, Text } = $.ui.resolve(e)
+    return (
+      <Box flexDirection="column" width={Math.max(20, e.props.bodyColumns)}>
+        <Text bold>FLIGHTDECK</Text>
+        <Text color={C.warn} wrap="wrap">{`draw failed (${next.error.kind}): ${next.error.message ?? 'no message'}`}</Text>
+      </Box>
+    )
+  })
+}
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: tests/adjustments.test.tsx
+import { expect, mock, test } from 'claude-code/testing'
+import type { Engine } from 'claude-code/testing'
+import type { On } from 'claude-code'
+
+import { cardStatus, routeModel } from '../hooks/core'
+import { PRICES, priceOf } from '../hooks/pricing'
+
+const YELLOW = '#fde047'
+const GREY = '#9ca3af'
+
+const pane = (surface: 'terminal' | 'desktop') =>
+  ({
+    plugin: 'flightdeck',
+    component: 'Pane',
+    requestId: 'flightdeck',
+    surface,
+    props: { title: 'Flightdeck', isFocused: false, bodyColumns: 100, placement: 'dock', scroll: { offset: 0, bodyRows: 60 }, view: {} },
+  }) as const
+
+const spawn = ($: Engine, description: string) =>
+  $.agent.spawn({
+    tool_use_id: description,
+    description,
+    prompt: description,
+    subagentType: 'general-purpose',
+    provider: { plugin: 'engine', tier: 'core' },
+    parentModel: 'claude-opus-5-5',
+    background: false,
+    fork: false,
+  } as never)
+
+// a1 runs a tool and two skills (one of them twice); a2 finishes without using any.
+async function session($: Engine, on: On): Promise<void> {
+  mock.clock(on, { now: 1_000_000 })
+  const ids = ['a1', 'a2']
+  on('agent.spawn', () => ({ model: 'claude-sonnet-5-5', agentId: ids.shift() }))
+  on('tool.call', () => ({ result: {} }))
+  on('ui.status', () => ({ value: undefined }))
+  on('session.usage', () => ({ value: { startedAt: 1, context: { window: 1_000_000 }, rateLimits: [] } }))
+  on('turn.complete', (_, e) => ({ text: e.answer }))
+  await spawn($, 'still working')
+  await spawn($, 'all finished')
+  await $.tool.call({ tool: 'Skill', skill: 'lookup', agentId: 'a1' })
+  await $.tool.call({ tool: 'Skill', skill: 'lookup', agentId: 'a1' })
+  await $.tool.call({ tool: 'Skill', skill: 'review', agentId: 'a1' })
+  await $.tool.call({ tool: 'Read', file_path: '/x/y.ts', agentId: 'a1' })
+  await $.turn.complete({ answer: 'ok', durationMs: 1, isAborted: false, turnId: 't', agentId: 'a2', reason: 'answer' })
+}
+
+for (const surface of ['terminal', 'desktop'] as const) {
+  test(`the monitor: active is yellow, completed is greyed, each card names its skills (${surface})`, async ($, on) => {
+    await session($, on)
+    const ui = await $.ui.mount(pane(surface))
+    const texts = await ui.findAll({ type: 'Text' })
+    const named = (text: string) => texts.find(t => t.text === text)
+
+    expect(named('🟡 ACTIVE')?.props.color).toBe(YELLOW)
+    expect(named('[SUBAGENT_01]')?.props.color).toBe(YELLOW)
+    expect(named('✓ DONE')?.props.color).toBe(GREY)
+    expect(texts.some(t => t.text.includes('🟢') || t.text.includes('✅'))).toBe(false)
+
+    expect(named('lookup review')).toBeTruthy()
+    expect(named('Skills:')).toBeTruthy()
+    expect(texts.some(t => t.text === '—' && t.props.dimColor === true)).toBe(true) // a2 ran no skill, and its whole card is dim
+    expect(named("'all finished'")?.props.dimColor).toBe(true)
+    expect(named("'still working'")?.props.dimColor).toBeFalsy()
+    await ui.unmount()
+  })
+}
+
+test('the compact layout colours and lists the same way', { options: { layout: 'compact' } }, async ($, on) => {
+  await session($, on)
+  const ui = await $.ui.mount(pane('terminal'))
+  const texts = await ui.findAll({ type: 'Text' })
+
+  expect(texts.find(t => t.text === '◐ running')?.props.color).toBe(YELLOW)
+  expect(texts.find(t => t.text === '✓ done')?.props.color).toBe(GREY)
+  expect(texts.some(t => t.text === 'skills lookup review')).toBe(true)
+  await ui.unmount()
+})
+
+for (const [name, options] of [
+  ['swimlanes', { layout: 'compact', maxCards: 1 }],
+  ['mini', { layout: 'mini' }],
+] as const) {
+  test(`${name} show every skill in full, however wide the pane`, { options }, async ($, on) => {
+    await session($, on)
+    const ui = await $.ui.mount(pane('terminal'))
+    const texts = await ui.findAll({ type: 'Text' })
+
+    expect(texts.some(t => t.text.endsWith('· lookup review'))).toBe(true)
+    await ui.unmount()
+  })
+}
+
+test('status glyphs, Opus-only routing, and only Opus, Sonnet and Haiku are priced', () => {
+  const card = { status: 'running', phase: 'tool', lastAt: 1, spawnedAt: 1 } as never
+  expect(cardStatus(card, 2, 60_000)).toMatchObject({ word: 'ACTIVE', glyph: '🟡', tone: 'active' })
+
+  const spawned = { subagentType: 'Explore', provider: { plugin: 'engine' }, parentModel: 'claude-opus-5-5' }
+  expect(routeModel({ Explore: 'haiku' }, spawned)).toBe('haiku')
+  expect(routeModel({ Explore: 'haiku' }, { ...spawned, parentModel: 'claude-sonnet-5-5' })).toBe(null)
+
+  expect(Object.keys(PRICES).every(id => /opus|sonnet|haiku/.test(id))).toBe(true)
+  expect(priceOf('claude-opus-9-9')).toBe(null)
+})
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: tsconfig.json
+{
+  "extends": "./.claude-plugin/types/tsconfig.json"
+}
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: types/index.d.ts
+export type Moment = 'before a plan' | 'error repeats' | 'before done'
+
+export type Bucket = 'file' | 'shell' | 'other'
+
+/** rule: settings allowed it. ask: put to the decider, outcome pending. cleared: asked, then ran. deny: refused. */
+export type Verdict = 'rule' | 'ask' | 'cleared' | 'deny'
+
+export type Main = {
+  model: string
+  effort: string
+  mode: string
+  steps: number
+  isRunning: boolean
+  /** The main loop's last answered request: time to its first piece of response. Null until one is
+   *  measured, absent in older state; a `tokPerS` kept by 0.5.0 and earlier is ignored. */
+  speed?: { ttftMs: number } | null
+}
+
+export type Usage = {
+  pct: number | null
+  tokens: number | null
+  window: number
+  /** The compaction window (`autoCompactWindow`, or the host's own) the host measures context against, when auto-compaction
+   *  is on and the window is smaller than the model's; null when none is set or none could be read. */
+  compactWindow: number | null
+  /** The model window `compactWindow` was read for, so a model switch reads it again; 0 = not read yet. */
+  compactFor: number
+  /** Reads for this model window that came back with no breakdown or failed; it stops asking at 3. */
+  compactMisses: number
+  costUsd: number | null
+  /** `resetsAt`: when the window resets, in ms since the epoch; null when the API gave no time,
+   *  absent in state saved before it was kept. */
+  limits: { kind: string; pct: number; resetsAt?: number | null }[]
+  compactions: number
+  lastCompactAt: number | null
+  /** When the session started (ms), and its short tag (first six characters of its id, upper case); absent in older state. */
+  startedAt: number
+  tag: string
+}
+
+export type Consult = { id: string; at: number; endAt: number | null; moment: Moment; via: string }
+
+export type Architect = { consults: Consult[]; ids: string[]; seen: string[]; lastAdvice: string }
+
+export type Check = {
+  id: string
+  tool: string
+  bucket: Bucket
+  verdict: Verdict
+  inSubagent: boolean
+  detail: string
+  at: number
+}
+
+export type Tally = { rule: number; ask: number; cleared: number; deny: number }
+
+export type Gate = { recent: Check[]; totals: Record<Bucket, Tally> }
+
+export type ToolNote = { tool: string; text: string; isError: boolean }
+
+export type AgentCard = {
+  id: string
+  type: string
+  model: string
+  description: string
+  status: string
+  spawnedAt: number
+  endedAt: number | null
+  /** The agent's context now: input + cache read + cache write of its latest step. */
+  ctx: number
+  /** Output tokens summed over its steps. */
+  out: number
+  /** Uncached input, cache-read and cache-write tokens summed over its steps (absent in older state). */
+  inTok: number
+  cacheRead: number
+  cacheWrite: number
+  /** Estimated USD summed over its steps at the model's list price; 0 when the model is not priced. */
+  cost: number
+  /** Effort of its latest step (`low` ... `max`), or empty when none was reported. */
+  effort: string
+  /** When it last did anything (a step or a tool call); a running card idle for too long stops counting. */
+  lastAt: number
+  steps: number
+  lastStop: string | null
+  tools: ToolNote[]
+  answer: string
+  /** What it is doing right now: a model request in flight, a tool call, or unknown. */
+  phase: 'thinking' | 'tool' | null
+  /** Its latest tool call in one line (kept after the call ends). */
+  doing: string
+  /** Skills it ran through the Skill tool, each once. */
+  skills: string[]
+}
+
+/** A model loop whose id matches no card: a workflow agent, a compaction or a memory fork. */
+export type Loop = { id: string; steps: number; firstAt: number; lastAt: number; isDone: boolean }
+
+export type LogLine = {
+  at: number
+  who: string
+  text: string
+  agentId: string | null
+  kind: 'info' | 'error' | 'consult' | 'done'
+}
+
+export type Turn = {
+  edits: number
+  errorStreak: number
+  errors: number
+  isReviewing: boolean
+  startedAt: number
+  costAtStart: number | null
+}
+
+export type Receipt = {
+  durationMs: number
+  agents: number
+  edits: number
+  errors: number
+  costDelta: number | null
+  reason: string
+}
+
+export type Layout = 'auto' | 'compact' | 'wide' | 'mini' | 'monitor'
+
+export type View = { expanded: string | null; gateOpen: Bucket | null; layout: Layout | null }
+
+export type Roster = { architectTypes: string[] }
+
+declare module 'claude-code' {
+  interface PluginState {
+    'flightdeck': {
+      meta: { schemaVersion: number }
+      main: Main
+      usage: Usage
+      architect: Architect
+      gate: Gate
+      agents: AgentCard[]
+      loops: Loop[]
+      log: LogLine[]
+      turn: Turn
+      receipt: Receipt | null
+      view: View
+      roster: Roster
+    }
+  }
+}
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: .checksums.sha256
+c5e86e65ecfe06fa7d60ef2890072168495f2fcb3ec7aafdd55d848d9f7034e1  .claude-plugin/plugin.json
+98e532b8434d2a52bb00893b8eb9d2325c6b0528cfdb805d95b351ec1d72034a  LICENSE
+59eb435bc02d10b68a1d1fe7cb3a4bc607b6a537c78f81aa43b6295aba650e36  NOTICE
+43ecf714f2a7682257a296a6204f8e1d1efa2b10ade197465d81c172d0b069d9  hooks/core.ts
+212ec2954e7d41ffff139791702be8a402eba57b2d9c1119f440a0ebd154c73e  hooks/elapsed.tsx
+d842d789476d67282d0f04b7e5fdc68a3d981ccec65dd79cfa2d11eed13fb828  hooks/hooks.json
+052c019600bfd37c508fd2d919573a80e5f8dd9c64718644203e498ca65b2908  hooks/pricing.ts
+a1de0798a8446106afe0a769e486aeb959ced96c17dd1fc686b9cb5a18903754  hooks/rail.tsx
+6cfdadbb2338334799adc28909e692ecdaf35e159bdff2e41eb748c6b1c25269  hooks/register.tsx
+c598681c66c95ecebdb83d04dd10e31e8b6f59b29a50b662d4d9003f1e37d1c3  tests/adjustments.test.tsx
+4087cf0ba92fde503ed0e7c56f37bcb26ad0c085873f10219d0336c0f19b5a8f  tsconfig.json
+516a35d22b52a2b2aaaeaaa848dca1ab85eae0dbfc67c4732808217b0aa00fbc  types/index.d.ts
+>>>>>>>> END FILE

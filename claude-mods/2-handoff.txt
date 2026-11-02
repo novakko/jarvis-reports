@@ -1,0 +1,1097 @@
+# Build the HANDOFF mod for Claude Code (no internet)
+
+**Tested on Claude Code 2.1.316.** You are Claude Code on a MacBook. Build the HANDOFF mod below on this machine, exactly as written. The complete source is in this document, so nothing needs downloading.
+
+## Rules
+
+- No internet. Do not use `npm`, `npx`, `curl`, `claude plugin install` or `claude plugin marketplace`. The mod runs from a plain local folder.
+- Do not change, improve or tidy the source. It already holds the requested behaviour. The only exception is step 6.
+- The mod may only use the Claude models Opus, Sonnet and Haiku. Do not add any other model or provider.
+- Edit nothing outside `~/.claude-mods/auto-handoff` and your settings file, which is `settings.json` in `CLAUDE_CONFIG_DIR` if that is set, else `~/.claude/settings.json`.
+- If an organisation policy on this machine blocks local mods, stop and tell the person. Do not work around it.
+
+## What you are building
+
+**Name on disk:** `auto-handoff` (plugin name, command `/auto-handoff`).
+
+**What it does.** It watches how full the chat is and helps you save `HANDOFF.md` in the working folder before it fills, so you can clear and carry on.
+
+**Band above the prompt:** chip ` ⇄ HANDOFF ` (bold, `#0b0b0f` on `#a78bfa`), then `ctx ▰▰▰▰▱▱ 62%` once a measurement exists (green under 60%, amber from 60%, red from the threshold), then one of:
+- Written in this chat: green `✓ saved 14:32` and button `c: clear & continue`.
+- Left by an earlier chat: `from 2d ago: <objective>` and button `r: resume`.
+- Saving: amber `saving handoff…`, for at most 5 minutes.
+- Nothing saved: `saves at 80%` and a plain button `h: save now`.
+
+These are in priority order, so an older file hides `saving handoff…`. The `h` button shows only in the last state; otherwise use `/auto-handoff now`.
+
+The band stacks with other mods' bands, and hides during a survey, when off, or when hidden.
+
+**Rules:**
+- Default threshold 80, mode `ask`. Settings are remembered across sessions.
+- Crossing the threshold gives one toast per crossing. In `ask` mode: `Chat is 80% full — save a handoff with h or /auto-handoff now`. In `auto` mode: `Chat is 80% full — saving a handoff`, and the save starts. Falling below the threshold re-arms it. A fill already over the threshold at session start, or while off, arms it silently, with no toast and no save.
+- Slash commands always run from a 500 ms timer, never inside the hook that asked.
+- Save: runs `/handoff` if such a command exists, otherwise submits a short prompt that writes `HANDOFF.md` (objective under `## Objective`, done / in progress / next, decisions and why, open questions, exact next step). Resume works the same way. Clear and continue runs `/clear` and then resumes.
+- HANDOFF.md is polled every 10 seconds, and a changed file is read once for its objective (60 characters at most).
+- A new session that finds an older file toasts once: `Handoff from 2 days ago available — /handoff resume`.
+- Any main-chat compaction while on, with no handoff in the last 10 minutes toasts `Compacting without a fresh handoff`.
+- `/clear` resets the fill and re-arms the trigger, because no new session start follows it.
+
+**Command:** `/auto-handoff on | off | now | resume | threshold <1-99> | mode auto|ask | hide | show | status`.
+
+**Note:** the toast text mentions `/handoff resume`, as the original does. If no `/handoff` command exists, the band's `r` button and `/auto-handoff resume` are what work. Keep the text as it is.
+
+## Steps
+
+Do these in order.
+
+### 1. Check the machine
+
+Run `claude --version`. Mods need 2.1.287 or newer, so below that, stop and tell the person. Run `claude plugin list`. If any entry is named `auto-handoff` or starts `auto-handoff@`, stop and ask before going on, because two copies would run at once. If `~/.claude-mods/auto-handoff` already exists and has files in it, show them and ask before replacing them.
+
+### 2. Put the files in place
+
+The source sits at the end of this document between `<<<<<<<< FILE: <path>` and `>>>>>>>> END FILE` lines. The instructions end at the line `=== END OF INSTRUCTIONS ===`. On the file route below you do not need to read past it.
+
+**If this document is a file on disk**, use this. It copies every byte, so use it whenever you can:
+
+```sh
+PROMPT='/absolute/path/of/this/document.md'
+DEST="$HOME/.claude-mods/auto-handoff"; mkdir -p "$DEST"
+awk -v dest="$DEST" '
+/^<<<<<<<< FILE: /{f=dest "/" substr($0,16); d=f; sub(/\/[^\/]*$/,"",d); system("mkdir -p \"" d "\""); printf "" > f; next}
+/^>>>>>>>> END FILE$/{close(f); f=""; next}
+f!=""{print > f}' "$PROMPT"
+```
+
+**If you only have this as pasted text**, skip that command and create each file yourself at `~/.claude-mods/auto-handoff/<path>`, with its exact contents, including the last block, `.checksums.sha256`. Leave out the marker lines, the blank line between blocks and any line numbers. Copy character for character, taking care with symbols such as `●`, `▰` and `→`, and end each file with one newline.
+
+### 3. Prove the files are exact
+
+```sh
+cd "$HOME/.claude-mods/auto-handoff" && shasum -a 256 -c .checksums.sha256
+```
+
+Every line must say `OK`. On a mismatch, redo that file from this document. Never edit the checksums. Then delete `.checksums.sha256`.
+
+### 4. Validate and test
+
+```sh
+claude plugin validate "$HOME/.claude-mods/auto-handoff"
+claude plugin test "$HOME/.claude-mods/auto-handoff"
+```
+
+Neither needs the mod to be turned on. The last line of validation must be `✔ Validation passed` (with or without warnings). Anything else in that output, such as problems the plugin directory refuses and missing-author or icon warnings, does not matter, as this mod is never submitted anywhere. Tests must show **10 pass, 0 fail**.
+
+### 5. Turn it on
+
+Find your settings file: `settings.json` in `CLAUDE_CONFIG_DIR` if that is set, else `~/.claude/settings.json`. Use your Read and Edit tools on its full absolute path. Create the file with `{}` if it is missing, and add an `env` object if it has none. In `env`, make sure `CLAUDE_CODE_PLUGIN_DIRS` includes the absolute path of the mod folder, with `~` expanded, such as `/Users/<name>/.claude-mods/auto-handoff`. If the variable already has a value, append with a `:` and keep what is there. Do not add a duplicate. Change nothing else, and leave the file as valid JSON.
+
+Example: `"env": { "CLAUDE_CODE_PLUGIN_DIRS": "/Users/<name>/.claude-mods/auto-handoff" }`
+
+### 6. Only if step 4 failed
+
+If the checksums passed but validation or a test failed, this Claude Code build differs from 2.1.316. The API types at `~/.claude-mods/auto-handoff/.claude-plugin/types/claude-code/index.d.ts` appear only once the mod has loaded, so they are normally absent; without them, work from the failure output alone. Make the smallest fix that keeps the behaviour above, and rerun step 4. List every change in your report. If you cannot get it passing, say so plainly and do not do step 5.
+
+### 7. Report
+
+Tell the person:
+- the checksum, validation and test results, and whether step 6 was needed
+- to start a new Claude Code session, because a running one will not load the mod
+- what they should see: a band above the prompt starting ` ⇄ HANDOFF ` appears, with the context gauge after the first reply. Run `/auto-handoff status` to check.
+
+=== END OF INSTRUCTIONS ===
+
+<<<<<<<< FILE: .claude-plugin/plugin.json
+{
+  "name": "auto-handoff",
+  "version": "0.1.0",
+  "description": "Watches how full the chat is and saves a HANDOFF.md before it fills up, so you can clear and continue without losing your place",
+  "types": "./types/index.d.ts"
+}
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: hooks/hooks.json
+{ "modules": ["./register.tsx"] }
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: hooks/lib.ts
+import type { HandoffFile, HandoffSettings } from '../types'
+
+export const MINUTE = 60_000
+export const HOUR = 60 * MINUTE
+export const DAY = 24 * HOUR
+
+export const FILE = 'HANDOFF.md'
+
+export const DEFAULT_SETTINGS: HandoffSettings = { isOn: true, threshold: 80, mode: 'ask', isHidden: false }
+
+export const COLORS = { green: '#4ade80', amber: '#fbbf24', red: '#f87171' } as const
+
+export const SAVE_PROMPT =
+  'Write HANDOFF.md in the current folder so a fresh chat can continue this work. ' +
+  'Under a "## Objective" heading give the objective in one line, then: done / in progress / next, ' +
+  'decisions and why, open questions, and the exact next step. Reply only "Handoff saved."'
+
+export const RESUME_PROMPT = 'Read HANDOFF.md in the current folder and continue from its exact next step.'
+
+/** A save counts as fresh for compaction for this long. */
+export const FRESH_MS = 10 * MINUTE
+
+/** A save request that never produced a file stops showing as pending after this. */
+export const PENDING_MS = 5 * MINUTE
+
+export type Tone = keyof typeof COLORS
+
+/** Green under 60%, amber from 60% up to the threshold, red from the threshold. */
+export function toneFor(percent: number, threshold: number): Tone {
+  if (percent >= threshold) {
+    return 'red'
+  }
+
+  return percent >= 60 ? 'amber' : 'green'
+}
+
+/** Six cells, one per sixth, rounded: 62% fills 4. */
+export function bar(percent: number, cells = 6): string {
+  const filled = Math.max(0, Math.min(cells, Math.round((percent / 100) * cells)))
+
+  return '▰'.repeat(filled) + '▱'.repeat(cells - filled)
+}
+
+/** `/auto-handoff threshold <n>`: a whole number from 1 to 99. */
+export function parseThreshold(arg: string | undefined): number | null {
+  const n = Number(arg)
+
+  return arg !== undefined && Number.isInteger(n) && n >= 1 && n <= 99 ? n : null
+}
+
+/** What the store held, or the defaults for anything missing or malformed. */
+export function parseSettings(raw: unknown): HandoffSettings {
+  if (typeof raw !== 'object' || raw === null) {
+    return DEFAULT_SETTINGS
+  }
+
+  const { isOn, threshold, mode, isHidden } = raw as Record<string, unknown>
+
+  return {
+    isOn: typeof isOn === 'boolean' ? isOn : DEFAULT_SETTINGS.isOn,
+    threshold: parseThreshold(String(threshold)) ?? DEFAULT_SETTINGS.threshold,
+    mode: mode === 'auto' || mode === 'ask' ? mode : DEFAULT_SETTINGS.mode,
+    isHidden: typeof isHidden === 'boolean' ? isHidden : DEFAULT_SETTINGS.isHidden,
+  }
+}
+
+const MAX_OBJECTIVE = 60
+
+/** The objective line of a handoff: under an "Objective" heading, or an "Objective: ..." line. */
+export function parseObjective(text: string): string {
+  const lines = text.split('\n')
+  const clean = (line: string) => line.replace(/^\s*(?:[-*]\s+)?/, '').replace(/\*\*/g, '').trim()
+  let found = ''
+
+  for (const [i, line] of lines.entries()) {
+    const inline = /^\s*(?:[-*]\s+)?(?:\*\*)?objective(?:\*\*)?\s*[:–-]\s*(.+)$/i.exec(line)
+
+    if (inline?.[1] !== undefined) {
+      found = clean(inline[1])
+    } else if (/^\s{0,3}#{1,6}\s*objective\b/i.test(line)) {
+      found = clean(lines.slice(i + 1).find(next => next.trim() !== '' && !/^\s{0,3}#/.test(next)) ?? '')
+    }
+
+    if (found !== '') {
+      break
+    }
+  }
+
+  return found.length > MAX_OBJECTIVE ? `${found.slice(0, MAX_OBJECTIVE - 1)}…` : found
+}
+
+/** `14:32`, in the person's own clock. */
+export function formatClock(ms: number): string {
+  const at = new Date(ms)
+
+  return `${String(at.getHours()).padStart(2, '0')}:${String(at.getMinutes()).padStart(2, '0')}`
+}
+
+/** `2d`, `5h`, `12m`, for the band. */
+export function formatAgeShort(ms: number): string {
+  if (ms >= DAY) {
+    return `${Math.floor(ms / DAY)}d`
+  }
+
+  return ms >= HOUR ? `${Math.floor(ms / HOUR)}h` : `${Math.max(1, Math.floor(ms / MINUTE))}m`
+}
+
+/** `2 days ago`, `3 hours ago`, `12 minutes ago`, for the toast. */
+export function formatAgeLong(ms: number): string {
+  const unit = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'} ago`
+
+  if (ms >= DAY) {
+    return unit(Math.floor(ms / DAY), 'day')
+  }
+
+  return ms >= HOUR ? unit(Math.floor(ms / HOUR), 'hour') : unit(Math.max(1, Math.floor(ms / MINUTE)), 'minute')
+}
+
+export type HandoffView =
+  | { kind: 'none' }
+  | { kind: 'saved'; at: number }
+  | { kind: 'available'; ageMs: number; objective: string }
+
+/**
+ * What the band says of HANDOFF.md: written in this chat (`saved`), left by an
+ * earlier one (`available`), or nothing to say (absent, or already resumed).
+ */
+export function handoffView(
+  file: HandoffFile | null,
+  handled: number,
+  sessionStart: number,
+  now: number,
+): HandoffView {
+  if (file === null || file.mtimeMs <= handled) {
+    return { kind: 'none' }
+  }
+
+  return file.mtimeMs >= sessionStart
+    ? { kind: 'saved', at: file.mtimeMs }
+    : { kind: 'available', ageMs: Math.max(0, now - file.mtimeMs), objective: file.objective }
+}
+
+export function isFresh(mtimeMs: number | undefined, now: number): boolean {
+  return mtimeMs !== undefined && now - mtimeMs <= FRESH_MS
+}
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: hooks/register.tsx
+import { atom, read, update } from 'claude-code'
+import type { EngineInterface, Register } from 'claude-code'
+
+import {
+  COLORS,
+  DEFAULT_SETTINGS,
+  FILE,
+  PENDING_MS,
+  RESUME_PROMPT,
+  SAVE_PROMPT,
+  bar,
+  formatAgeLong,
+  formatAgeShort,
+  formatClock,
+  handoffView,
+  isFresh,
+  parseObjective,
+  parseSettings,
+  parseThreshold,
+  toneFor,
+} from './lib'
+
+// Change a tag when the value's fields change: the new code declines what the
+// old code stored, which outlives a reload.
+const settings = atom({ plugin: 'auto-handoff', key: 'settings' } as const, DEFAULT_SETTINGS, { shape: 'settings-1' })
+const handoff = atom({ plugin: 'auto-handoff', key: 'handoff' } as const, null, { shape: 'handoff-1' })
+const percent = atom({ plugin: 'auto-handoff', key: 'percent' } as const, null)
+const triggered = atom({ plugin: 'auto-handoff', key: 'triggered' } as const, false)
+const pendingSince = atom({ plugin: 'auto-handoff', key: 'pendingSince' } as const, null)
+const handled = atom({ plugin: 'auto-handoff', key: 'handled' } as const, 0)
+const sessionStart = atom({ plugin: 'auto-handoff', key: 'sessionStart' } as const, 0)
+const announced = atom({ plugin: 'auto-handoff', key: 'announced' } as const, 0)
+const now = atom({ plugin: 'auto-handoff', key: 'now' } as const, 0)
+
+const POLL_MS = 10_000
+const RUN_DELAY_MS = 500
+
+async function hasCommand($: EngineInterface, name: string): Promise<boolean> {
+  return (await $.command.list()).some(c => c.name === name)
+}
+
+// Slash commands run from a timer, never inside the hook that asked: a hook
+// the turn waits on cannot wait on a command.
+function later($: EngineInterface, what: string, run: () => Promise<void>): void {
+  $.clock.after(RUN_DELAY_MS, async () => {
+    try {
+      await run()
+    } catch (error) {
+      $.ui.toast(`${what} failed: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  })
+}
+
+async function saveNow($: EngineInterface): Promise<void> {
+  if (await hasCommand($, 'handoff')) {
+    await $.command.run({ command: 'handoff' })
+  } else {
+    await $.prompt.submit({ text: SAVE_PROMPT, asUser: true })
+  }
+}
+
+async function resumeNow($: EngineInterface): Promise<void> {
+  if (await hasCommand($, 'handoff')) {
+    await $.command.run({ command: 'handoff', args: 'resume' })
+  } else {
+    await $.prompt.submit({ text: RESUME_PROMPT, asUser: true })
+  }
+}
+
+async function requestSave($: EngineInterface): Promise<void> {
+  const at = await $.clock.now()
+  await update($, pendingSince, () => at)
+  later($, 'Handoff', () => saveNow($))
+}
+
+async function markHandled($: EngineInterface): Promise<void> {
+  const file = await read($, handoff)
+
+  if (file !== null) {
+    await update($, handled, () => file.mtimeMs)
+  }
+}
+
+async function requestResume($: EngineInterface): Promise<void> {
+  await markHandled($)
+  later($, 'Resume', () => resumeNow($))
+}
+
+async function requestClear($: EngineInterface): Promise<void> {
+  await markHandled($)
+  later($, 'Clear and continue', async () => {
+    await $.command.run({ command: 'clear' })
+    await resumeNow($)
+  })
+}
+
+// Looks at HANDOFF.md in the working folder; a changed file is read once for its objective.
+async function poll($: EngineInterface): Promise<void> {
+  const at = await $.clock.now()
+  const stat = await $.fs.stat(FILE).catch(() => undefined)
+  const prev = await read($, handoff)
+
+  if (stat === undefined || stat.kind !== 'file') {
+    if (prev !== null) {
+      await update($, handoff, () => null)
+    }
+  } else if (prev === null || prev.mtimeMs !== stat.mtimeMs) {
+    const text = await $.fs.read(FILE).catch(() => '')
+    await update($, handoff, () => ({ mtimeMs: stat.mtimeMs, objective: parseObjective(text) }))
+  }
+
+  const since = await read($, pendingSince)
+
+  if (since !== null && stat !== undefined && stat.mtimeMs >= since) {
+    await update($, pendingSince, () => null)
+  }
+
+  await update($, now, () => at)
+}
+
+// Takes in the context fill; at the threshold, one toast, and in auto mode the save.
+async function ingest($: EngineInterface, fill: number | undefined, isSeed: boolean): Promise<void> {
+  const config = await read($, settings)
+  await update($, percent, () => fill ?? null)
+
+  if (fill === undefined) {
+    return
+  }
+
+  const was = await read($, triggered)
+
+  if (fill < config.threshold) {
+    if (was) {
+      await update($, triggered, () => false)
+    }
+
+    return
+  }
+
+  if (was) {
+    return
+  }
+
+  await update($, triggered, () => true)
+
+  if (isSeed || !config.isOn) {
+    return
+  }
+
+  const full = `Chat is ${Math.round(fill)}% full`
+
+  if (config.mode === 'auto') {
+    $.ui.toast(`${full} — saving a handoff`)
+    await requestSave($)
+  } else {
+    $.ui.toast(`${full} — save a handoff with h or /auto-handoff now`)
+  }
+}
+
+export const register: Register = on => {
+  on('session.start', async ($, e, next) => {
+    const stored = parseSettings(await $.store.get('settings'))
+    await update($, settings, () => stored)
+    await $.command.register({
+      name: 'auto-handoff',
+      description: 'Auto handoff: on | off | now | resume | threshold <n> | mode auto|ask | hide | show | status',
+      argumentHint: 'on | off | now | resume | threshold <n> | mode auto|ask | hide | show | status',
+    })
+
+    const usage = await $.session.usage()
+    await update($, sessionStart, () => usage.startedAt)
+    await ingest($, usage.context.percent, true)
+    await poll($)
+
+    const file = await read($, handoff)
+    const at = await $.clock.now()
+    const view = handoffView(file, await read($, handled), usage.startedAt, at)
+
+    if (stored.isOn && view.kind === 'available' && file !== null && file.mtimeMs !== (await read($, announced))) {
+      await update($, announced, () => file.mtimeMs)
+      $.ui.toast(`Handoff from ${formatAgeLong(view.ageMs)} available — /handoff resume`)
+    }
+
+    $.clock.every(POLL_MS, () => poll($))
+
+    return next(e)
+  })
+
+  // A /clear starts a new chat in the same process: no session.start follows.
+  on('session.end', async ($, e, next) => {
+    if (e.reason === 'clear') {
+      const at = await $.clock.now()
+      await update($, sessionStart, () => at)
+      await update($, percent, () => null)
+      await update($, triggered, () => false)
+      await update($, pendingSince, () => null)
+    }
+
+    return next(e)
+  })
+
+  on('session.measure', async ($, e, next) => {
+    await ingest($, e.context.percent, false)
+
+    return next(e)
+  })
+
+  on('session.compact', async ($, e, next) => {
+    if (e.trigger !== 'precompute' && e.agentId === undefined && (await read($, settings)).isOn) {
+      const stat = await $.fs.stat(FILE).catch(() => undefined)
+
+      if (!isFresh(stat?.mtimeMs, await $.clock.now())) {
+        $.ui.toast('Compacting without a fresh handoff')
+      }
+    }
+
+    return next(e)
+  })
+
+  on('command.run', { command: 'auto-handoff' }, async ($, e) => {
+    const [sub, arg] = e.args.trim().toLowerCase().split(/\s+/)
+    const save = async (change: Partial<typeof DEFAULT_SETTINGS>) => {
+      const merged = { ...(await read($, settings)), ...change }
+
+      await $.store.set('settings', merged)
+      await update($, settings, () => merged)
+
+      return merged
+    }
+
+    switch (sub) {
+      case 'on':
+      case 'off':
+        await save({ isOn: sub === 'on' })
+
+        return { text: `auto-handoff ${sub}` }
+      case 'hide':
+      case 'show':
+        await save({ isHidden: sub === 'hide' })
+
+        return { text: sub === 'hide' ? 'auto-handoff band hidden' : 'auto-handoff band shown' }
+      case 'now':
+        await requestSave($)
+
+        return { text: 'Saving a handoff…' }
+      case 'resume': {
+        if ((await read($, handoff)) === null) {
+          return { text: `No ${FILE} in this folder.` }
+        }
+
+        await requestResume($)
+
+        return { text: 'Resuming from the handoff…' }
+      }
+      case 'threshold': {
+        const threshold = parseThreshold(arg)
+
+        if (threshold === null) {
+          return { text: 'Usage: /auto-handoff threshold <1-99>, e.g. threshold 80' }
+        }
+
+        await save({ threshold })
+
+        return { text: `auto-handoff threshold ${threshold}%` }
+      }
+      case 'mode': {
+        if (arg !== 'auto' && arg !== 'ask') {
+          return { text: 'Usage: /auto-handoff mode auto|ask' }
+        }
+
+        await save({ mode: arg })
+
+        return { text: `auto-handoff mode ${arg}` }
+      }
+      case 'status': {
+        const config = await read($, settings)
+        const fill = await read($, percent)
+        const view = handoffView(
+          await read($, handoff),
+          await read($, handled),
+          await read($, sessionStart),
+          await $.clock.now(),
+        )
+        const file = await read($, handoff)
+        const saved =
+          view.kind === 'saved'
+            ? `${FILE} saved ${formatClock(view.at)}`
+            : view.kind === 'available'
+              ? `${FILE} from ${formatAgeShort(view.ageMs)} ago${file?.objective ? `: ${file.objective}` : ''}`
+              : `no ${FILE} to resume`
+
+        return {
+          text: [
+            `auto-handoff ${config.isOn ? 'on' : 'off'} · mode ${config.mode} · threshold ${config.threshold}% · band ${config.isHidden ? 'hidden' : 'shown'}`,
+            `context ${fill === null ? 'not measured yet' : `${Math.round(fill)}% full`}`,
+            saved,
+          ].join('\n'),
+        }
+      }
+      default:
+        return { text: 'Usage: /auto-handoff on | off | now | resume | threshold <n> | mode auto|ask | hide | show | status' }
+    }
+  })
+
+  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+    const config = await read($, settings)
+
+    if (e.props.hasSurvey || !config.isOn || config.isHidden) {
+      return next(e)
+    }
+
+    const fill = await read($, percent)
+    const file = await read($, handoff)
+    const since = await read($, pendingSince)
+    await read($, now)
+    const at = await $.clock.now()
+    const view = handoffView(file, await read($, handled), await read($, sessionStart), at)
+    const isPending = since !== null && at - since < PENDING_MS && view.kind !== 'saved'
+    const below = await next(e)
+    const { Box, Button, Text } = $.ui.resolve(e)
+
+    const line = (
+      <Box>
+        <Text bold color="#0b0b0f" backgroundColor="#a78bfa">
+          {' ⇄ HANDOFF '}
+        </Text>
+        <Text> </Text>
+        {fill === null ? null : (
+          <Text color={COLORS[toneFor(fill, config.threshold)]}>{`ctx ${bar(fill)} ${Math.round(fill)}%`}</Text>
+        )}
+        {fill === null ? null : <Text dimColor>{' · '}</Text>}
+        {view.kind === 'saved' ? (
+          <Box>
+            <Text color={COLORS.green}>{`✓ saved ${formatClock(view.at)} `}</Text>
+            <Button key="clear" hotkey="c" plain label="clear & continue" onPress={() => requestClear($)} />
+          </Box>
+        ) : view.kind === 'available' ? (
+          <Box>
+            <Text>{`from ${formatAgeShort(view.ageMs)} ago${view.objective === '' ? '' : `: ${view.objective}`} `}</Text>
+            <Button key="resume" hotkey="r" plain label="resume" onPress={() => requestResume($)} />
+          </Box>
+        ) : isPending ? (
+          <Text color={COLORS.amber}>saving handoff…</Text>
+        ) : (
+          <Box>
+            <Text dimColor>{`saves at ${config.threshold}% `}</Text>
+            <Button key="save" hotkey="h" plain label="save now" onPress={() => requestSave($)} />
+          </Box>
+        )}
+      </Box>
+    )
+
+    return below ? (
+      <Box flexDirection="column">
+        {line}
+        {below}
+      </Box>
+    ) : (
+      line
+    )
+  })
+}
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: tests/auto-handoff.test.tsx
+import { expect, mock, test } from 'claude-code/testing'
+import type { Engine } from 'claude-code/testing'
+import type { CommandInfo, On } from 'claude-code'
+
+import {
+  bar,
+  formatAgeLong,
+  formatAgeShort,
+  formatClock,
+  handoffView,
+  isFresh,
+  parseObjective,
+  parseSettings,
+  parseThreshold,
+  toneFor,
+} from '../hooks/lib'
+
+const MINUTE = 60_000
+const HOUR = 60 * MINUTE
+const DAY = 24 * HOUR
+const START = 10 * DAY
+const SURFACES = ['terminal', 'desktop'] as const
+
+const band = (surface: (typeof SURFACES)[number]) =>
+  ({
+    plugin: 'auto-handoff',
+    component: 'AbovePrompt',
+    requestId: 'band',
+    surface,
+    props: {
+      hasSurvey: false,
+      isWorking: false,
+      maxRows: 10,
+      bodyColumns: 140,
+      scroll: { offset: 0, bodyRows: 10 },
+      view: {},
+    },
+  }) as const
+
+type World = {
+  percent?: number
+  /** HANDOFF.md as the folder holds it; absent when there is none. */
+  file?: { mtimeMs: number; text: string }
+  commands: string[]
+}
+
+type Seen = {
+  toasts: string[]
+  runs: string[]
+  prompts: string[]
+  store: Record<string, unknown>
+}
+
+const fresh = (): Seen => ({ toasts: [], runs: [], prompts: [], store: {} })
+
+// The engine beneath the plugin: the folder, the chat's fill, the commands.
+function engineBeneath(on: On, world: World, seen: Seen) {
+  const clock = mock.clock(on, { now: START })
+
+  on('store.get', (_, e) => ({ value: seen.store[e.key] }))
+  on('store.set', (_, e) => {
+    seen.store[e.key] = e.value
+
+    return { value: undefined }
+  })
+  on('session.usage', () => ({
+    value: {
+      startedAt: START,
+      context: { window: 1_000_000, percent: world.percent },
+      rateLimits: [],
+    },
+  }))
+  on('command.register', () => ({ value: { command: 'auto-handoff' } }))
+  on('command.list', () => ({
+    value: world.commands.map((name): CommandInfo => ({ name, description: '', source: 'user' })),
+  }))
+  on('command.run', (_, e) => {
+    seen.runs.push(`${e.command}${e.args === '' ? '' : ` ${e.args}`}`)
+
+    return { text: '' }
+  })
+  on('prompt.submit', (_, e) => {
+    seen.prompts.push(e.text)
+
+    return { text: e.text }
+  })
+  on('fs.stat', (_, e) => {
+    if (world.file === undefined) {
+      throw new Error('ENOENT')
+    }
+
+    return { value: { kind: 'file', size: world.file.text.length, mtimeMs: world.file.mtimeMs, isLink: false } }
+  })
+  on('fs.read', () => ({ value: world.file?.text ?? '' }))
+  on('session.start', (_, e) => ({ cwd: e.cwd }))
+  on('session.end', (_, e) => ({ sessionId: e.sessionId }))
+  on('session.measure', (_, e) => ({ changed: e.changed }))
+  on('session.compact', () => ({ messages: [{ role: 'user', text: 'summary', toolUses: [] }] }))
+  on('ui.toast', (_, e) => {
+    seen.toasts.push(e.text)
+
+    return { value: undefined }
+  })
+  // Another mod's band line, already in the chain beneath ours.
+  on('ui.render', { component: 'AbovePrompt' }, ($, e) => {
+    const { Text } = $.ui.resolve(e)
+
+    return <Text>other mod line</Text>
+  })
+
+  return clock
+}
+
+const start = ($: Engine) => $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
+
+async function measure($: Engine, world: World, percent: number): Promise<void> {
+  world.percent = percent
+  await $.session.measure({ context: { window: 1_000_000, percent }, rateLimits: [], changed: ['context'] })
+}
+
+const slash = (args: string) =>
+  ({
+    command: 'auto-handoff',
+    args,
+    origin: { kind: 'composer' },
+    presentation: { isFullscreen: false, columns: 80 },
+  }) as const
+
+const HANDOFF_TEXT = '# Handoff\n\n## Objective\nShip the usage gauge mod\n\n## Done\n- the band\n'
+
+test('the band shows the fill in the right colour and stacks on another mod, on terminal and desktop', async ($, on) => {
+  const world: World = { commands: ['handoff'] }
+  engineBeneath(on, world, fresh())
+  await start($)
+
+  for (const [percent, color] of [
+    [62, '#fbbf24'],
+    [40, '#4ade80'],
+    [80, '#f87171'],
+  ] as const) {
+    await measure($, world, percent)
+
+    for (const surface of SURFACES) {
+      const ui = await $.ui.mount(band(surface))
+
+      const chip = await ui.find({ type: 'Text', text: /HANDOFF/ })
+      expect(chip?.text).toBe(' ⇄ HANDOFF ')
+      expect(chip?.props.color).toBe('#0b0b0f')
+      expect(chip?.props.backgroundColor).toBe('#a78bfa')
+      expect(chip?.props.bold).toBe(true)
+
+      const ctx = await ui.find({ type: 'Text', text: /^ctx/ })
+      expect(ctx?.text).toBe(`ctx ${bar(percent)} ${percent}%`)
+      expect(ctx?.props.color).toBe(color)
+
+      expect((await ui.find({ type: 'Text', text: /saves at/ }))?.text).toBe('saves at 80% ')
+      expect((await ui.find({ type: 'Button', key: 'save' }))?.props.label).toBe('save now')
+      expect((await ui.find({ type: 'Button', key: 'save' }))?.props.hotkey).toBe('h')
+      expect(await ui.find({ type: 'Text', text: /other mod line/ })).toBeTruthy()
+      await ui.unmount()
+    }
+  }
+})
+
+test('at the threshold: one toast; ask mode waits, auto mode runs /handoff from a timer', async ($, on) => {
+  const world: World = { commands: ['handoff'] }
+  const seen = fresh()
+  const clock = engineBeneath(on, world, seen)
+  await start($)
+
+  await measure($, world, 79)
+  await measure($, world, 80)
+  await measure($, world, 85)
+  expect(seen.toasts).toEqual(['Chat is 80% full — save a handoff with h or /auto-handoff now'])
+  await clock.advance(5_000)
+  expect(seen.runs).toEqual([])
+
+  // Back under the line (a clear or a compaction) and over it again: a new crossing.
+  await measure($, world, 10)
+  await $.command.run(slash('mode auto'))
+  await measure($, world, 81)
+  expect(seen.toasts.at(-1)).toBe('Chat is 81% full — saving a handoff')
+  expect(seen.toasts.length).toBe(2)
+  // Nothing has run yet: the command waits for the timer, not the hook.
+  expect(seen.runs).toEqual([])
+  await clock.advance(1_000)
+  expect(seen.runs).toEqual(['handoff'])
+
+  await measure($, world, 90)
+  expect(seen.toasts.length).toBe(2)
+})
+
+test('without a /handoff command a short prompt writes HANDOFF.md', async ($, on) => {
+  const world: World = { commands: [] }
+  const seen = fresh()
+  const clock = engineBeneath(on, world, seen)
+  await start($)
+  await $.command.run(slash('mode auto'))
+  await measure($, world, 83)
+  await clock.advance(1_000)
+
+  expect(seen.runs).toEqual([])
+  expect(seen.prompts.length).toBe(1)
+  expect(seen.prompts[0]).toContain('HANDOFF.md')
+  for (const part of ['objective', 'done / in progress / next', 'decisions and why', 'open questions', 'exact next step']) {
+    expect(seen.prompts[0]?.toLowerCase()).toContain(part)
+  }
+})
+
+test('once HANDOFF.md is written the band says saved, and c clears then resumes', async ($, on) => {
+  const world: World = { commands: ['handoff'] }
+  const seen = fresh()
+  const clock = engineBeneath(on, world, seen)
+  await start($)
+  await $.command.run(slash('mode auto'))
+  await measure($, world, 83)
+
+  for (const surface of SURFACES) {
+    const ui = await $.ui.mount(band(surface))
+    expect(await ui.find({ type: 'Text', text: /saving handoff/ })).toBeTruthy()
+    await ui.unmount()
+  }
+
+  await clock.advance(1_000)
+  const savedAt = new Date(2026, 9, 28, 14, 32).getTime()
+  world.file = { mtimeMs: Math.max(savedAt, clock.now()), text: HANDOFF_TEXT }
+  await clock.advance(10_000)
+
+  for (const surface of SURFACES) {
+    const ui = await $.ui.mount(band(surface))
+    expect((await ui.find({ type: 'Text', text: /saved/ }))?.text).toBe(`✓ saved ${formatClock(world.file.mtimeMs)} `)
+    expect(await ui.find({ type: 'Text', text: /saving handoff/ })).toBeFalsy()
+    const button = await ui.find({ type: 'Button', key: 'clear' })
+    expect(button?.props.label).toBe('clear & continue')
+    expect(button?.props.hotkey).toBe('c')
+    await ui.unmount()
+  }
+
+  const ui = await $.ui.mount(band('terminal'))
+  seen.runs.length = 0
+  await ui.press({ key: 'clear' })
+  expect(seen.runs).toEqual([])
+  await clock.advance(1_000)
+  expect(seen.runs).toEqual(['clear', 'handoff resume'])
+
+  // Handled: the band no longer offers that file.
+  await clock.advance(10_000)
+  expect(await ui.find({ type: 'Button', key: 'clear' })).toBeFalsy()
+  expect(await ui.find({ type: 'Button', key: 'save' })).toBeTruthy()
+  await ui.unmount()
+})
+
+test('a new session with a HANDOFF.md toasts once and the band offers resume', async ($, on) => {
+  const twoDaysAgo = START - 2 * DAY
+  const world: World = { commands: ['handoff'], file: { mtimeMs: twoDaysAgo, text: HANDOFF_TEXT } }
+  const seen = fresh()
+  const clock = engineBeneath(on, world, seen)
+  await start($)
+
+  expect(seen.toasts).toEqual(['Handoff from 2 days ago available — /handoff resume'])
+  await clock.advance(60_000)
+  expect(seen.toasts.length).toBe(1)
+
+  for (const surface of SURFACES) {
+    const ui = await $.ui.mount(band(surface))
+    expect((await ui.find({ type: 'Text', text: /^from/ }))?.text).toBe('from 2d ago: Ship the usage gauge mod ')
+    const resume = await ui.find({ type: 'Button', key: 'resume' })
+    expect(resume?.props.label).toBe('resume')
+    expect(resume?.props.hotkey).toBe('r')
+    await ui.unmount()
+  }
+
+  const ui = await $.ui.mount(band('desktop'))
+  await ui.press({ key: 'resume' })
+  await clock.advance(1_000)
+  expect(seen.runs).toEqual(['handoff resume'])
+  await ui.unmount()
+})
+
+test('before a compaction without a handoff from the last 10 minutes it toasts', async ($, on) => {
+  const world: World = { commands: ['handoff'] }
+  const seen = fresh()
+  engineBeneath(on, world, seen)
+  await start($)
+
+  await $.session.compact({ trigger: 'manual', messages: [] })
+  expect(seen.toasts).toEqual(['Compacting without a fresh handoff'])
+
+  world.file = { mtimeMs: START - 9 * MINUTE, text: HANDOFF_TEXT }
+  await $.session.compact({ trigger: 'manual', messages: [] })
+  expect(seen.toasts.length).toBe(1)
+
+  world.file = { mtimeMs: START - 11 * MINUTE, text: HANDOFF_TEXT }
+  await $.session.compact({ trigger: 'manual', messages: [] })
+  expect(seen.toasts.length).toBe(2)
+
+  await $.command.run(slash('off'))
+  await $.session.compact({ trigger: 'manual', messages: [] })
+  expect(seen.toasts.length).toBe(2)
+})
+
+test('/auto-handoff: threshold, mode, hide, show, off, on, now, resume, status', async ($, on) => {
+  const world: World = { commands: ['handoff'], percent: 62 }
+  const seen = fresh()
+  const clock = engineBeneath(on, world, seen)
+  await start($)
+  const run = async (args: string): Promise<string> => (await $.command.run(slash(args))).text ?? ''
+
+  expect(await run('threshold 150')).toContain('Usage: /auto-handoff threshold')
+  expect(await run('threshold 70')).toBe('auto-handoff threshold 70%')
+  expect(await run('mode sometimes')).toContain('Usage: /auto-handoff mode')
+  expect(await run('mode auto')).toBe('auto-handoff mode auto')
+  expect(seen.store.settings).toEqual({ isOn: true, threshold: 70, mode: 'auto', isHidden: false })
+
+  const ui = await $.ui.mount(band('terminal'))
+  expect((await ui.find({ type: 'Text', text: /saves at/ }))?.text).toBe('saves at 70% ')
+  expect(await run('hide')).toBe('auto-handoff band hidden')
+  expect(await ui.find({ type: 'Text', text: /HANDOFF/ })).toBeFalsy()
+  expect(await run('show')).toBe('auto-handoff band shown')
+  expect(await ui.find({ type: 'Text', text: /HANDOFF/ })).toBeTruthy()
+  expect(await run('off')).toBe('auto-handoff off')
+  expect(await ui.find({ type: 'Text', text: /HANDOFF/ })).toBeFalsy()
+  expect(await run('on')).toBe('auto-handoff on')
+  await ui.unmount()
+
+  expect(await run('resume')).toBe('No HANDOFF.md in this folder.')
+  expect(await run('now')).toBe('Saving a handoff…')
+  await clock.advance(1_000)
+  expect(seen.runs).toEqual(['handoff'])
+
+  world.file = { mtimeMs: clock.now(), text: HANDOFF_TEXT }
+  await clock.advance(10_000)
+  const status = await run('status')
+  expect(status).toContain('auto-handoff on · mode auto · threshold 70% · band shown')
+  expect(status).toContain('context 62% full')
+  expect(status).toContain(`HANDOFF.md saved ${formatClock(world.file.mtimeMs)}`)
+  expect(await run('resume')).toBe('Resuming from the handoff…')
+  await clock.advance(1_000)
+  expect(seen.runs).toEqual(['handoff', 'handoff resume'])
+  expect(await run('bogus')).toContain('Usage: /auto-handoff on')
+})
+
+test('settings kept in the store are read at session start', async ($, on) => {
+  const world: World = { commands: [] }
+  const seen = fresh()
+  seen.store.settings = { isOn: false, threshold: 90, mode: 'auto', isHidden: true }
+  engineBeneath(on, world, seen)
+  await start($)
+
+  const status = (await $.command.run(slash('status'))).text ?? ''
+  expect(status).toContain('auto-handoff off · mode auto · threshold 90% · band hidden')
+
+  await measure($, world, 95)
+  expect(seen.toasts).toEqual([])
+})
+
+test('after /clear the fill starts over and the trigger re-arms', async ($, on) => {
+  const world: World = { commands: ['handoff'] }
+  const seen = fresh()
+  engineBeneath(on, world, seen)
+  await start($)
+
+  await measure($, world, 85)
+  expect(seen.toasts.length).toBe(1)
+
+  await $.session.end({ reason: 'clear', sessionId: 's1', resume: {} as never })
+  const ui = await $.ui.mount(band('terminal'))
+  expect(await ui.find({ type: 'Text', text: /^ctx/ })).toBeFalsy()
+  await ui.unmount()
+
+  await measure($, world, 86)
+  expect(seen.toasts.length).toBe(2)
+})
+
+test('colours, bars, ages, objectives and the handoff view', () => {
+  expect(toneFor(59, 80)).toBe('green')
+  expect(toneFor(60, 80)).toBe('amber')
+  expect(toneFor(79, 80)).toBe('amber')
+  expect(toneFor(80, 80)).toBe('red')
+  expect(toneFor(70, 70)).toBe('red')
+  expect(bar(62)).toBe('▰▰▰▰▱▱')
+
+  expect(parseThreshold('80')).toBe(80)
+  expect(parseThreshold('0')).toBe(null)
+  expect(parseThreshold('100')).toBe(null)
+  expect(parseThreshold('7.5')).toBe(null)
+  expect(parseThreshold(undefined)).toBe(null)
+  expect(parseSettings({ threshold: 'x', mode: 'loud' })).toEqual({ isOn: true, threshold: 80, mode: 'ask', isHidden: false })
+
+  expect(formatAgeShort(2 * DAY + HOUR)).toBe('2d')
+  expect(formatAgeShort(5 * HOUR)).toBe('5h')
+  expect(formatAgeShort(12 * MINUTE)).toBe('12m')
+  expect(formatAgeLong(2 * DAY)).toBe('2 days ago')
+  expect(formatAgeLong(DAY)).toBe('1 day ago')
+  expect(formatAgeLong(3 * HOUR)).toBe('3 hours ago')
+  expect(formatAgeLong(30_000)).toBe('1 minute ago')
+  expect(formatClock(new Date(2026, 9, 28, 14, 32).getTime())).toBe('14:32')
+  expect(formatClock(new Date(2026, 9, 28, 9, 5).getTime())).toBe('09:05')
+
+  expect(parseObjective('## Objective\n\nShip it\n## Done')).toBe('Ship it')
+  expect(parseObjective('**Objective:** Fix the login bug\nmore')).toBe('Fix the login bug')
+  expect(parseObjective('# Handoff\nnothing here')).toBe('')
+  expect(parseObjective(`Objective: ${'x'.repeat(100)}`).length).toBe(60)
+
+  const file = { mtimeMs: 1000, objective: 'o' }
+  expect(handoffView(null, 0, 0, 5000)).toEqual({ kind: 'none' })
+  expect(handoffView(file, 1000, 0, 5000)).toEqual({ kind: 'none' })
+  expect(handoffView(file, 0, 500, 5000)).toEqual({ kind: 'saved', at: 1000 })
+  expect(handoffView(file, 0, 2000, 5000)).toEqual({ kind: 'available', ageMs: 4000, objective: 'o' })
+
+  expect(isFresh(undefined, 0)).toBe(false)
+  expect(isFresh(1000, 1000 + 10 * MINUTE)).toBe(true)
+  expect(isFresh(1000, 1001 + 10 * MINUTE)).toBe(false)
+})
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: tsconfig.json
+{
+  "extends": "./.claude-plugin/types/tsconfig.json"
+}
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: types/index.d.ts
+export type HandoffSettings = {
+  isOn: boolean
+  /** Context fill, in percent, at which a handoff is saved or offered. */
+  threshold: number
+  /** `auto` runs the handoff itself; `ask` turns the band red and waits. */
+  mode: 'auto' | 'ask'
+  isHidden: boolean
+}
+
+/** HANDOFF.md as last seen in the working folder. */
+export type HandoffFile = { mtimeMs: number; objective: string }
+
+declare module 'claude-code' {
+  interface PluginState {
+    'auto-handoff': {
+      settings: Shaped<HandoffSettings>
+      handoff: Shaped<HandoffFile | null>
+      /** Context fill from the last measurement, absent until the first response. */
+      percent: number | null
+      /** True from the threshold crossing until the fill falls back under it. */
+      triggered: boolean
+      /** When a save was asked for, until HANDOFF.md is written. */
+      pendingSince: number | null
+      /** mtime of the HANDOFF.md already resumed or cleared into. */
+      handled: number
+      /** When this chat began, in ms since the epoch. */
+      sessionStart: number
+      /** mtime of the HANDOFF.md already announced by toast. */
+      announced: number
+      now: number
+    }
+  }
+}
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: .checksums.sha256
+b8651344369bd105b0e32cda247cf9accd7005de1439556172aefc028fe6dcfc  .claude-plugin/plugin.json
+d842d789476d67282d0f04b7e5fdc68a3d981ccec65dd79cfa2d11eed13fb828  hooks/hooks.json
+0181fe4dfcb277aa2de7ce5e9ae2eaf859bc3a9eb3eb5482778d90af5773894f  hooks/lib.ts
+677c89da96e675266a4feae2d64c8edcb3bdcaeb28a557a0510ce3d2d3df2061  hooks/register.tsx
+a1dfada32a05f1040db07731998237bacdc1094fc59c82512ecf3743041495e5  tests/auto-handoff.test.tsx
+4087cf0ba92fde503ed0e7c56f37bcb26ad0c085873f10219d0336c0f19b5a8f  tsconfig.json
+46c2d249b59ba007bf3bac4adc88aa03b0077d3e3ca891f5f8f5adc047b11233  types/index.d.ts
+>>>>>>>> END FILE

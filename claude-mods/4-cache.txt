@@ -1,0 +1,731 @@
+# Build the CACHE mod for Claude Code (no internet)
+
+**Tested on Claude Code 2.1.316.** You are Claude Code on a MacBook. Build the CACHE mod below on this machine, exactly as written. The complete source is in this document, so nothing needs downloading.
+
+## Rules
+
+- No internet. Do not use `npm`, `npx`, `curl`, `claude plugin install` or `claude plugin marketplace`. The mod runs from a plain local folder.
+- Do not change, improve or tidy the source. It already holds the requested behaviour. The only exception is step 6.
+- The mod may only use the Claude models Opus, Sonnet and Haiku. Do not add any other model or provider.
+- Edit nothing outside `~/.claude-mods/cache-clock` and your settings file, which is `settings.json` in `CLAUDE_CONFIG_DIR` if that is set, else `~/.claude/settings.json`.
+- If an organisation policy on this machine blocks local mods, stop and tell the person. Do not work around it.
+
+## What you are building
+
+**Name on disk:** `cache-clock` (plugin name, command `/cache-clock`).
+
+**What it does.** A band above the prompt shows whether the prompt cache is still warm and what letting it go cold would cost.
+
+**Band:** chip ` ● CACHE ` (bold, `#0b0b0f` on `#22d3ee`), bold status `warm 42m` or `COLD`, then `▰▰▰▰▰▱ 94% reused · 180k cached · cold rewrite ≈ $1.80 (est.)` and a `Compact` button. Status colours: green over 15 minutes left, amber at 15 minutes or fewer, red at cold. The band is hidden until the first cache activity, during a survey, or when off. It stacks with other mods' bands.
+
+**Rules:**
+- The clock restarts only on a main-chat model step that read or wrote the cache. Subagent steps count in the totals but never restart the clock.
+- Cache lifetime is the `cacheMinutes` option in the `/config` menu: `5` or `60`, default `60`.
+- Reuse percent is the last main step's reads divided by reads + writes + input, rounded. The bar has six cells, one per sixth, rounded down.
+- Cold rewrite is cached tokens × input price × write multiplier (1.25 for 5 minutes, 2 for 60 minutes). Saved is read tokens × input price × (1 − read multiplier), and appears only in `/cache-clock status`. Haiku 5.5 uses $0.50 instead of $0.10 past 100k tokens.
+- Prices are in `hooks/lib.ts` and cover Claude Opus, Sonnet and Haiku only. A model not listed shows `≈ ?`, never a guess. Its read tokens are counted separately.
+- Timer every 30 seconds. One toast per cache write when 5 minutes are left, only with the 60-minute lifetime: `Cache goes cold in 5 min: 180k tokens, rewrite ≈ $1.80 (estimate). Send anything to keep it warm.`
+- The Compact button compacts the chat and toasts `Compacted: 180k → 9k tokens`, `Compact skipped: <why>` or `Compact failed: <why>`.
+
+**Command:** `/cache-clock on | off | status`. No argument means `status`. On and off last for the session only, and are not remembered. `/clear` does not reset the band; it updates at the next cache step.
+
+## Steps
+
+Do these in order.
+
+### 1. Check the machine
+
+Run `claude --version`. Mods need 2.1.287 or newer, so below that, stop and tell the person. Run `claude plugin list`. If any entry is named `cache-clock` or starts `cache-clock@`, stop and ask before going on, because two copies would run at once. If `~/.claude-mods/cache-clock` already exists and has files in it, show them and ask before replacing them.
+
+### 2. Put the files in place
+
+The source sits at the end of this document between `<<<<<<<< FILE: <path>` and `>>>>>>>> END FILE` lines. The instructions end at the line `=== END OF INSTRUCTIONS ===`. On the file route below you do not need to read past it.
+
+**If this document is a file on disk**, use this. It copies every byte, so use it whenever you can:
+
+```sh
+PROMPT='/absolute/path/of/this/document.md'
+DEST="$HOME/.claude-mods/cache-clock"; mkdir -p "$DEST"
+awk -v dest="$DEST" '
+/^<<<<<<<< FILE: /{f=dest "/" substr($0,16); d=f; sub(/\/[^\/]*$/,"",d); system("mkdir -p \"" d "\""); printf "" > f; next}
+/^>>>>>>>> END FILE$/{close(f); f=""; next}
+f!=""{print > f}' "$PROMPT"
+```
+
+**If you only have this as pasted text**, skip that command and create each file yourself at `~/.claude-mods/cache-clock/<path>`, with its exact contents, including the last block, `.checksums.sha256`. Leave out the marker lines, the blank line between blocks and any line numbers. Copy character for character, taking care with symbols such as `●`, `▰` and `→`, and end each file with one newline.
+
+### 3. Prove the files are exact
+
+```sh
+cd "$HOME/.claude-mods/cache-clock" && shasum -a 256 -c .checksums.sha256
+```
+
+Every line must say `OK`. On a mismatch, redo that file from this document. Never edit the checksums. Then delete `.checksums.sha256`.
+
+### 4. Validate and test
+
+```sh
+claude plugin validate "$HOME/.claude-mods/cache-clock"
+claude plugin test "$HOME/.claude-mods/cache-clock"
+```
+
+Neither needs the mod to be turned on. The last line of validation must be `✔ Validation passed` (with or without warnings). Anything else in that output, such as problems the plugin directory refuses and missing-author or icon warnings, does not matter, as this mod is never submitted anywhere. Tests must show **7 pass, 0 fail**.
+
+### 5. Turn it on
+
+Find your settings file: `settings.json` in `CLAUDE_CONFIG_DIR` if that is set, else `~/.claude/settings.json`. Use your Read and Edit tools on its full absolute path. Create the file with `{}` if it is missing, and add an `env` object if it has none. In `env`, make sure `CLAUDE_CODE_PLUGIN_DIRS` includes the absolute path of the mod folder, with `~` expanded, such as `/Users/<name>/.claude-mods/cache-clock`. If the variable already has a value, append with a `:` and keep what is there. Do not add a duplicate. Change nothing else, and leave the file as valid JSON.
+
+Example: `"env": { "CLAUDE_CODE_PLUGIN_DIRS": "/Users/<name>/.claude-mods/cache-clock" }`
+
+### 6. Only if step 4 failed
+
+If the checksums passed but validation or a test failed, this Claude Code build differs from 2.1.316. The API types at `~/.claude-mods/cache-clock/.claude-plugin/types/claude-code/index.d.ts` appear only once the mod has loaded, so they are normally absent; without them, work from the failure output alone. Make the smallest fix that keeps the behaviour above, and rerun step 4. List every change in your report. If you cannot get it passing, say so plainly and do not do step 5.
+
+### 7. Report
+
+Tell the person:
+- the checksum, validation and test results, and whether step 6 was needed
+- to start a new Claude Code session, because a running one will not load the mod
+- what they should see: after the first reply, a band above the prompt reads ` ● CACHE  warm 60m ▰▰▰▰▰▱ 94% reused · 180k cached · cold rewrite ≈ $1.80 (est.) [Compact]`. Run `/cache-clock status` to check.
+
+=== END OF INSTRUCTIONS ===
+
+<<<<<<<< FILE: .claude-plugin/plugin.json
+{
+  "name": "cache-clock",
+  "version": "0.1.0",
+  "description": "Shows above the prompt whether Claude's prompt cache is still warm: time left, reuse, size and the estimated cost of a cold rewrite",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "cacheMinutes": {
+      "type": "string",
+      "title": "Cache lifetime (minutes)",
+      "description": "How long the prompt cache stays warm after its last use: 5 for the default 5-minute cache, 60 for the 1-hour cache.",
+      "options": ["5", "60"],
+      "default": "60"
+    }
+  }
+}
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: hooks/hooks.json
+{ "modules": ["./register.tsx"] }
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: hooks/lib.ts
+import type { CacheState } from '../types'
+
+export const EMPTY: CacheState = {
+  lastCacheAt: null,
+  model: null,
+  cachedTokens: 0,
+  lastReads: 0,
+  lastWrites: 0,
+  lastInput: 0,
+  totalReads: 0,
+  totalWrites: 0,
+  totalInput: 0,
+  savedUsd: 0,
+  unpricedReads: 0,
+}
+
+export const MINUTE = 60_000
+export const AMBER_AT_MS = 15 * MINUTE
+export const WARN_AT_MS = 5 * MINUTE
+
+type Price = {
+  /** Base input, $ per million tokens. */
+  input: number
+  /** Cache-read price as a fraction of the base input price. */
+  readMult: number
+  /** Base input past 100K prompt tokens, where the model prices it differently. */
+  longInput?: number
+}
+
+// $ per million input tokens, from the claude-api skill's "Current Models"
+// table (cached 2026-10-06). Cache reads are 0.1x base unless noted in its
+// shared/prompt-caching.md: 0.05x on Opus 5.5. Cache writes are 1.25x base for the 5-minute cache, 2x for the
+// 1-hour cache. A model missing here has no price: never estimate one.
+const PRICES: Readonly<Record<string, Price>> = {
+  'claude-opus-5-5': { input: 4, readMult: 0.05 },
+  'claude-opus-5': { input: 5, readMult: 0.1 },
+  'claude-opus-4-8': { input: 5, readMult: 0.1 },
+  'claude-opus-4-7': { input: 5, readMult: 0.1 },
+  'claude-opus-4-6': { input: 5, readMult: 0.1 },
+  'claude-sonnet-5-5': { input: 2, readMult: 0.1 },
+  'claude-sonnet-5': { input: 2, readMult: 0.1 },
+  'claude-sonnet-4-6': { input: 3, readMult: 0.1 },
+  'claude-haiku-5-5': { input: 0.1, readMult: 0.1, longInput: 0.5 },
+  'claude-haiku-4-5': { input: 1, readMult: 0.1 },
+}
+
+/** The price row for a model id: exact, or the id plus a `-YYYYMMDD` snapshot date. */
+export function priceFor(model: string | null): Price | null {
+  if (model === null) {
+    return null
+  }
+
+  for (const [id, price] of Object.entries(PRICES)) {
+    if (model === id || (model.startsWith(`${id}-`) && /^\d{8}$/.test(model.slice(id.length + 1)))) {
+      return price
+    }
+  }
+
+  return null
+}
+
+function inputPrice(price: Price, promptTokens: number): number {
+  return price.longInput !== undefined && promptTokens > 100_000 ? price.longInput : price.input
+}
+
+export function writeMultiplier(ttlMinutes: number): number {
+  return ttlMinutes >= 60 ? 2 : 1.25
+}
+
+/** What re-writing `cachedTokens` into a cold cache costs, or null for an unpriced model. */
+export function coldRewriteUsd(model: string | null, cachedTokens: number, ttlMinutes: number): number | null {
+  const price = priceFor(model)
+
+  return price === null ? null : (cachedTokens * inputPrice(price, cachedTokens) * writeMultiplier(ttlMinutes)) / 1e6
+}
+
+/** What reading `reads` tokens from cache saved against full-price input, or null if unpriced. */
+export function savedUsd(model: string | null, reads: number): number | null {
+  const price = priceFor(model)
+
+  return price === null ? null : (reads * inputPrice(price, reads) * (1 - price.readMult)) / 1e6
+}
+
+export function formatUsd(usd: number | null): string {
+  return usd === null ? '≈ ?' : `≈ $${usd.toFixed(2)}`
+}
+
+export function formatTokens(n: number): string {
+  if (n >= 1_000_000) {
+    return `${(n / 1_000_000).toFixed(1)}M`
+  }
+
+  return n >= 1000 ? `${Math.round(n / 1000)}k` : String(n)
+}
+
+/** Cache reads over everything the request processed, as a whole percent. */
+export function pctReused(reads: number, writes: number, input: number): number {
+  const total = reads + writes + input
+
+  return total === 0 ? 0 : Math.round((reads / total) * 100)
+}
+
+/** Six cells, one per sixth reused: 94% fills five. */
+export function bar(pct: number): string {
+  const filled = Math.min(6, Math.floor((pct / 100) * 6))
+
+  return '▰'.repeat(filled) + '▱'.repeat(6 - filled)
+}
+
+/** Milliseconds of warmth left, 0 once cold, null before any cache activity. */
+export function remainingMs(lastCacheAt: number | null, ttlMs: number, now: number): number | null {
+  return lastCacheAt === null ? null : Math.max(0, lastCacheAt + ttlMs - now)
+}
+
+export type Tone = 'green' | 'amber' | 'red'
+
+export function toneFor(remaining: number): Tone {
+  if (remaining === 0) {
+    return 'red'
+  }
+
+  return remaining <= AMBER_AT_MS ? 'amber' : 'green'
+}
+
+export const COLORS: Readonly<Record<Tone, string>> = {
+  green: '#4ade80',
+  amber: '#fbbf24',
+  red: '#f87171',
+}
+
+/**
+ * True once, per cache write, when the clock first reaches the last 5 minutes.
+ * A 5-minute cache is always inside them, so it never warns.
+ */
+export function shouldWarn(
+  remaining: number | null,
+  ttlMs: number,
+  lastCacheAt: number | null,
+  warnedFor: number | null,
+): boolean {
+  return (
+    remaining !== null &&
+    ttlMs > WARN_AT_MS &&
+    remaining > 0 &&
+    remaining <= WARN_AT_MS &&
+    warnedFor !== lastCacheAt
+  )
+}
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: hooks/register.tsx
+import { atom, read, update } from 'claude-code'
+import type { Register } from 'claude-code'
+
+import {
+  COLORS,
+  EMPTY,
+  MINUTE,
+  bar,
+  coldRewriteUsd,
+  formatTokens,
+  formatUsd,
+  pctReused,
+  remainingMs,
+  savedUsd,
+  shouldWarn,
+  toneFor,
+} from './lib'
+
+const cache = atom({ plugin: 'cache-clock', key: 'cache' } as const, EMPTY)
+const isOn = atom({ plugin: 'cache-clock', key: 'isOn' } as const, true)
+const now = atom({ plugin: 'cache-clock', key: 'now' } as const, 0)
+const warnedFor = atom({ plugin: 'cache-clock', key: 'warnedFor' } as const, null)
+
+const TICK_MS = 30_000
+
+export const register: Register = (on, options) => {
+  const ttlMinutes = String(options.cacheMinutes) === '5' ? 5 : 60
+  const ttlMs = ttlMinutes * MINUTE
+
+  on('session.start', async ($, e, next) => {
+    await $.command.register({
+      name: 'cache-clock',
+      description: 'Prompt cache clock',
+      argumentHint: 'on | off | status',
+    })
+
+    $.clock.every(TICK_MS, async () => {
+      const at = await $.clock.now()
+      await update($, now, () => at)
+
+      const state = await read($, cache)
+      const remaining = remainingMs(state.lastCacheAt, ttlMs, at)
+
+      if (!(await read($, isOn)) || !shouldWarn(remaining, ttlMs, state.lastCacheAt, await read($, warnedFor))) {
+        return
+      }
+
+      await update($, warnedFor, () => state.lastCacheAt)
+      $.ui.toast(
+        `Cache goes cold in 5 min: ${formatTokens(state.cachedTokens)} tokens, ` +
+          `rewrite ${formatUsd(coldRewriteUsd(state.model, state.cachedTokens, ttlMinutes))} (estimate). ` +
+          'Send anything to keep it warm.',
+      )
+    })
+
+    return next(e)
+  })
+
+  on('turn.step', async function* ($, e, next) {
+    const response = yield* next(e)
+    const usage = response.usage
+
+    if (usage === null) {
+      return response
+    }
+
+    const reads = usage.cache_read_input_tokens
+    const writes = usage.cache_creation_input_tokens
+    const input = usage.input_tokens
+    const isMain = e.agentId === undefined
+    const isCacheStep = isMain && reads + writes > 0
+    const at = await $.clock.now()
+    const saved = savedUsd(usage.model, reads)
+
+    await update($, cache, c => ({
+      ...c,
+      totalReads: c.totalReads + reads,
+      totalWrites: c.totalWrites + writes,
+      totalInput: c.totalInput + input,
+      savedUsd: c.savedUsd + (saved ?? 0),
+      unpricedReads: c.unpricedReads + (saved === null ? reads : 0),
+      ...(isMain ? { lastReads: reads, lastWrites: writes, lastInput: input } : {}),
+      ...(isCacheStep ? { lastCacheAt: at, model: usage.model, cachedTokens: reads + writes } : {}),
+    }))
+
+    if (isCacheStep) {
+      await update($, now, () => at)
+    }
+
+    return response
+  })
+
+  on('command.run', { command: 'cache-clock' }, async ($, e) => {
+    const arg = e.args.trim().toLowerCase()
+
+    if (arg === 'on' || arg === 'off') {
+      await update($, isOn, () => arg === 'on')
+
+      return { text: `cache-clock ${arg}` }
+    }
+
+    if (arg !== '' && arg !== 'status') {
+      return { text: 'Usage: /cache-clock on | off | status' }
+    }
+
+    const state = await read($, cache)
+    const remaining = remainingMs(state.lastCacheAt, ttlMs, await $.clock.now())
+    const left =
+      remaining === null ? 'no cache activity yet' : remaining === 0 ? 'COLD' : `warm, ${Math.ceil(remaining / MINUTE)}m left`
+    const missed =
+      state.unpricedReads > 0 ? ` (${formatTokens(state.unpricedReads)} read tokens on models without a price not counted)` : ''
+
+    return {
+      text: [
+        `cache-clock ${(await read($, isOn)) ? 'on' : 'off'} · cache ${left} of ${ttlMinutes}m`,
+        `reads ${formatTokens(state.totalReads)} · writes ${formatTokens(state.totalWrites)} · fresh input ${formatTokens(state.totalInput)} (all steps, subagents included)`,
+        `${pctReused(state.lastReads, state.lastWrites, state.lastInput)}% reused on the last main step`,
+        `saved ${formatUsd(state.savedUsd)} (estimate)${missed}`,
+      ].join('\n'),
+    }
+  })
+
+  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+    const state = await read($, cache)
+    await read($, now)
+
+    if (e.props.hasSurvey || state.lastCacheAt === null || !(await read($, isOn))) {
+      return next(e)
+    }
+
+    const below = await next(e)
+    const remaining = remainingMs(state.lastCacheAt, ttlMs, await $.clock.now()) ?? 0
+    const tone = toneFor(remaining)
+    const pct = pctReused(state.lastReads, state.lastWrites, state.lastInput)
+    const rewrite = formatUsd(coldRewriteUsd(state.model, state.cachedTokens, ttlMinutes))
+    const status = remaining === 0 ? 'COLD' : `warm ${Math.ceil(remaining / MINUTE)}m`
+    const { Box, Button, Text } = $.ui.resolve(e)
+
+    const compact = async () => {
+      try {
+        const result = await $.session.compact()
+
+        $.ui.toast(
+          'skip' in result
+            ? `Compact skipped: ${result.skip}`
+            : `Compacted: ${formatTokens(result.tokensBefore ?? 0)} → ${formatTokens(result.tokensAfter ?? 0)} tokens`,
+        )
+      } catch (error) {
+        $.ui.toast(`Compact failed: ${error instanceof Error ? error.message : String(error)}`)
+      }
+    }
+
+    const line = (
+      <Box>
+        <Text bold color="#0b0b0f" backgroundColor="#22d3ee">
+          {' ● CACHE '}
+        </Text>
+        <Text bold color={COLORS[tone]}>
+          {` ${status} `}
+        </Text>
+        <Text>
+          {`${bar(pct)} ${pct}% reused · ${formatTokens(state.cachedTokens)} cached · cold rewrite ${rewrite} (est.) `}
+        </Text>
+        <Button key="compact" label="Compact" onPress={compact} />
+      </Box>
+    )
+
+    return below ? (
+      <Box flexDirection="column">
+        {line}
+        {below}
+      </Box>
+    ) : (
+      line
+    )
+  })
+}
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: tests/cache-clock.test.tsx
+import { expect, mock, test } from 'claude-code/testing'
+import type { Engine } from 'claude-code/testing'
+import type { On } from 'claude-code'
+
+import { bar, coldRewriteUsd, formatUsd, pctReused, priceFor, remainingMs, shouldWarn, toneFor } from '../hooks/lib'
+
+const START = 1_000_000
+const MINUTE = 60_000
+
+const BAND = {
+  plugin: 'cache-clock',
+  component: 'AbovePrompt',
+  requestId: 'band',
+  surface: 'terminal',
+  props: {
+    hasSurvey: false,
+    isWorking: false,
+    maxRows: 10,
+    bodyColumns: 120,
+    scroll: { offset: 0, bodyRows: 10 },
+    view: {},
+  },
+} as const
+
+const CACHE = { plugin: 'cache-clock', key: 'cache' } as const
+
+type Step = { agentId?: string; reads: number; writes: number; input: number; model?: string }
+
+// The engine beneath the plugin: it answers every model request with `step`.
+function stepWith(on: On, step: () => Step): void {
+  on('turn.step', async function* (_, e) {
+    const s = step()
+
+    return {
+      turnId: e.turnId,
+      index: e.index,
+      answer: '',
+      toolUses: [],
+      stopReason: 'end_turn',
+      usage: {
+        model: s.model ?? 'claude-opus-4-8',
+        input_tokens: s.input,
+        output_tokens: 10,
+        cache_read_input_tokens: s.reads,
+        cache_creation_input_tokens: s.writes,
+      },
+    }
+  })
+}
+
+async function runStep($: Engine, agentId?: string): Promise<void> {
+  const stream = $.turn.step({ turnId: 't', index: 0, model: 'm', messageCount: 1, agentId })
+
+  for await (const _chunk of stream) {
+    // drained: the hooks run as the chunks pass
+  }
+  await stream.result
+}
+
+const slash = (args: string) =>
+  ({
+    command: 'cache-clock',
+    args,
+    origin: { kind: 'composer' },
+    presentation: { isFullscreen: false, columns: 80 },
+  }) as const
+
+function engineBeneath(on: On, toasts: string[] = []) {
+  const clock = mock.clock(on, { now: START })
+
+  on('command.register', () => ({ value: { command: 'cache-clock' } }))
+  on('session.start', (_, e) => ({ cwd: e.cwd }))
+  on('ui.toast', (_, e) => {
+    toasts.push(e.text)
+
+    return { value: undefined }
+  })
+  // Another mod's band line, already in the chain beneath ours.
+  on('ui.render', { component: 'AbovePrompt' }, ($, e) => {
+    const { Text } = $.ui.resolve(e)
+
+    return <Text>other mod line</Text>
+  })
+
+  return clock
+}
+
+test('only main-loop cache steps restart the countdown; subagents count in totals', async ($, on) => {
+  const clock = engineBeneath(on)
+  let step: Step = { reads: 0, writes: 0, input: 0 }
+  stepWith(on, () => step)
+
+  const status = async (): Promise<string> =>
+    (await $.command.run(slash('status'))).text ?? ''
+
+  await runStep($)
+  expect(await status()).toContain('no cache activity yet')
+
+  step = { reads: 90_000, writes: 10_000, input: 0 }
+  await runStep($)
+  expect(await status()).toContain('warm, 60m left')
+
+  await clock.advance(10 * MINUTE)
+  step = { agentId: 'sub1', reads: 50_000, writes: 0, input: 0 }
+  await runStep($, 'sub1')
+  const afterSub = await status()
+  expect(afterSub).toContain('warm, 50m left')
+  expect(afterSub).toContain('reads 140k')
+  expect(afterSub).toContain('90% reused on the last main step')
+
+  step = { reads: 100_000, writes: 0, input: 0 }
+  await runStep($)
+  expect(await status()).toContain('warm, 60m left')
+})
+
+test('the band stacks on another mod and the Compact button calls $.session.compact', async ($, on) => {
+  const toasts: string[] = []
+  engineBeneath(on, toasts)
+  stepWith(on, () => ({ reads: 150_000, writes: 30_000, input: 0 }))
+
+  let compactCalls = 0
+  on('session.compact', () => {
+    compactCalls += 1
+
+    return {
+      messages: [{ role: 'user', text: 'summary', toolUses: [] }],
+      tokensBefore: 180_000,
+      tokensAfter: 9_000,
+    }
+  })
+
+  await runStep($)
+  const ui = await $.ui.mount(BAND)
+
+  expect((await ui.find({ type: 'Text', text: /● CACHE/ }))?.text).toBe(' ● CACHE ')
+  expect(await ui.find({ type: 'Text', text: /warm 60m/ })).toBeTruthy()
+  expect((await ui.find({ type: 'Text', text: /cold rewrite/ }))?.text).toContain('83% reused · 180k cached')
+  expect(await ui.find({ type: 'Text', text: /other mod line/ })).toBeTruthy()
+
+  expect(compactCalls).toBe(0)
+  await ui.press({ key: 'compact' })
+
+  expect(compactCalls).toBe(1)
+  expect(toasts).toEqual(['Compacted: 180k → 9k tokens'])
+  await ui.unmount()
+})
+
+test('a skipped compact is reported, not hidden', async ($, on) => {
+  const toasts: string[] = []
+  engineBeneath(on, toasts)
+  stepWith(on, () => ({ reads: 1000, writes: 0, input: 0 }))
+  on('session.compact', () => ({ skip: 'a hook said no' }))
+
+  await runStep($)
+  const ui = await $.ui.mount(BAND)
+  await ui.press({ key: 'compact' })
+
+  expect(toasts).toEqual(['Compact skipped: a hook said no'])
+  await ui.unmount()
+})
+
+test('toasts once at 5 minutes left, then goes COLD at 0', async ($, on) => {
+  const toasts: string[] = []
+  const clock = engineBeneath(on, toasts)
+  stepWith(on, () => ({ reads: 150_000, writes: 30_000, input: 0, model: 'claude-opus-4-8' }))
+
+  await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
+  await runStep($)
+
+  await clock.advance(54 * MINUTE)
+  expect(toasts).toEqual([])
+
+  await clock.advance(2 * MINUTE)
+  expect(toasts.length).toBe(1)
+  expect(toasts[0]).toContain('Send anything to keep it warm.')
+  expect(toasts[0]).toContain('≈ $1.80')
+
+  await clock.advance(10 * MINUTE)
+  expect(toasts.length).toBe(1)
+
+  const ui = await $.ui.mount(BAND)
+  expect(await ui.find({ type: 'Text', text: /COLD/ })).toBeTruthy()
+  await ui.unmount()
+})
+
+test('/cache-clock off hides the band, status reports reads, writes, reuse and savings', async ($, on) => {
+  engineBeneath(on)
+  stepWith(on, () => ({ reads: 100_000, writes: 0, input: 0 }))
+  await runStep($)
+
+  const off = await $.command.run(slash('off'))
+  expect(off.text).toBe('cache-clock off')
+  const ui = await $.ui.mount(BAND)
+  expect(await ui.find({ type: 'Text', text: /● CACHE/ })).toBeFalsy()
+  await ui.unmount()
+
+  await $.command.run(slash('on'))
+  const status = (await $.command.run(slash('status'))).text ?? ''
+  expect(status).toContain('reads 100k · writes 0')
+  expect(status).toContain('100% reused')
+  expect(status).toContain('saved ≈ $0.45 (estimate)')
+})
+
+test('prices: known models are priced, unknown ones show ≈ ?', () => {
+  expect(formatUsd(coldRewriteUsd('claude-opus-4-8', 180_000, 5))).toBe('≈ $1.13')
+  expect(formatUsd(coldRewriteUsd('claude-opus-4-8', 180_000, 60))).toBe('≈ $1.80')
+  expect(formatUsd(coldRewriteUsd('claude-haiku-4-5-20251001', 100_000, 5))).toBe('≈ $0.13')
+  expect(formatUsd(coldRewriteUsd('claude-haiku-5-5', 180_000, 5))).toBe('≈ $0.11')
+  expect(priceFor('claude-opus-5-5')?.input).toBe(4)
+  expect(priceFor('claude-opus-5-6')).toBe(null)
+  expect(formatUsd(coldRewriteUsd('claude-opus-9-9', 180_000, 5))).toBe('≈ ?')
+  expect(formatUsd(coldRewriteUsd(null, 180_000, 5))).toBe('≈ ?')
+})
+
+test('reuse, bar, colors and the warning rule', () => {
+  expect(pctReused(94, 6, 0)).toBe(94)
+  expect(pctReused(0, 0, 0)).toBe(0)
+  expect(bar(94)).toBe('▰▰▰▰▰▱')
+  expect(bar(100)).toBe('▰▰▰▰▰▰')
+  expect(bar(0)).toBe('▱▱▱▱▱▱')
+
+  expect(toneFor(16 * MINUTE)).toBe('green')
+  expect(toneFor(15 * MINUTE)).toBe('amber')
+  expect(toneFor(1)).toBe('amber')
+  expect(toneFor(0)).toBe('red')
+  expect(remainingMs(null, 60 * MINUTE, 5)).toBe(null)
+  expect(remainingMs(0, 60 * MINUTE, 61 * MINUTE)).toBe(0)
+
+  expect(shouldWarn(5 * MINUTE, 60 * MINUTE, 7, null)).toBe(true)
+  expect(shouldWarn(5 * MINUTE, 60 * MINUTE, 7, 7)).toBe(false)
+  expect(shouldWarn(6 * MINUTE, 60 * MINUTE, 7, null)).toBe(false)
+  expect(shouldWarn(0, 60 * MINUTE, 7, null)).toBe(false)
+  expect(shouldWarn(4 * MINUTE, 5 * MINUTE, 7, null)).toBe(false)
+})
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: tsconfig.json
+{
+  "extends": "./.claude-plugin/types/tsconfig.json"
+}
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: types/index.d.ts
+export type CacheState = {
+  /** When a main-loop step last read or wrote the cache, in ms since the epoch. */
+  lastCacheAt: number | null
+  /** The model that answered that step, as the API reported it. */
+  model: string | null
+  /** Tokens that step left cached: cache reads plus cache writes. */
+  cachedTokens: number
+  /** The last main-loop step's token counts. */
+  lastReads: number
+  lastWrites: number
+  lastInput: number
+  /** Session totals, subagent steps included. */
+  totalReads: number
+  totalWrites: number
+  totalInput: number
+  /** Estimated dollars the cache reads saved against full-price input. */
+  savedUsd: number
+  /** Cache-read tokens on models missing from the price table, left out of savedUsd. */
+  unpricedReads: number
+}
+
+declare module 'claude-code' {
+  interface PluginState {
+    'cache-clock': {
+      cache: CacheState
+      isOn: boolean
+      now: number
+      warnedFor: number | null
+    }
+  }
+}
+>>>>>>>> END FILE
+
+<<<<<<<< FILE: .checksums.sha256
+2498aa15eb71e4455363766cb28602fbd27105bca4dbadf8a413f2ef5426333a  .claude-plugin/plugin.json
+d842d789476d67282d0f04b7e5fdc68a3d981ccec65dd79cfa2d11eed13fb828  hooks/hooks.json
+f2c4e3acd015be5bbd617d59944883db8659bfcc344355a8226b1675cc44ee0f  hooks/lib.ts
+32729ed30d8a92d1316d30d7832999287d0b6c395e982e5459fb8971f482e3a5  hooks/register.tsx
+e39c3598511c5bebb9fa0108b7bc6565808382fbdf9cc6ff02a4cc5079da5b59  tests/cache-clock.test.tsx
+4087cf0ba92fde503ed0e7c56f37bcb26ad0c085873f10219d0336c0f19b5a8f  tsconfig.json
+4984233a83a72eb32464040eb0495e311cee7f72b22dfeb3827674445bf343d4  types/index.d.ts
+>>>>>>>> END FILE
